@@ -46,6 +46,7 @@ export const BEND_R_LIP = (3 / 16) * inch;         // tread and step lips, on 1/
 export const K_FACTOR = 0.42;
 export const ALU_DENSITY = 2.68 * gram / (centimeter ^ 3);   // 5052-H32
 export const STEEL_DENSITY = 8.0 * gram / (centimeter ^ 3);  // 304 stainless
+export const TUBE_DENSITY = 2.70 * gram / (centimeter ^ 3);  // 6061 axle tube
 
 // ---------------------------------------------------------------------------
 // Treads and step tray
@@ -64,17 +65,20 @@ export const CAB_AXLE_Y = (15 / 16) * inch;
 export const CAB_AXLE_DROP = (5 / 8) * inch;       // below T
 export const OUT_AXLE_Y = 17.75 * inch;
 export const OUT_AXLE_DROP = 1.5 * inch;           // below T
-export const HOLE_DIA = (7 / 16) * inch;           // bushing bore, reamed (cut 3/8 pilots)
+export const HOLE_DIA = 14 * millimeter;           // bushing bore, reamed H7 (cut 3/8 pilots, bend, then open up)
 export const EAR_X0 = (7 / 16) * inch;             // ear outer faces at EAR_X0 and GOING - EAR_X0 in each going
 export const EAR_HOOK_R = (7 / 16) * inch;         // round top of every hook, on its axle hole
 export const EAR_W = (19 / 16) * inch;             // ear reach, u 0 to 1 3/16 (brackets and rail)
 export const HOOK_U0 = (5 / 16) * inch;            // hook part of each ear starts at u = 5/16
-export const AXLE_DIA = (5 / 16) * inch;
-export const TREAD_AXLE_X0 = 0 * inch;             // tread axles run x 0 to 6 in each going
-export const TREAD_AXLE_LEN = 6 * inch;
-export const GROOVE_DIA = 0.250 * inch;            // E-clip grooves on every axle (not modeled)
-export const GROOVE_W = 0.029 * inch;
-export const TREAD_GROOVE_SPAN = 5.70 * inch;      // groove inner edges apart, 0.15 in from each end
+export const AXLE_DIA = 12 * millimeter;           // aluminum tube on all six axles
+export const AXLE_BORE = 5 * millimeter;           // tapped M6 at both ends
+export const TREAD_AXLE_LEN = 145.2 * millimeter;  // 5.72
+export const TREAD_AXLE_X0 = (GOING - TREAD_AXLE_LEN) / 2;   // centered: x 0.14 to 5.86 in each going
+// Each axle end: an M6 fender washer and an M6 button-head screw (ISO 7380).
+export const END_WASHER_DIA = 18 * millimeter;
+export const END_WASHER_T = 1.6 * millimeter;
+export const END_HEAD_DIA = 10.5 * millimeter;
+export const END_HEAD_H = 3.3 * millimeter;
 
 // ---------------------------------------------------------------------------
 // Cabinet brackets
@@ -116,8 +120,8 @@ export const RIVET_HOLE_DIA = 0.196 * inch;        // #9 drill
 // ---------------------------------------------------------------------------
 // Keyholes (front angle and step clip)
 // ---------------------------------------------------------------------------
-export const KEYHOLE_DIA = (11 / 16) * inch;
-export const KEYHOLE_SLOT_W = (11 / 32) * inch;
+export const KEYHOLE_DIA = 20 * millimeter;        // clears the pin's fender washer and button head
+export const KEYHOLE_SLOT_W = 13 * millimeter;     // clears the 12 mm tube
 
 // ---------------------------------------------------------------------------
 // Front angle
@@ -170,9 +174,8 @@ export const STEP_LEG_BOTTOM_Z = (3 / 8) * inch;
 export const STEP_LEG_TOP_Z = (81 / 8) * inch;     // 10 1/8, stops against the skin's underside
 export const STEP_EAR_W = (17 / 16) * inch;        // ear reach from the web's inner face
 export const STEP_EAR_DROP = 1 * inch;             // ear's straight part, from axle z - 1 to axle z
-export const STEP_AXLE_X0 = 11.72 * inch;          // back end is the hook pin
-export const STEP_AXLE_X1 = 17.97 * inch;          // 6.25 long
-export const STEP_GROOVE_SPAN = 6.01 * inch;       // groove inner edges apart, 0.12 in from each end
+export const STEP_AXLE_X0 = 11.87 * inch;          // back end is the hook pin, through the keyhole
+export const STEP_AXLE_X1 = 17.86 * inch;          // 152.1 mm (5.99) long
 
 // ---------------------------------------------------------------------------
 // Fold check

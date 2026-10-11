@@ -20,6 +20,7 @@ export const RGB_ALU = [0.78, 0.80, 0.83];
 export const RGB_ALU_DARK = [0.55, 0.60, 0.66];
 export const RGB_STEP = [0.62, 0.56, 0.77];
 export const RGB_STEEL = [0.36, 0.41, 0.44];
+export const RGB_TUBE = [0.70, 0.72, 0.76];
 export const RGB_REF = [0.85, 0.75, 0.57];
 
 // ---------------------------------------------------------------------------
@@ -166,6 +167,16 @@ export function b3CylX(context is Context, id is Id, y is ValueWithUnits, z is V
     fCylinder(context, id, { "bottomCenter" : vector(x0, y, z), "topCenter" : vector(x1, y, z), "radius" : dia / 2 });
 }
 
+// Tube along x, x0 < x1, with a bore.
+export function b3TubeX(context is Context, id is Id, y is ValueWithUnits, z is ValueWithUnits,
+    x0 is ValueWithUnits, x1 is ValueWithUnits, dia is ValueWithUnits, bore is ValueWithUnits)
+{
+    b3CylX(context, id + "outside", y, z, x0, x1, dia);
+    b3CylX(context, id + "bore", y, z, x0 - 1 * millimeter, x1 + 1 * millimeter, bore);
+    opBoolean(context, id + "cut", { "tools" : b3Solids(id + "bore"), "targets" : b3Solids(id + "outside"),
+                "operationType" : BooleanOperationType.SUBTRACTION });
+}
+
 // ---------------------------------------------------------------------------
 // 2D shapes
 // ---------------------------------------------------------------------------
@@ -278,18 +289,23 @@ export function b3Union(context is Context, id is Id, bodies is Query)
 
 export function b3Finish(context is Context, bodies is Query, partName is string, rgb is array)
 {
-    setProperty(context, { "entities" : bodies, "propertyType" : PropertyType.NAME, "value" : partName });
-    setProperty(context, { "entities" : bodies, "propertyType" : PropertyType.MATERIAL,
-                "value" : material("Aluminum 5052-H32", ALU_DENSITY) });
-    setProperty(context, { "entities" : bodies, "propertyType" : PropertyType.APPEARANCE,
-                "value" : color(rgb[0], rgb[1], rgb[2]) });
+    b3Part(context, bodies, partName, material("Aluminum 5052-H32", ALU_DENSITY), rgb);
 }
 
 export function b3FinishSteel(context is Context, bodies is Query, partName is string)
 {
+    b3Part(context, bodies, partName, material("Stainless 304", STEEL_DENSITY), RGB_STEEL);
+}
+
+export function b3FinishTube(context is Context, bodies is Query, partName is string)
+{
+    b3Part(context, bodies, partName, material("Aluminum 6061", TUBE_DENSITY), RGB_TUBE);
+}
+
+function b3Part(context is Context, bodies is Query, partName is string, mat is Material, rgb is array)
+{
     setProperty(context, { "entities" : bodies, "propertyType" : PropertyType.NAME, "value" : partName });
-    setProperty(context, { "entities" : bodies, "propertyType" : PropertyType.MATERIAL,
-                "value" : material("Stainless 304", STEEL_DENSITY) });
+    setProperty(context, { "entities" : bodies, "propertyType" : PropertyType.MATERIAL, "value" : mat });
     setProperty(context, { "entities" : bodies, "propertyType" : PropertyType.APPEARANCE,
-                "value" : color(RGB_STEEL[0], RGB_STEEL[1], RGB_STEEL[2]) });
+                "value" : color(rgb[0], rgb[1], rgb[2]) });
 }

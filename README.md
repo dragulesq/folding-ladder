@@ -13,7 +13,7 @@ FeatureScript for Onshape that builds design **B3** of the folding camper bed st
 | `onshape/B3_Brackets.fs` | B3 Cabinet Brackets | The two brackets with pivot ears |
 | `onshape/B3_OuterRail.fs` | B3 Outer Rail | Stepped rail with flanges, hand slot and pivot ears |
 | `onshape/B3_StepClip.fs` | B3 Step Clip | Clip inside the outer rail with the outer keyhole |
-| `onshape/B3_PivotHardware.fs` | B3 Pivot Hardware | Tread and step axles, stop pins |
+| `onshape/B3_PivotHardware.fs` | B3 Pivot Hardware | 12 mm tube axles for the treads and step, with an M6 button head and fender washer on each end, and the stop pins |
 | `onshape/B3_FrontAngle.fs` | B3 Front Angle | Angle on the cabinet's front post |
 | `onshape/B3_StepLedge.fs` | B3 Step Ledge | Ledge that holds the folded step |
 | `onshape/B3_HookOnStep.fs` | B3 Hook-on Step | Step tray and two folding legs |
@@ -36,6 +36,18 @@ FeatureScript for Onshape that builds design **B3** of the folding camper bed st
 
 When you paste an updated file from the repo later, keep the import line Onshape made and paste the rest below it.
 
+## Checking the code
+
+`tools/fs_lint.py` checks the files offline: brackets balance, `B3_AllInOne.fs` is up to date, and, given a copy of the FeatureScript standard library at the version the files import, every function, constant and enum value they use exists.
+
+```
+git clone --filter=blob:none https://github.com/javawizard/onshape-std-library-mirror std
+git -C std checkout "$(git -C std log --format=%h --grep='^Version 2641.0$')"
+python3 tools/fs_lint.py std
+```
+
+`tools/onshape_check.py` runs the lint, then loads `B3_AllInOne.fs` into a test Onshape document through the API, adds every feature to a Part Studio and reports what rebuilds, plus how far each axle screw is from its two nearest parts (with `--fold 90`, that's the folded clearance to the next tread). It needs `ONSHAPE_ACCESS_KEY`, `ONSHAPE_SECRET_KEY` and `ONSHAPE_DOC_URL` (a workspace URL of a document used only for testing), and touches only the `B3 test` tabs it creates there. API calls are limited, so it reuses those tabs between runs: the first run costs about 14 calls and each rerun 3. `--fold 90` checks the folded stair, and `--report` re-reads the results for 1 call.
+
 ## Changing dimensions
 
 Edit `B3 Parameters` (or the parameters section at the top of the all-in-one file) and commit. The Part Studio rebuilds to match. The names and values follow the "Part definitions" section of the Bed Stair B3 page, and each is commented with what it measures.
@@ -53,4 +65,4 @@ Same datum as the B3 page. The origin is on the floor, at the side panel's face,
 ## Limitations
 
 - **Solid parts.** Parts are plain solids with sharp 90° bends, sized to the outside of the bends, not Onshape sheet-metal parts, so there are no flat patterns yet. The page's bend radii and K-factor are in the parameters for that step.
-- **Not modeled:** bend reliefs, countersinks, the notches left where the rail's ear tabs are cut, latch and keeper holes, bushings, washers, E-clips and rubber parts.
+- **Not modeled:** bend reliefs, countersinks, the notches left where the rail's ear tabs are cut, latch and keeper holes, bushings, thrust and wave washers, and rubber parts. Each axle screw therefore sits about 1.2 mm off its lip, where the bushing flange goes.
