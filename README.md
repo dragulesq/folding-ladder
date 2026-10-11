@@ -46,7 +46,7 @@ git -C std checkout "$(git -C std log --format=%h --grep='^Version 2641.0$')"
 python3 tools/fs_lint.py std
 ```
 
-`tools/onshape_check.py` runs the lint, then loads `B3_AllInOne.fs` into a test Onshape document through the API, adds every feature to a Part Studio and reports what rebuilds. It needs `ONSHAPE_ACCESS_KEY`, `ONSHAPE_SECRET_KEY` and `ONSHAPE_DOC_URL` (a workspace URL of a document used only for testing), and touches only the `B3 test` tabs it creates there. API calls are limited, so it reuses those tabs between runs: the first run costs about 14 calls and each rerun 4.
+`tools/onshape_check.py` runs the lint, then loads `B3_AllInOne.fs` into a test Onshape document through the API, adds every feature to a Part Studio and reports what rebuilds. It needs `ONSHAPE_ACCESS_KEY`, `ONSHAPE_SECRET_KEY` and `ONSHAPE_DOC_URL` (a workspace URL of a document used only for testing), and touches only the `B3 test` tabs it creates there. API calls are limited, so it reuses those tabs between runs: the first run costs about 14 calls and each rerun 3. `--fold 90` checks the folded stair, and `--report` re-reads the results for 1 call.
 
 ## Changing dimensions
 

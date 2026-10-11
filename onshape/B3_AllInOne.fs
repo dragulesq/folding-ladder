@@ -638,17 +638,34 @@ export const b3OuterRail = defineFeature(function(context is Context, id is Id, 
         }
         b3PrismXZ(context, id + "plate", outline, holes, y0, y1);
 
-        // Flanges, each a strip PLATE_T wide inside its edge, turned outward.
+        // Flanges along the bed-side, cut-back, bottom, foot and front edges, each
+        // a strip PLATE_T wide inside its edge, turned outward.
         const fy1 = y1 + RAIL_FLANGE;
-        const pBack = vector(0 * inch, RAIL_BACK_Z);
-        const pCut = vector(RAIL_CUTBACK_X, RAIL_CUTBACK_Z);
-        const pFoot = vector(RAIL_FOOT_X, RAIL_FOOT_Z);
-        const pFront = vector(xf, RAIL_FOOT_Z);
-        b3PrismXZ(context, id + "flangeBack", b3Strip(vector(0 * inch, RAIL_BACK_FLANGE_TOP), pBack, PLATE_T), [], y0, fy1);
-        b3PrismXZ(context, id + "flangeCutback", b3Strip(pBack, pCut, PLATE_T), [], y0, fy1);
-        b3PrismXZ(context, id + "flangeBottom", b3Strip(pCut, pFoot, PLATE_T), [], y0, fy1);
-        b3PrismXZ(context, id + "flangeFoot", b3Strip(pFoot, pFront, PLATE_T), [], y0, fy1);
-        b3PrismXZ(context, id + "flangeFront", b3Strip(pFront, vector(xf, RAIL_FRONT_FLANGE_TOP), PLATE_T), [], y0, fy1);
+        const edges = [
+                vector(0 * inch, RAIL_BACK_FLANGE_TOP),
+                vector(0 * inch, RAIL_BACK_Z),
+                vector(RAIL_CUTBACK_X, RAIL_CUTBACK_Z),
+                vector(RAIL_FOOT_X, RAIL_FOOT_Z),
+                vector(xf, RAIL_FOOT_Z),
+                vector(xf, RAIL_FRONT_FLANGE_TOP)
+            ];
+        for (var i = 0; i + 1 < size(edges); i += 1)
+        {
+            b3PrismXZ(context, id + ("flange" ~ toString(i)), b3Strip(edges[i], edges[i + 1], PLATE_T), [], y0, fy1);
+        }
+        // Where the edge turns away from the plate (the cut-back's lower corner), two
+        // strips touch only along a line, which Onshape can't join. Fill the V between them.
+        for (var i = 1; i + 1 < size(edges); i += 1)
+        {
+            const d0 = edges[i] - edges[i - 1];
+            const d1 = edges[i + 1] - edges[i];
+            if (d0[0] * d1[1] - d0[1] * d1[0] < 0 * inch * inch)
+            {
+                const before = b3Strip(edges[i - 1], edges[i], PLATE_T);
+                const after = b3Strip(edges[i], edges[i + 1], PLATE_T);
+                b3PrismXZ(context, id + ("flangeCorner" ~ toString(i)), [edges[i], before[2], after[3]], [], y0, fy1);
+            }
+        }
 
         // Pivot ears for both treads.
         b3RailEars(context, id + "earsTop", TREAD_TOP);

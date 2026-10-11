@@ -8,7 +8,7 @@ one in the Part Studio "B3 test Part Studio". It reports each feature's
 status, its error text if it failed, and the parts it built.
 
 The Onshape plan allows a limited number of API calls a year, so this keeps
-them few: a first run costs about 14 calls, a rerun after a fix costs 4.
+them few: a first run costs about 14 calls, a rerun after a fix costs 3.
 Element and feature ids are kept in a state file between runs, and every call
 is appended to a log next to it.
 
@@ -98,6 +98,8 @@ def main():
     ap.add_argument("--fold", type=float, help="upload with FOLD_ANGLE set to this many degrees")
     ap.add_argument("--std", help="std library checkout for the offline lint")
     ap.add_argument("--state", help="state file (default: the project's shared folder if present)")
+    ap.add_argument("--report", action="store_true", help="only re-read the Part Studio's status (1 call)")
+    ap.add_argument("--relink", action="store_true", help="also repoint the Part Studio's features at the new upload")
     args = ap.parse_args()
 
     lint = [sys.executable, str(ROOT / "tools" / "fs_lint.py")] + ([args.std] if args.std else [])
@@ -120,7 +122,7 @@ def main():
         state_path.write_text(json.dumps(state, indent=1))
 
     try:
-        bad = run(api, state, save, with_fold(FS_FILE.read_text(), args.fold))
+        bad = report(api, state) if args.report else run(api, state, save, with_fold(FS_FILE.read_text(), args.fold), args.relink)
     finally:
         save()
         total = sum(1 for _ in open(api.log_path)) if api.log_path.exists() else api.calls
@@ -128,18 +130,14 @@ def main():
     sys.exit(1 if bad else 0)
 
 
-def run(api, state, save, contents):
+def run(api, state, save, contents, relink=False):
     # Feature Studio: create once, then overwrite its contents.
     if "studio" not in state:
         e = api("POST", f"/featurestudios{api.dw}", {"name": STUDIO_NAME})
-        state["studio"], state["studio_mv"] = e["id"], e.get("microversionId")
+        state["studio"] = e["id"]
         save()
-    body = {"contents": contents, "rejectMicroversionSkew": False}
-    if state.get("studio_mv"):
-        body["sourceMicroversion"] = state["studio_mv"]
-    up = api("POST", f"/featurestudios{api.dw}/e/{state['studio']}", body)
-    state["studio_mv"] = up.get("sourceMicroversion") or state.get("studio_mv")
-    save()
+    up = api("POST", f"/featurestudios{api.dw}/e/{state['studio']}",
+             {"contents": contents, "rejectMicroversionSkew": False})
     for line in notices(up):
         print("studio notice", line)
 
@@ -152,7 +150,8 @@ def run(api, state, save, contents):
         print(f"MISSING FEATURES {missing}; specs response other fields: {json.dumps(extra)[:3000]}")
         return len(missing)
 
-    # Part Studio: add the features once, later just point them at the new studio version.
+    # Part Studio: add the features once. Features from a Feature Studio in the same
+    # workspace pick up its new contents by themselves; --relink repoints them anyway.
     if "part_studio" not in state:
         e = api("POST", f"/partstudios{api.dw}", {"name": PART_STUDIO_NAME})
         state["part_studio"], state["features"] = e["id"], {}
@@ -161,6 +160,8 @@ def run(api, state, save, contents):
     statuses = {}
     have = state.get("features", {})
     if all(t in have for t in FEATURES):
+        if not relink:
+            return report(api, state)
         feats = [{"btType": "BTMFeature-134", "featureId": have[t], "featureType": t,
                   "name": found[t].get("featureTypeName") or t, "namespace": found[t]["namespace"],
                   "parameters": []} for t in FEATURES]
@@ -179,40 +180,53 @@ def run(api, state, save, contents):
             save()
             statuses[t] = (r.get("featureState") or {}).get("featureStatus", "?")
 
-    # One evaluate call: each feature's error text and the parts in the studio.
+    return report(api, state, statuses)
+
+
+def report(api, state, statuses=None):
+    """One evaluate call: each feature's error or warning and the parts in the Part Studio."""
+    statuses = statuses or {}
+    have = state["features"]
     ids = ", ".join(f'"{t}" : "{have[t]}"' for t in FEATURES)
     script = """function(context is Context, queries is map)
 {
     const ids = { %s };
     var errors = {};
+    var warnings = {};
     for (var t, fid in ids)
     {
         const e = getFeatureError(context, makeId(fid));
         if (e != undefined)
             errors[t] = toString(e);
+        const w = getFeatureWarning(context, makeId(fid));
+        if (w != undefined)
+            warnings[t] = toString(w);
     }
     var parts = [];
     for (var b in evaluateQuery(context, qAllModifiableSolidBodies()))
         parts = append(parts, getProperty(context, { "entity" : b, "propertyType" : PropertyType.NAME }));
-    return { "errors" : errors, "parts" : parts };
+    return { "errors" : errors, "warnings" : warnings, "parts" : parts };
 }""" % ids
-    ev = api("POST", f"{ps}/featurescript", {"script": script, "queries": []})
+    ps = f"/partstudios{api.dw}/e/{state['part_studio']}"
+    ev = api("POST", f"{ps}/featurescript", {"script": script, "queries": {}})
     for line in notices(ev):
         print("evaluate notice", line)
     if ev.get("console"):
         print("console:", ev["console"][:3000])
-    res = fs_value(ev.get("result")) or {}
-    errors = res.get("errors") or {}
+    res = fs_value(ev.get("result"))
+    if not isinstance(res, dict):
+        print("could not read the evaluate result:", json.dumps(ev.get("result"))[:3000])
+        return len(FEATURES)
+    errors, warnings = res.get("errors") or {}, res.get("warnings") or {}
     bad = 0
     for t in FEATURES:
-        ok = statuses.get(t) == "OK" and t not in errors
-        bad += not ok
-        print(f"  {t}: {statuses.get(t)}" + (f"  {errors[t]}" if t in errors else ""))
+        status = "ERROR" if t in errors else "WARNING" if t in warnings else statuses.get(t, "OK")
+        bad += status == "ERROR"
+        print(f"  {t}: {status}  {errors.get(t) or warnings.get(t) or ''}".rstrip())
     parts = res.get("parts") or []
     print(f"parts ({len(parts)}): {', '.join(map(str, parts))}")
     print("ALL OK" if not bad else f"{bad} feature(s) failed")
     return bad
-
 
 if __name__ == "__main__":
     main()
