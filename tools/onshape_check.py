@@ -203,9 +203,47 @@ def report(api, state, statuses=None):
             warnings[t] = toString(w);
     }
     var parts = [];
+    var screws = [];
+    var others = [];
     for (var b in evaluateQuery(context, qAllModifiableSolidBodies()))
-        parts = append(parts, getProperty(context, { "entity" : b, "propertyType" : PropertyType.NAME }));
-    return { "errors" : errors, "warnings" : warnings, "parts" : parts };
+    {
+        const n = getProperty(context, { "entity" : b, "propertyType" : PropertyType.NAME });
+        parts = append(parts, n);
+        if (startsWith(n, "Axle screw"))
+            screws = append(screws, [b, n]);
+        else if (!startsWith(n, "Axle"))
+            others = append(others, [b, n]);
+    }
+    // Each axle screw's two nearest parts other than the axles, in mm. The nearest is
+    // usually the lip its own axle runs through; the second is what it must clear.
+    var clearance = {};
+    for (var s in screws)
+    {
+        var d1 = undefined;
+        var n1 = "";
+        var d2 = undefined;
+        var n2 = "";
+        for (var o in others)
+        {
+            const d = evDistance(context, { "side0" : s[0], "side1" : o[0] }).distance;
+            if (d1 == undefined || d < d1)
+            {
+                d2 = d1;
+                n2 = n1;
+                d1 = d;
+                n1 = o[1];
+            }
+            else if (d2 == undefined || d < d2)
+            {
+                d2 = d;
+                n2 = o[1];
+            }
+        }
+        if (d2 != undefined)
+            clearance[s[1]] = toString(roundToPrecision(d1 / millimeter, 2)) ~ " mm to " ~ n1 ~ "; "
+                ~ toString(roundToPrecision(d2 / millimeter, 2)) ~ " mm to " ~ n2;
+    }
+    return { "errors" : errors, "warnings" : warnings, "parts" : parts, "clearance" : clearance };
 }""" % ids
     ps = f"/partstudios{api.dw}/e/{state['part_studio']}"
     ev = api("POST", f"{ps}/featurescript", {"script": script, "queries": {}})
@@ -224,6 +262,8 @@ def report(api, state, statuses=None):
         bad += status == "ERROR"
         print(f"  {t}: {status}  {errors.get(t) or warnings.get(t) or ''}".rstrip())
     parts = res.get("parts") or []
+    for name, text in sorted((res.get("clearance") or {}).items(), key=lambda kv: float(kv[1].split()[0])):
+        print(f"  clearance  {name}: {text}")
     print(f"parts ({len(parts)}): {', '.join(map(str, parts))}")
     print("ALL OK" if not bad else f"{bad} feature(s) failed")
     return bad

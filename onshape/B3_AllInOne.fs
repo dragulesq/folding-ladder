@@ -52,6 +52,7 @@ export const BEND_R_LIP = (3 / 16) * inch;         // tread and step lips, on 1/
 export const K_FACTOR = 0.42;
 export const ALU_DENSITY = 2.68 * gram / (centimeter ^ 3);   // 5052-H32
 export const STEEL_DENSITY = 8.0 * gram / (centimeter ^ 3);  // 304 stainless
+export const TUBE_DENSITY = 2.70 * gram / (centimeter ^ 3);  // 6061 axle tube
 
 // ---------------------------------------------------------------------------
 // Treads and step tray
@@ -70,17 +71,20 @@ export const CAB_AXLE_Y = (15 / 16) * inch;
 export const CAB_AXLE_DROP = (5 / 8) * inch;       // below T
 export const OUT_AXLE_Y = 17.75 * inch;
 export const OUT_AXLE_DROP = 1.5 * inch;           // below T
-export const HOLE_DIA = (7 / 16) * inch;           // bushing bore, reamed (cut 3/8 pilots)
+export const HOLE_DIA = 14 * millimeter;           // bushing bore, reamed H7 (cut 3/8 pilots, bend, then open up)
 export const EAR_X0 = (7 / 16) * inch;             // ear outer faces at EAR_X0 and GOING - EAR_X0 in each going
 export const EAR_HOOK_R = (7 / 16) * inch;         // round top of every hook, on its axle hole
 export const EAR_W = (19 / 16) * inch;             // ear reach, u 0 to 1 3/16 (brackets and rail)
 export const HOOK_U0 = (5 / 16) * inch;            // hook part of each ear starts at u = 5/16
-export const AXLE_DIA = (5 / 16) * inch;
-export const TREAD_AXLE_X0 = 0 * inch;             // tread axles run x 0 to 6 in each going
-export const TREAD_AXLE_LEN = 6 * inch;
-export const GROOVE_DIA = 0.250 * inch;            // E-clip grooves on every axle (not modeled)
-export const GROOVE_W = 0.029 * inch;
-export const TREAD_GROOVE_SPAN = 5.70 * inch;      // groove inner edges apart, 0.15 in from each end
+export const AXLE_DIA = 12 * millimeter;           // aluminum tube on all six axles
+export const AXLE_BORE = 5 * millimeter;           // tapped M6 at both ends
+export const TREAD_AXLE_LEN = 145.2 * millimeter;  // 5.72
+export const TREAD_AXLE_X0 = (GOING - TREAD_AXLE_LEN) / 2;   // centered: x 0.14 to 5.86 in each going
+// Each axle end: an M6 fender washer and an M6 button-head screw (ISO 7380).
+export const END_WASHER_DIA = 18 * millimeter;
+export const END_WASHER_T = 1.6 * millimeter;
+export const END_HEAD_DIA = 10.5 * millimeter;
+export const END_HEAD_H = 3.3 * millimeter;
 
 // ---------------------------------------------------------------------------
 // Cabinet brackets
@@ -122,8 +126,8 @@ export const RIVET_HOLE_DIA = 0.196 * inch;        // #9 drill
 // ---------------------------------------------------------------------------
 // Keyholes (front angle and step clip)
 // ---------------------------------------------------------------------------
-export const KEYHOLE_DIA = (11 / 16) * inch;
-export const KEYHOLE_SLOT_W = (11 / 32) * inch;
+export const KEYHOLE_DIA = 20 * millimeter;        // clears the pin's fender washer and button head
+export const KEYHOLE_SLOT_W = 13 * millimeter;     // clears the 12 mm tube
 
 // ---------------------------------------------------------------------------
 // Front angle
@@ -176,9 +180,8 @@ export const STEP_LEG_BOTTOM_Z = (3 / 8) * inch;
 export const STEP_LEG_TOP_Z = (81 / 8) * inch;     // 10 1/8, stops against the skin's underside
 export const STEP_EAR_W = (17 / 16) * inch;        // ear reach from the web's inner face
 export const STEP_EAR_DROP = 1 * inch;             // ear's straight part, from axle z - 1 to axle z
-export const STEP_AXLE_X0 = 11.72 * inch;          // back end is the hook pin
-export const STEP_AXLE_X1 = 17.97 * inch;          // 6.25 long
-export const STEP_GROOVE_SPAN = 6.01 * inch;       // groove inner edges apart, 0.12 in from each end
+export const STEP_AXLE_X0 = 11.87 * inch;          // back end is the hook pin, through the keyhole
+export const STEP_AXLE_X1 = 17.86 * inch;          // 152.1 mm (5.99) long
 
 // ---------------------------------------------------------------------------
 // Fold check
@@ -204,6 +207,7 @@ export const RGB_ALU = [0.78, 0.80, 0.83];
 export const RGB_ALU_DARK = [0.55, 0.60, 0.66];
 export const RGB_STEP = [0.62, 0.56, 0.77];
 export const RGB_STEEL = [0.36, 0.41, 0.44];
+export const RGB_TUBE = [0.70, 0.72, 0.76];
 export const RGB_REF = [0.85, 0.75, 0.57];
 
 // ---------------------------------------------------------------------------
@@ -350,6 +354,16 @@ export function b3CylX(context is Context, id is Id, y is ValueWithUnits, z is V
     fCylinder(context, id, { "bottomCenter" : vector(x0, y, z), "topCenter" : vector(x1, y, z), "radius" : dia / 2 });
 }
 
+// Tube along x, x0 < x1, with a bore.
+export function b3TubeX(context is Context, id is Id, y is ValueWithUnits, z is ValueWithUnits,
+    x0 is ValueWithUnits, x1 is ValueWithUnits, dia is ValueWithUnits, bore is ValueWithUnits)
+{
+    b3CylX(context, id + "outside", y, z, x0, x1, dia);
+    b3CylX(context, id + "bore", y, z, x0 - 1 * millimeter, x1 + 1 * millimeter, bore);
+    opBoolean(context, id + "cut", { "tools" : b3Solids(id + "bore"), "targets" : b3Solids(id + "outside"),
+                "operationType" : BooleanOperationType.SUBTRACTION });
+}
+
 // ---------------------------------------------------------------------------
 // 2D shapes
 // ---------------------------------------------------------------------------
@@ -462,20 +476,25 @@ export function b3Union(context is Context, id is Id, bodies is Query)
 
 export function b3Finish(context is Context, bodies is Query, partName is string, rgb is array)
 {
-    setProperty(context, { "entities" : bodies, "propertyType" : PropertyType.NAME, "value" : partName });
-    setProperty(context, { "entities" : bodies, "propertyType" : PropertyType.MATERIAL,
-                "value" : material("Aluminum 5052-H32", ALU_DENSITY) });
-    setProperty(context, { "entities" : bodies, "propertyType" : PropertyType.APPEARANCE,
-                "value" : color(rgb[0], rgb[1], rgb[2]) });
+    b3Part(context, bodies, partName, material("Aluminum 5052-H32", ALU_DENSITY), rgb);
 }
 
 export function b3FinishSteel(context is Context, bodies is Query, partName is string)
 {
+    b3Part(context, bodies, partName, material("Stainless 304", STEEL_DENSITY), RGB_STEEL);
+}
+
+export function b3FinishTube(context is Context, bodies is Query, partName is string)
+{
+    b3Part(context, bodies, partName, material("Aluminum 6061", TUBE_DENSITY), RGB_TUBE);
+}
+
+function b3Part(context is Context, bodies is Query, partName is string, mat is Material, rgb is array)
+{
     setProperty(context, { "entities" : bodies, "propertyType" : PropertyType.NAME, "value" : partName });
-    setProperty(context, { "entities" : bodies, "propertyType" : PropertyType.MATERIAL,
-                "value" : material("Stainless 304", STEEL_DENSITY) });
+    setProperty(context, { "entities" : bodies, "propertyType" : PropertyType.MATERIAL, "value" : mat });
     setProperty(context, { "entities" : bodies, "propertyType" : PropertyType.APPEARANCE,
-                "value" : color(RGB_STEEL[0], RGB_STEEL[1], RGB_STEEL[2]) });
+                "value" : color(rgb[0], rgb[1], rgb[2]) });
 }
 
 // ===========================================================================
@@ -730,10 +749,12 @@ export const b3StepClip = defineFeature(function(context is Context, id is Id, d
 // B3_PivotHardware.fs
 // ===========================================================================
 /*
- * B3 Pivot Hardware: the four 5/16" tread axles, the two hook-on step axles
- * (their back ends are the hook pins) and the four 3/16" stop pins, for
- * checking fit. Bushings, washers and E-clips aren't modeled. The outer
- * tread axles follow FOLD_ANGLE.
+ * B3 Pivot Hardware: the four tread axles and the two hook-on step axles
+ * (their back ends are the hook pins), all 12 mm aluminum tube with a 5 mm
+ * bore, each end capped by an M6 fender washer and button-head screw, plus
+ * the four 3/16" stop pins, for checking fit and folded clearances.
+ * Bushings, thrust washers and wave washers aren't modeled. The outer tread
+ * axles and their screws follow FOLD_ANGLE.
  */
 annotation { "Feature Type Name" : "B3 Pivot Hardware" }
 export const b3PivotHardware = defineFeature(function(context is Context, id is Id, definition is map)
@@ -744,10 +765,8 @@ export const b3PivotHardware = defineFeature(function(context is Context, id is 
         b3TreadHardware(context, id + "top", TREAD_TOP, "top");
         b3TreadHardware(context, id + "middle", TREAD_MIDDLE, "middle");
 
-        b3CylX(context, id + "stepCab", STEP_CAB_AXLE_Y, STEP_CAB_AXLE_Z, STEP_AXLE_X0, STEP_AXLE_X1, AXLE_DIA);
-        b3FinishSteel(context, b3Solids(id + "stepCab"), "Axle, step, cabinet side");
-        b3CylX(context, id + "stepOut", STEP_OUT_AXLE_Y, STEP_OUT_AXLE_Z, STEP_AXLE_X0, STEP_AXLE_X1, AXLE_DIA);
-        b3FinishSteel(context, b3Solids(id + "stepOut"), "Axle, step, outer");
+        b3Axle(context, id + "stepCab", STEP_CAB_AXLE_Y, STEP_CAB_AXLE_Z, STEP_AXLE_X0, STEP_AXLE_X1, "step, cabinet side");
+        b3Axle(context, id + "stepOut", STEP_OUT_AXLE_Y, STEP_OUT_AXLE_Z, STEP_AXLE_X0, STEP_AXLE_X1, "step, outer");
     });
 
 function b3TreadHardware(context is Context, id is Id, n is number, label is string)
@@ -756,12 +775,10 @@ function b3TreadHardware(context is Context, id is Id, n is number, label is str
     const x0 = b3GoingX(n) + TREAD_AXLE_X0;
     const x1 = x0 + TREAD_AXLE_LEN;
 
-    b3CylX(context, id + "cabAxle", CAB_AXLE_Y, top - CAB_AXLE_DROP, x0, x1, AXLE_DIA);
-    b3FinishSteel(context, b3Solids(id + "cabAxle"), "Axle, cabinet, " ~ label);
+    b3Axle(context, id + "cabAxle", CAB_AXLE_Y, top - CAB_AXLE_DROP, x0, x1, "cabinet, " ~ label);
 
-    b3CylX(context, id + "outAxle", OUT_AXLE_Y, top - OUT_AXLE_DROP, x0, x1, AXLE_DIA);
+    b3Axle(context, id + "outAxle", OUT_AXLE_Y, top - OUT_AXLE_DROP, x0, x1, "outer, " ~ label);
     opTransform(context, id + "fold", { "bodies" : b3Solids(id + "outAxle"), "transform" : b3RailFold() });
-    b3FinishSteel(context, b3Solids(id + "outAxle"), "Axle, outer, " ~ label);
 
     // Stop pins: flush with each bracket ear's inside face, sticking out under the lip.
     const ranges = b3EarRanges(n);
@@ -770,6 +787,28 @@ function b3TreadHardware(context is Context, id is Id, n is number, label is str
     b3CylX(context, id + "pinFront", STOP_PIN_Y, pz, ranges[1][0], ranges[1][1] + STOP_PIN_OUT, STOP_PIN_DIA);
     b3FinishSteel(context, b3Solids(id + "pinBack"), "Stop pin, back, " ~ label);
     b3FinishSteel(context, b3Solids(id + "pinFront"), "Stop pin, front, " ~ label);
+}
+
+// One axle from x0 to x1: the tube, then a fender washer and button head on each end.
+function b3Axle(context is Context, id is Id, y is ValueWithUnits, z is ValueWithUnits,
+    x0 is ValueWithUnits, x1 is ValueWithUnits, label is string)
+{
+    b3TubeX(context, id + "tube", y, z, x0, x1, AXLE_DIA, AXLE_BORE);
+    b3FinishTube(context, b3Solids(id + "tube"), "Axle, " ~ label);
+    b3AxleEnd(context, id + "back", y, z, x0, -1, "Axle screw, " ~ label ~ ", back");
+    b3AxleEnd(context, id + "front", y, z, x1, 1, "Axle screw, " ~ label ~ ", front");
+}
+
+// Fender washer and button head as one part, stacked outward from the tube end at x
+// (dir -1 toward the bed end, 1 toward the front).
+function b3AxleEnd(context is Context, id is Id, y is ValueWithUnits, z is ValueWithUnits, x is ValueWithUnits,
+    dir is number, partName is string)
+{
+    const w = x + dir * END_WASHER_T;
+    b3CylX(context, id + "washer", y, z, x, w, END_WASHER_DIA);
+    b3CylX(context, id + "head", y, z, w, w + dir * END_HEAD_H, END_HEAD_DIA);
+    b3Union(context, id + "join", b3Solids(id));
+    b3FinishSteel(context, b3Solids(id), partName);
 }
 
 // ===========================================================================
