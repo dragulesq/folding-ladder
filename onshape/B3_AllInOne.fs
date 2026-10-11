@@ -76,8 +76,11 @@ export const EAR_HOOK_R = (7 / 16) * inch;         // round top of every hook, o
 export const EAR_W = (19 / 16) * inch;             // ear reach, u 0 to 1 3/16 (brackets and rail)
 export const HOOK_U0 = (5 / 16) * inch;            // hook part of each ear starts at u = 5/16
 export const AXLE_DIA = (5 / 16) * inch;
-export const TREAD_AXLE_X0 = (1 / 16) * inch;      // tread axles run x 1/16 to 5 15/16 in each going
-export const TREAD_AXLE_LEN = (47 / 8) * inch;     // 5 7/8
+export const TREAD_AXLE_X0 = 0 * inch;             // tread axles run x 0 to 6 in each going
+export const TREAD_AXLE_LEN = 6 * inch;
+export const GROOVE_DIA = 0.250 * inch;            // E-clip grooves on every axle (not modeled)
+export const GROOVE_W = 0.029 * inch;
+export const TREAD_GROOVE_SPAN = 5.70 * inch;      // groove inner edges apart, 0.15 in from each end
 
 // ---------------------------------------------------------------------------
 // Cabinet brackets
@@ -173,8 +176,9 @@ export const STEP_LEG_BOTTOM_Z = (3 / 8) * inch;
 export const STEP_LEG_TOP_Z = (81 / 8) * inch;     // 10 1/8, stops against the skin's underside
 export const STEP_EAR_W = (17 / 16) * inch;        // ear reach from the web's inner face
 export const STEP_EAR_DROP = 1 * inch;             // ear's straight part, from axle z - 1 to axle z
-export const STEP_AXLE_X0 = 11.75 * inch;          // back end is the hook pin
-export const STEP_AXLE_X1 = (287 / 16) * inch;     // 17 15/16
+export const STEP_AXLE_X0 = 11.72 * inch;          // back end is the hook pin
+export const STEP_AXLE_X1 = 17.97 * inch;          // 6.25 long
+export const STEP_GROOVE_SPAN = 6.01 * inch;       // groove inner edges apart, 0.12 in from each end
 
 // ---------------------------------------------------------------------------
 // Fold check
