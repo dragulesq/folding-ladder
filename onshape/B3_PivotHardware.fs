@@ -12,10 +12,13 @@ import(path : "onshape/std/common.fs", version : "2641.0");
  *   Tread axle (4 used) and step axle (2 used; the back end is the hook
  *   pin), 12 mm aluminum tube with a 5 mm bore tapped M6 at both ends.
  *   M6 fender washer and M6 button-head screw (12 each, one on each axle end).
- *   Stop pin (4 used), 3/16" pin through each bracket ear.
+ *   Stop pin (4 used), 3/16" pin through each cabinet bracket ear.
+ *   M6 x 16 flat-head screw and M6 nyloc nut (8 each), bolting the two rail
+ *   brackets inside the outer rail.
  * Each is built where its first use sits: the top tread's cabinet axle, the
  * step's cabinet-side axle, the washer and screw on the top tread's cabinet
- * axle at the bed end, and the top bracket's back stop pin.
+ * axle at the bed end, the top cabinet bracket's back stop pin, and the
+ * first screw of the top rail bracket with its nut.
  * Bushings, thrust washers and wave washers aren't modeled.
  */
 annotation { "Feature Type Name" : "B3 Pivot Hardware" }
@@ -50,6 +53,33 @@ export const b3PivotHardware = defineFeature(function(context is Context, id is 
         b3CylX(context, id + "pin", q[1], q[2], q[0] - PLATE_T - STOP_PIN_OUT, q[0], STOP_PIN_DIA);
         b3FinishSteel(context, b3Solids(id + "pin"), "Stop pin");
         b3Mc(context, id + "mcPin", b3Solids(id + "pin"), "Stop pin", "Bracket", pin);
+
+        // Flat-head screw: 90 degree head flush with the bracket web's ear side, shank through the rail.
+        const head = b3OnRail(TREAD_TOP, b3BracketScrewJoint(TREAD_TOP, 0));
+        const s0 = head.origin;
+        const along = head.zAxis;
+        const headH = (FH_HEAD_DIA - FH_DIA) / 2;
+        fCone(context, id + "fh" + "head", { "bottomCenter" : b3V(s0), "topCenter" : b3V(s0 + along * headH),
+                    "bottomRadius" : FH_HEAD_DIA / 2, "topRadius" : FH_DIA / 2 });
+        fCylinder(context, id + "fh" + "shank", { "bottomCenter" : b3V(s0 + along * headH), "topCenter" : b3V(s0 + along * FH_LEN),
+                    "radius" : FH_DIA / 2 });
+        b3Union(context, id + "fh" + "join", b3Solids(id + "fh"));
+        const fh = b3Solids(id + "fh");
+        b3FinishSteel(context, fh, "M6 flat-head screw");
+        b3Mc(context, id + "mcFh", fh, "M6 flat-head screw", "Head", head);
+
+        // Nyloc nut on the rail's outer face, a hex prism around the screw.
+        const nutJoint = b3RailNutJoint(TREAD_TOP, 0);
+        const c = nutJoint.origin;
+        var hex = [];
+        for (var i = 0; i < 6; i += 1)
+        {
+            const a = (30 + 60 * i) * degree;
+            hex = append(hex, vector(c[0] + NUT_AF / sqrt(3) * cos(a), c[2] + NUT_AF / sqrt(3) * sin(a)));
+        }
+        b3PrismXZ(context, id + "nut", hex, [b3Hole(c[0], c[2], FH_DIA)], c[1], c[1] + NUT_H);
+        b3FinishSteel(context, b3Solids(id + "nut"), "M6 nyloc nut");
+        b3Mc(context, id + "mcNut", b3Solids(id + "nut"), "M6 nyloc nut", "Rail", nutJoint);
     });
 
 // A tube axle of length len from the joint at its bed-end tip, with a mate

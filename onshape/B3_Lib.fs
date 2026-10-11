@@ -1,5 +1,6 @@
 FeatureScript 2641;
 import(path : "onshape/std/common.fs", version : "2641.0");
+import(path : "onshape/std/sheetMetalStart.fs", version : "2641.0");
 
 // <B3-IMPORT> In Onshape: delete the next line, click Import in the toolbar,
 // pick "B3 Parameters", then type "export " in front of the line it inserts.
@@ -102,6 +103,48 @@ export function b3BracketJoint(n is number) returns map
     return b3PanelJoint(b3EarFaces(n)[0], b3T(n) - BRACKET_TOP_DROP - BRACKET_H);
 }
 
+// Tread n's rail bracket is the same part as its cabinet bracket, turned
+// half a turn about a vertical axis and lowered so its axle hole lands on the
+// outer axle line. This moves a joint on the cabinet bracket to the same spot
+// on the rail bracket.
+export function b3OnRail(n is number, joint is map) returns map
+{
+    const xg = b3GoingX(n);
+    const p = joint.origin;
+    const z = joint.zAxis;
+    const x = joint.xAxis;
+    return b3Joint(vector(2 * xg + GOING - p[0], OUT_AXLE_Y + CAB_AXLE_Y - p[1], p[2] + CAB_AXLE_DROP - OUT_AXLE_DROP),
+        vector(-z[0], -z[1], z[2]), vector(-x[0], -x[1], x[2]));
+}
+
+// Bracket n's web on the rail's inner face.
+export function b3RailBracketJoint(n is number) returns map
+{
+    return b3OnRail(n, b3BracketJoint(n));
+}
+
+// The bracket's axle seen from its other end, so that on the rail it matches
+// the tread's outer axle joint: b3OnRail(n, b3BracketAxleTurnedJoint(n)) is
+// b3OutAxleJoint(n).
+export function b3BracketAxleTurnedJoint(n is number) returns map
+{
+    return b3Joint(vector(b3GoingX(n) + GOING - TREAD_AXLE_X0, CAB_AXLE_Y, b3T(n) - CAB_AXLE_DROP),
+        vector(1, 0, 0), vector(0, -1, 0));
+}
+
+// Screw hole k in bracket n's web, on the ear side, z along the screw.
+export function b3BracketScrewJoint(n is number, k is number) returns map
+{
+    return b3Joint(vector(b3GoingX(n) + SCREW_X[k], PLATE_T, b3T(n) - SCREW_DROP), vector(0, -1, 0), vector(1, 0, 0));
+}
+
+// The nut on the rail's outer face for screw k of tread n's rail bracket.
+export function b3RailNutJoint(n is number, k is number) returns map
+{
+    const hole = b3OnRail(n, b3BracketScrewJoint(n, k)).origin;
+    return b3Joint(vector(hole[0], RAIL_Y + PLATE_T, hole[2]), vector(0, 1, 0), vector(1, 0, 0));
+}
+
 // Front angle on the panel: its bottom front corner.
 export function b3FrontAngleJoint() returns map
 {
@@ -171,6 +214,12 @@ export function b3PlaneXZ(y is ValueWithUnits) returns Plane
     return plane(b3V(vector(0 * inch, y, 0 * inch)), b3V(vector(0, 1, 0)), vector(1, 0, 0));
 }
 
+// Sketch (u, v) = (x, y), extruded along -z.
+export function b3PlaneXY(z is ValueWithUnits) returns Plane
+{
+    return plane(vector(0 * inch, 0 * inch, z), vector(0, 0, -1), vector(1, 0, 0));
+}
+
 // Closed loop through 2D points. An entry {"mid" : p, "end" : q} draws an arc
 // from the previous point through p to q. The loop closes with a line.
 export function b3SketchLoop(sketch is Sketch, prefix is string, path is array)
@@ -234,6 +283,12 @@ export function b3PrismXZ(context is Context, id is Id, path is array, holes is 
     b3Prism(context, id, b3PlaneXZ(y0), path, holes, y1 - y0);
 }
 
+// Outline in (x, y), from z0 to z1.
+export function b3PrismXY(context is Context, id is Id, path is array, holes is array, z0 is ValueWithUnits, z1 is ValueWithUnits)
+{
+    b3Prism(context, id, b3PlaneXY(z1), path, holes, z1 - z0);
+}
+
 export function b3Box(context is Context, id is Id, lo is Vector, hi is Vector)
 {
     fCuboid(context, id, { "corner1" : b3V(lo), "corner2" : b3V(hi) });
@@ -262,6 +317,39 @@ export function b3TubeX(context is Context, id is Id, y is ValueWithUnits, z is 
 export function b3Rect(u0 is ValueWithUnits, v0 is ValueWithUnits, u1 is ValueWithUnits, v1 is ValueWithUnits) returns array
 {
     return [vector(u0, v0), vector(u1, v0), vector(u1, v1), vector(u0, v1)];
+}
+
+// Rounds the corner p, between the edges to a and to b, with radius r: the
+// path entries from the tangent point on pa, around the arc, to the tangent
+// point on pb. Works for outside and inside corners alike.
+export function b3Corner(a is Vector, p is Vector, b is Vector, r is ValueWithUnits) returns array
+{
+    const ua = (a - p) / norm(a - p);
+    const ub = (b - p) / norm(b - p);
+    const half = acos(dot(ua, ub)) / 2;
+    const bisector = (ua + ub) / norm(ua + ub);
+    const center = p + bisector * (r / sin(half));
+    return [p + ua * (r / tan(half)), { "mid" : center - bisector * r, "end" : p + ub * (r / tan(half)) }];
+}
+
+// Closed polygon with corner i rounded to radii[i] (0 leaves it sharp). Each
+// corner's tangent points must stay on its two edges.
+export function b3Rounded(points is array, radii is array) returns array
+{
+    const n = size(points);
+    var path = [];
+    for (var i = 0; i < n; i += 1)
+    {
+        if (radii[i] is number || radii[i] <= 0 * inch)
+        {
+            path = append(path, points[i]);
+        }
+        else
+        {
+            path = concatenateArrays([path, b3Corner(points[(i + n - 1) % n], points[i], points[(i + 1) % n], radii[i])]);
+        }
+    }
+    return path;
 }
 
 export function b3Hole(u is ValueWithUnits, v is ValueWithUnits, dia is ValueWithUnits) returns map
@@ -305,49 +393,112 @@ export function b3Keyhole(u is ValueWithUnits, vHole is ValueWithUnits, vEnd is 
         ];
 }
 
-// Hook-shaped ear in (y, z). The ear runs from the root face yRoot to yFar,
-// over z zLo to zHi; above that the hook (yHookIn to yFar) rises to a round
-// top of radius EAR_HOOK_R on the axle (axY, axZ). Works either way along y.
+// Hook-shaped bracket ear in (y, z). The ear runs from the root face yRoot
+// to yFar, over z zLo to zHi; above that the hook (yHookIn to yFar) rises to
+// a round top of radius EAR_HOOK_R on the axle (axY, axZ). The bottom outer
+// corner and the hook notch are rounded.
 export function b3EarOutline(yRoot is ValueWithUnits, yFar is ValueWithUnits, yHookIn is ValueWithUnits,
     zLo is ValueWithUnits, zHi is ValueWithUnits, axY is ValueWithUnits, axZ is ValueWithUnits) returns array
 {
-    return [
-            vector(yRoot, zLo),
-            vector(yFar, zLo),
-            vector(yFar, axZ),
-            { "mid" : vector(axY, axZ + EAR_HOOK_R), "end" : vector(yHookIn, axZ) },
-            vector(yHookIn, zHi),
-            vector(yRoot, zHi)
-        ];
+    const root = vector(yRoot, zLo);
+    const notch = vector(yHookIn, zHi);
+    return concatenateArrays([
+                [root],
+                b3Corner(root, vector(yFar, zLo), vector(yFar, axZ), EAR_CORNER_R),
+                [vector(yFar, axZ), { "mid" : vector(axY, axZ + EAR_HOOK_R), "end" : vector(yHookIn, axZ) }],
+                b3Corner(vector(yHookIn, axZ), notch, vector(yRoot, zHi), EAR_NOTCH_R),
+                [vector(yRoot, zHi)]
+            ]);
 }
 
 // ---------------------------------------------------------------------------
-// Tray (treads and hook-on step): skin plus two lips at the x ends.
-// Holes are in (y, z) and go through both lips. cornerR > 0 rounds each
-// lip's bottom outer corner.
+// Tray (treads and hook-on step): skin plus two lips bent down at the x ends,
+// as a sheet-metal part. Holes are in (y, z) and go through both lips. Both
+// bottom corners of each lip are rounded to LIP_CORNER_R.
 // ---------------------------------------------------------------------------
-export function b3Tray(context is Context, id is Id, x0 is ValueWithUnits, top is ValueWithUnits, holes is array, cornerR is ValueWithUnits)
+export function b3Tray(context is Context, id is Id, x0 is ValueWithUnits, top is ValueWithUnits, holes is array)
 {
     const y0 = TRAY_Y0;
     const y1 = TRAY_Y0 + TRAY_W;
     const x1 = x0 + TRAY_D;
     const zb = top - LIP;
-    var lip = [vector(y0, top), vector(y1, top), vector(y1, zb), vector(y0, zb)];
-    if (cornerR > 0 * inch)
-    {
-        const k = 1 - sqrt(0.5);
-        lip = [
-                vector(y0, top),
-                vector(y1, top),
-                vector(y1, zb + cornerR),
-                { "mid" : vector(y1 - cornerR * k, zb + cornerR * k), "end" : vector(y1 - cornerR, zb) },
-                vector(y0, zb)
-            ];
-    }
+    const lip = b3Rounded([vector(y0, top), vector(y1, top), vector(y1, zb), vector(y0, zb)],
+        [0, 0, LIP_CORNER_R, LIP_CORNER_R]);
     b3Box(context, id + "skin", vector(x0, y0, top - SHEET_T), vector(x1, y1, top));
     b3PrismYZ(context, id + "lipBack", lip, holes, x0, x0 + SHEET_T);
     b3PrismYZ(context, id + "lipFront", lip, holes, x1 - SHEET_T, x1);
     b3Union(context, id + "join", b3Solids(id));
+    const ym = (y0 + y1) / 2;
+    b3SheetMetal(context, id + "sm", b3Solids(id), [
+                vector((x0 + x1) / 2, ym, top),
+                vector(x0, ym, top - LIP / 2),
+                vector(x1, ym, top - LIP / 2)
+            ], SHEET_T, BEND_R_LIP, K_SHEET);
+}
+
+// ---------------------------------------------------------------------------
+// Sheet metal
+// ---------------------------------------------------------------------------
+// Turns body, a solid modeled to the outside of its bends with sharp bends,
+// into an Onshape sheet-metal part. outside lists a point (page coordinates)
+// inside each outside face: the base wall first, then each wall bent off it.
+// The edges between the base and the others become bends of inside radius r;
+// any edge between two of the others becomes a rip with a corner relief. The
+// thickness t goes inward, so the outside faces stay put.
+export function b3SheetMetal(context is Context, id is Id, body is Query, outside is array,
+    t is ValueWithUnits, r is ValueWithUnits, k is number)
+{
+    const faces = qOwnedByBody(body, EntityType.FACE);
+    var walls = [];
+    for (var p in outside)
+    {
+        const wall = qContainsPoint(faces, b3V(p));
+        if (size(evaluateQuery(context, wall)) != 1)
+        {
+            throw regenError("B3: expected one outside face at " ~ toString(p / inch) ~ " in");
+        }
+        walls = append(walls, wall);
+    }
+    const baseEdges = qAdjacent(walls[0], AdjacencyType.EDGE, EntityType.EDGE);
+    var bends = [];
+    for (var i = 1; i < size(walls); i += 1)
+    {
+        bends = append(bends, qIntersection([baseEdges, qAdjacent(walls[i], AdjacencyType.EDGE, EntityType.EDGE)]));
+    }
+    sheetMetalStart(context, id, {
+                "process" : SMProcessType.CONVERT,
+                "partToConvert" : body,
+                "facesToExclude" : qSubtraction(faces, qUnion(walls)),
+                "bends" : qUnion(bends),
+                "thickness" : t,
+                "radius" : r,
+                "kFactor" : k,
+                "oppositeDirection" : true,
+                "defaultCornerStyle" : SMCornerStrategyType.ROUND,
+                "defaultCornerReliefScale" : CORNER_RELIEF_SCALE,
+                "defaultBendReliefStyle" : SMBendStrategyType.RECTANGLE,
+                "defaultBendReliefDepthScale" : 1 + RELIEF_EXTRA / r,
+                "defaultBendReliefScale" : RELIEF_W_SCALE
+            });
+}
+
+// Bend relief where a bend stops at p, short of the edge it runs along: a
+// notch in the wall that carries on, RELIEF_W_SCALE * t wide along the edge
+// (direction along, away from the bend) and r + t + RELIEF_EXTRA deep
+// (direction inward, into the wall). A 2D outline for b3Prism*.
+export function b3ReliefPath(p is Vector, along is Vector, inward is Vector, t is ValueWithUnits, r is ValueWithUnits) returns array
+{
+    const a = along / norm(along);
+    const n = inward / norm(inward);
+    const w = RELIEF_W_SCALE * t;
+    const d = r + t + RELIEF_EXTRA;
+    const out = n * (-0.05 * inch);
+    return [p + out, p + a * w + out, p + a * w + n * d, p + n * d];
+}
+
+export function b3Subtract(context is Context, id is Id, targets is Query, tools is Query)
+{
+    opBoolean(context, id, { "tools" : tools, "targets" : targets, "operationType" : BooleanOperationType.SUBTRACTION });
 }
 
 // ---------------------------------------------------------------------------

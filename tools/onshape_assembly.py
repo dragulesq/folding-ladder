@@ -4,24 +4,30 @@
 Run tools/onshape_check.py first: it saves the part ids and mate connectors
 this script uses. This script then creates the assembly "B3 test Assembly",
 inserts every part as many times as the stair uses it (the reference blocks
-fixed), and mates them: fastened mates for everything screwed, riveted or
-clamped together, and revolute mates for the pivots, so the stair can be
-folded by dragging a tread and the hook-on step's legs can be folded.
+fixed), and puts them together:
+- mates for the joints between the main parts: fastened where they are
+  screwed or riveted together, revolute at the pivots, so the stair folds
+  when you drag a tread and the hook-on step's legs fold;
+- a group for each part and the hardware fixed to it (axles, stop pins,
+  washers, screws, nuts), which costs one API call per group instead of one
+  per piece of hardware. If Onshape refuses the group, that hardware gets
+  fastened mates instead.
 
 Each instance is inserted where its mates will put it, worked out from the
 mate connectors, so the mates find everything already in place.
 
 The Onshape plan allows a limited number of API calls a year. Building the
-assembly costs about 50 calls (one per mate), so the script does it once and
-records what it made in the state file; a rerun picks up where it stopped
-and costs nothing once the assembly is complete. The assembly follows the
-Part Studios by itself, so rerun onshape_check.py after changing the
-FeatureScript, not this.
+assembly costs about 25 calls, so the script does it once and records what
+it made in the state file; a rerun picks up where it stopped and costs
+nothing once the assembly is complete. The assembly follows the Part Studios
+by itself, so rerun onshape_check.py after changing the FeatureScript, not
+this. When the parts themselves are replaced (their ids change, as when they
+became sheet metal), --rebuild deletes the old assembly and builds a new one.
 
 Usage:
-  python3 tools/onshape_assembly.py [--state FILE] [--dry-run]
+  python3 tools/onshape_assembly.py [--state FILE] [--dry-run] [--rebuild]
 
---dry-run prints the instances and mates without calling the API.
+--dry-run prints the instances, mates and groups without calling the API.
 """
 from urllib.parse import quote
 import argparse
@@ -31,15 +37,16 @@ from onshape_api import State
 
 NAME = "B3 test Assembly"
 
-# Instances: key -> (part name, Part Studio key). The reference blocks are added
-# separately, one fixed instance of each part in the Surroundings Part Studio.
+# Instances: key -> part name. The reference blocks are added separately, one
+# fixed instance of each part in the Surroundings Part Studio.
 AXLES = {  # axle instance -> part
     "Tread axle 1": "Tread axle", "Tread axle 2": "Tread axle",
     "Tread axle 3": "Tread axle", "Tread axle 4": "Tread axle",
     "Step axle 1": "Step axle", "Step axle 2": "Step axle",
 }
 INSTANCES = {
-    "Cabinet bracket 1": "Cabinet bracket", "Cabinet bracket 2": "Cabinet bracket",
+    # Brackets 1 and 2 on the cabinet (top and middle tread), 3 and 4 on the rail.
+    **{f"Bracket {i}": "Bracket" for i in range(1, 5)},
     "Tread 1": "Tread", "Tread 2": "Tread",
     "Outer rail": "Outer rail", "Step clip": "Step clip",
     "Front angle": "Front angle", "Step ledge": "Step ledge",
@@ -50,40 +57,77 @@ INSTANCES = {
     **{f"Stop pin {i}": "Stop pin" for i in range(1, 5)},
     **{f"M6 fender washer {i}": "M6 fender washer" for i in range(1, 13)},
     **{f"M6 button-head screw {i}": "M6 button-head screw" for i in range(1, 13)},
+    **{f"M6 flat-head screw {i}": "M6 flat-head screw" for i in range(1, 9)},
+    **{f"M6 nyloc nut {i}": "M6 nyloc nut" for i in range(1, 9)},
 }
 
-# Mates: (type, (instance, its mate connector), (instance it goes on, that one's mate connector)).
-# In order: each instance is placed by the first mate that names it on the left.
+# Mates between the main parts: (type, (instance, its mate connector), (instance it goes on, that one's
+# mate connector)). In order: each instance is placed by the first mate that names it on the left.
+# The treads, the rail brackets and the rail make a four-bar linkage with the cabinet brackets.
 MATES = [
-    ("FASTENED", ("Cabinet bracket 1", "Cabinet"), ("REF cabinet", "Bracket, top tread")),
-    ("FASTENED", ("Cabinet bracket 2", "Cabinet"), ("REF cabinet", "Bracket, middle tread")),
+    ("FASTENED", ("Bracket 1", "Mounting face"), ("REF cabinet", "Bracket, top tread")),
+    ("FASTENED", ("Bracket 2", "Mounting face"), ("REF cabinet", "Bracket, middle tread")),
     ("FASTENED", ("Front angle", "Cabinet"), ("REF cabinet", "Front angle")),
     ("FASTENED", ("Step ledge", "Cabinet"), ("REF cabinet", "Step ledge")),
-    ("FASTENED", ("Stop pin 1", "Bracket"), ("Cabinet bracket 1", "Stop pin, back")),
-    ("FASTENED", ("Stop pin 2", "Bracket"), ("Cabinet bracket 1", "Stop pin, front")),
-    ("FASTENED", ("Stop pin 3", "Bracket"), ("Cabinet bracket 2", "Stop pin, back")),
-    ("FASTENED", ("Stop pin 4", "Bracket"), ("Cabinet bracket 2", "Stop pin, front")),
-    ("FASTENED", ("Tread axle 1", "Back end"), ("Cabinet bracket 1", "Axle")),
-    ("FASTENED", ("Tread axle 2", "Back end"), ("Cabinet bracket 2", "Axle")),
-    ("REVOLUTE", ("Tread 1", "Cabinet axle"), ("Cabinet bracket 1", "Axle")),
-    ("REVOLUTE", ("Tread 2", "Cabinet axle"), ("Cabinet bracket 2", "Axle")),
-    ("REVOLUTE", ("Outer rail", "Top tread axle"), ("Tread 1", "Outer axle")),
-    ("REVOLUTE", ("Outer rail", "Middle tread axle"), ("Tread 2", "Outer axle")),
-    ("FASTENED", ("Tread axle 3", "Back end"), ("Outer rail", "Top tread axle")),
-    ("FASTENED", ("Tread axle 4", "Back end"), ("Outer rail", "Middle tread axle")),
+    ("REVOLUTE", ("Tread 1", "Cabinet axle"), ("Bracket 1", "Axle")),
+    ("REVOLUTE", ("Tread 2", "Cabinet axle"), ("Bracket 2", "Axle")),
+    ("REVOLUTE", ("Bracket 3", "Axle, turned"), ("Tread 1", "Outer axle")),
+    ("FASTENED", ("Outer rail", "Top tread bracket"), ("Bracket 3", "Mounting face")),
+    ("FASTENED", ("Bracket 4", "Mounting face"), ("Outer rail", "Middle tread bracket")),
+    ("REVOLUTE", ("Tread 2", "Outer axle"), ("Bracket 4", "Axle, turned")),
     ("FASTENED", ("Step clip", "Outer rail"), ("Outer rail", "Step clip")),
     ("FASTENED", ("Hook-on step tray", "Cabinet-side axle"), ("Front angle", "Hook-on step")),
-    ("FASTENED", ("Step axle 1", "Back end"), ("Hook-on step tray", "Cabinet-side axle")),
-    ("FASTENED", ("Step axle 2", "Back end"), ("Hook-on step tray", "Outer axle")),
     ("REVOLUTE", ("Hook-on step leg, cabinet side", "Axle"), ("Hook-on step tray", "Cabinet-side axle")),
     ("REVOLUTE", ("Hook-on step leg, outer", "Axle"), ("Hook-on step tray", "Outer axle")),
 ]
+
+# Hardware fixed to a part: ((instance, mate connector), (part instance, mate connector)), placed the
+# same way. Each part and everything fixed to it, directly or through an axle, become one group.
+HARDWARE = [
+    (("Stop pin 1", "Bracket"), ("Bracket 1", "Stop pin, back")),
+    (("Stop pin 2", "Bracket"), ("Bracket 1", "Stop pin, front")),
+    (("Stop pin 3", "Bracket"), ("Bracket 2", "Stop pin, back")),
+    (("Stop pin 4", "Bracket"), ("Bracket 2", "Stop pin, front")),
+    (("Tread axle 1", "Back end"), ("Bracket 1", "Axle")),
+    (("Tread axle 2", "Back end"), ("Bracket 2", "Axle")),
+    (("Tread axle 3", "Back end"), ("Bracket 3", "Axle, turned")),
+    (("Tread axle 4", "Back end"), ("Bracket 4", "Axle, turned")),
+    (("Step axle 1", "Back end"), ("Hook-on step tray", "Cabinet-side axle")),
+    (("Step axle 2", "Back end"), ("Hook-on step tray", "Outer axle")),
+]
 # A fender washer and button-head screw on each axle end.
 for i, (axle, end) in enumerate((a, e) for a in AXLES for e in ("Back end", "Front end")):
-    MATES += [
-        ("FASTENED", (f"M6 fender washer {i + 1}", "Axle"), (axle, end)),
-        ("FASTENED", (f"M6 button-head screw {i + 1}", "Washer"), (f"M6 fender washer {i + 1}", "Screw")),
+    HARDWARE += [
+        ((f"M6 fender washer {i + 1}", "Axle"), (axle, end)),
+        ((f"M6 button-head screw {i + 1}", "Washer"), (f"M6 fender washer {i + 1}", "Screw")),
     ]
+# Four flat-head screws through each rail bracket, with a nyloc nut on the rail's outer face.
+for b, row in (("Bracket 3", "top"), ("Bracket 4", "middle")):
+    for k in range(1, 5):
+        i = k + (4 if row == "middle" else 0)
+        HARDWARE += [
+            ((f"M6 flat-head screw {i}", "Head"), (b, f"Screw {k}")),
+            ((f"M6 nyloc nut {i}", "Rail"), ("Outer rail", f"Nut, {row} {k}")),
+        ]
+
+
+def groups():
+    """The hardware's groups: [(name, [instances])], each led by the part the rest is fixed to."""
+    root = {}
+
+    def find(i):
+        while root.get(i, i) != i:
+            i = root[i]
+        return i
+
+    for (child, _), (parent, _) in HARDWARE:
+        root[find(child)] = find(parent)
+    members = {}
+    for i in [i for (c, _), (p, _) in HARDWARE for i in (p, c)]:
+        members.setdefault(find(i), [])
+        if i not in members[find(i)]:
+            members[find(i)].append(i)
+    return [(f"{lead} and its hardware", [lead] + [i for i in m if i != lead]) for lead, m in members.items()]
 
 
 # 4x4 transforms as row-major nested lists, lengths in meters.
@@ -122,12 +166,13 @@ def plan(state):
     for name in studios["surroundings"]["parts"]:
         part_of[name] = name
         instances[name] = {"part": name, "studio": "surroundings", "fixed": True, "transform": IDENTITY}
+    links = [ends for _, *ends in MATES] + HARDWARE
     missing = sorted({p for p in INSTANCES.values() if p not in studios["parts"]["parts"]}
-                     | {f"{part_of.get(i, i)} / {n}" for _, *ends in MATES for i, n in ends
+                     | {f"{part_of.get(i, i)} / {n}" for ends in links for i, n in ends
                         if (part_of.get(i, i), n) not in mcs})
     if missing:
         sys.exit(f"Not in the Part Studios (rerun onshape_check.py?): {', '.join(missing)}")
-    for _, (child, cmc), (parent, pmc) in MATES:
+    for (child, cmc), (parent, pmc) in links:
         if child in instances:
             continue
         if parent not in instances:
@@ -145,6 +190,8 @@ def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--state", help="state file (default: the project's shared folder if present)")
     ap.add_argument("--dry-run", action="store_true", help="print the plan without calling the API")
+    ap.add_argument("--rebuild", action="store_true", help="delete the assembly in the state file and build a new one")
+    ap.add_argument("--no-groups", action="store_true", help="fasten the hardware with mates instead of groups")
     args = ap.parse_args()
 
     st = State(args.state)
@@ -156,39 +203,64 @@ def main():
                   + ("  fixed" if inst["fixed"] else ""))
         for kind, (a, an), (b, bn) in MATES:
             print(f"{kind:9} {a} ({an}) to {b} ({bn})")
-        print(f"{len(instances)} instances, {len(MATES)} mates")
+        for name, members in groups():
+            print(f"group     {name}: {', '.join(members[1:])}")
+        print(f"{len(instances)} instances, {len(MATES)} mates, {len(groups())} groups")
         return
     try:
-        build(st, instances, mcs)
+        if args.no_groups:
+            st.data.setdefault("assembly", {})["no_groups"] = True
+        build(st, instances, mcs, args.rebuild)
     finally:
         st.close()
 
 
-def build(st, instances, mcs):
+def build(st, instances, mcs, rebuild):
     api, state = st.api, st.data
     asm = state.setdefault("assembly", {})
+    if rebuild and "id" in asm:
+        # API keys without delete permission get a 403; then the new assembly gets a new name
+        # and the old tab is left for deleting by hand.
+        code, _ = api("DELETE", f"/elements{api.dw}/e/{asm['id']}", check=False)
+        old = asm.get("name", NAME)
+        keep = {k: asm[k] for k in ("no_groups",) if k in asm}
+        if code < 300:
+            print(f"deleted the old assembly, {old}")
+            keep["name"] = old
+        else:
+            print(f"could not delete the old assembly ({code}); delete the tab \"{old}\" by hand")
+            n = int(old.rsplit(" ", 1)[1]) + 1 if old.rsplit(" ", 1)[-1].isdigit() else 2
+            keep["name"] = f"{NAME} {n}"
+            state.setdefault("abandoned_assemblies", []).append(asm["id"])
+        asm.clear()
+        asm.update(keep)
+        st.save()
+    if asm.get("instances") and set(asm["instances"]) != set(instances):
+        sys.exit("The assembly in the state file has other instances; rerun with --rebuild to replace it.")
     if "id" not in asm:
-        asm["id"] = api("POST", f"/assemblies{api.dw}", {"name": NAME})["id"]
+        asm.setdefault("name", NAME)
+        asm["id"] = api("POST", f"/assemblies{api.dw}", {"name": asm["name"]})["id"]
+        print(f"created the assembly {asm['name']}")
         st.save()
     path = f"/assemblies{api.dw}/e/{asm['id']}"
 
     # All instances in one call, each in its own transform group.
     if "instances" not in asm:
         if not asm.get("inserted"):
-            groups = []
+            transform_groups = []
             for name, inst in instances.items():
                 ps = state["part_studios"][inst["studio"]]
                 params = {"documentId": api.did, "elementId": ps["id"], "partId": ps["parts"][inst["part"]],
                           "isAssembly": False, "isWholePartStudio": False}
                 if inst["fixed"]:
                     params["isFixed"] = True
-                groups.append({"instances": [params], "transform": flat(inst["transform"])})
-            code, r = api("POST", f"{path}/transformedinstances", {"transformGroups": groups}, check=False)
+                transform_groups.append({"instances": [params], "transform": flat(inst["transform"])})
+            code, r = api("POST", f"{path}/transformedinstances", {"transformGroups": transform_groups}, check=False)
             if code >= 400 and any(i["fixed"] for i in instances.values()):
                 print(f"insert with isFixed refused ({code}: {str(r)[:500]}); inserting without it")
-                for g in groups:
+                for g in transform_groups:
                     g["instances"][0].pop("isFixed", None)
-                api("POST", f"{path}/transformedinstances", {"transformGroups": groups})
+                api("POST", f"{path}/transformedinstances", {"transformGroups": transform_groups})
                 asm["unfixed"] = True
             elif code >= 400:
                 raise RuntimeError(f"insert failed {code}: {r}")
@@ -199,12 +271,31 @@ def build(st, instances, mcs):
         st.save()
     ids = asm["instances"]
 
+    # Groups, one call each: a part and the hardware fixed to it move as one.
+    made = 0
+    done_groups = asm.setdefault("groups", {})
+    for name, members in groups():
+        if name in done_groups or asm.get("no_groups"):
+            continue
+        code, r = api("POST", f"{path}/features", mate_group(name, [ids[m] for m in members]), check=False)
+        fid = (r.get("feature") or {}).get("featureId") if isinstance(r, dict) else None
+        status = (r.get("featureState") or {}).get("featureStatus") if isinstance(r, dict) else None
+        print(f"group     {name}: {status or code}")
+        if code >= 400 or status not in ("OK", "INFO"):
+            if fid:
+                api("DELETE", f"{path}/features/featureid/{quote(fid, safe='')}")
+            sys.exit(f"Onshape refused the group ({code}: {str(r)[:800]}). Rerun with --no-groups to fasten "
+                     f"the hardware with mates instead, which costs about {len(HARDWARE)} more calls.")
+        done_groups[name] = fid
+        made += 1
+        st.save()
+
     # Mates, one call each. A mate names a Part Studio mate connector by the instance
     # and the id of the operation that made it.
     done = asm.setdefault("mates", {})
     pending = asm.setdefault("pending", {})
-    made = 0
-    for kind, (a, an), (b, bn) in MATES:
+    mates = MATES + ([("FASTENED", c, p) for c, p in HARDWARE] if asm.get("no_groups") else [])
+    for kind, (a, an), (b, bn) in mates:
         label = f"{a} to {b}"
         if label in done:
             continue
@@ -226,7 +317,7 @@ def build(st, instances, mcs):
     if made:
         moved = moved_instances(api, path, instances, ids)
         print("every instance is where its mates put it" if not moved else f"moved by the mates: {', '.join(moved)}")
-    print(f"assembly: {len(ids)} instances, {len(done)} mates"
+    print(f"assembly: {len(ids)} instances, {len(done)} mates, {len(done_groups)} groups"
           + ("; fix the REF parts by hand (right-click > Fix)" if asm.get("unfixed") else ""))
 
 
@@ -263,6 +354,16 @@ def match(definition, instances, state):
         raise RuntimeError(f"inserted instances not where planned: {', '.join(missing)}; "
                            f"occurrences: {str(root.get('occurrences'))[:2000]}")
     return found
+
+
+def mate_group(name, ids):
+    return {"feature": {
+        "btType": "BTMMateGroup-65", "featureType": "mateGroup", "name": name, "namespace": "",
+        "suppressed": False,
+        "parameters": [
+            {"btType": "BTMParameterQueryWithOccurrenceList-67", "parameterId": "occurrencesQuery",
+             "queries": [{"btType": "BTMIndividualOccurrenceQuery-626", "path": [i]} for i in ids]},
+        ]}}
 
 
 def mate(name, kind, queries):

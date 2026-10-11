@@ -130,10 +130,18 @@ def report(st, key):
             warnings[t] = toString(w);
     }
     var parts = [];
-    for (var b in evaluateQuery(context, qAllModifiableSolidBodies()))
+    for (var b in evaluateQuery(context, qSheetMetalFlatFilter(qAllModifiableSolidBodies(), SMFlatType.NO)))
     {
+        const bb = evBox3d(context, { "topology" : b, "tight" : true });
         parts = append(parts, [getProperty(context, { "entity" : b, "propertyType" : PropertyType.NAME }),
-                    transientQueriesToStrings(b)]);
+                    transientQueriesToStrings(b), bb.minCorner / inch, bb.maxCorner / inch]);
+    }
+    var flats = [];
+    for (var b in evaluateQuery(context, qSheetMetalFlatFilter(qEverything(EntityType.BODY), SMFlatType.YES)))
+    {
+        const bb = evBox3d(context, { "topology" : b, "tight" : true });
+        flats = append(flats, [try silent(getProperty(context, { "entity" : b, "propertyType" : PropertyType.NAME })),
+                    (bb.maxCorner - bb.minCorner) / inch]);
     }
     var mcs = [];
     for (var mc in evaluateQuery(context, qHasAttribute("b3Mc")))
@@ -144,7 +152,7 @@ def report(st, key):
                     "origin" : [cs.origin[0] / meter, cs.origin[1] / meter, cs.origin[2] / meter],
                     "x" : [cs.xAxis[0], cs.xAxis[1], cs.xAxis[2]], "z" : [cs.zAxis[0], cs.zAxis[1], cs.zAxis[2]] });
     }
-    return { "errors" : errors, "warnings" : warnings, "parts" : parts, "mcs" : mcs };
+    return { "errors" : errors, "warnings" : warnings, "parts" : parts, "mcs" : mcs, "flats" : flats };
 }""" % ids
     ev = api("POST", f"/partstudios{api.dw}/e/{ps['id']}/featurescript", {"script": script, "queries": {}})
     for line in notices(ev):
@@ -164,7 +172,15 @@ def report(st, key):
         print(f"  {t}: {status}  {errors.get(t) or warnings.get(t) or ''}".rstrip())
     parts = res.get("parts") or []
     mcs = res.get("mcs") or []
-    print(f"  parts ({len(parts)}): {', '.join(p[0] for p in parts)}")
+    print(f"  parts ({len(parts)}):")
+    for p in parts:
+        lo, hi = p[2], p[3]
+        # Onshape's Y is the page's -y.
+        print(f"    {p[0]:34} x {lo[0]:7.3f} to {hi[0]:7.3f}  y {-hi[1]:7.3f} to {-lo[1]:7.3f}  z {lo[2]:7.3f} to {hi[2]:7.3f}")
+    flats = res.get("flats") or []
+    for f in flats:
+        size = sorted((abs(v) for v in f[1]), reverse=True)
+        print(f"  flat pattern {f[0] or '(unnamed)'}: {size[0]:.3f} x {size[1]:.3f} x {size[2]:.3f} in")
     for p in sorted({m["part"] for m in mcs}):
         print(f"  mate connectors on {p}: {', '.join(m['name'] for m in mcs if m['part'] == p)}")
     ps["parts"] = {p[0]: p[1] for p in parts}
