@@ -30,5 +30,9 @@ export const b3FrontAngle = defineFeature(function(context is Context, id is Id,
             [b3Keyhole(FA_KEYHOLE_Y, FA_KEYHOLE_Z, FA_KEYHOLE_END_Z)], FA_X1 - SHEET_T, FA_X1);
 
         b3Union(context, id + "join", b3Solids(id));
-        b3Finish(context, b3Solids(id), "Front angle", RGB_ALU_DARK);
+        const body = b3Solids(id);
+        const name = "Front angle";
+        b3Finish(context, body, name, RGB_ALU_DARK);
+        b3Mc(context, id + "mcCabinet", body, name, "Cabinet", b3FrontAngleJoint());
+        b3Mc(context, id + "mcStep", body, name, "Hook-on step", b3StepCabAxleJoint());
     });

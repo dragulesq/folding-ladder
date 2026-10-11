@@ -11,9 +11,10 @@ import(path : "onshape/std/common.fs", version : "2641.0");
  * Datum (same as the B3 page). Origin on the floor, at the side panel's face,
  * at the stair's bed end (the end the top tread is on).
  *   x  along the cabinet toward its front edge; the stair spans x = 0 to 12
- *   y  out from the panel face into the room
+ *   y  out from the panel face into the room (Onshape's -Y)
  *   z  up from the floor
- * All parts are built where they sit when the stair is open.
+ * Each part is built once, where its first use sits when the stair is open;
+ * the assembly places the rest.
  *
  * Sizes are to the outside of bends. Bends are modeled sharp; the page's
  * inside radii are BEND_R_SHEET, BEND_R_PLATE and BEND_R_LIP for the
@@ -176,10 +177,3 @@ export const STEP_EAR_W = (17 / 16) * inch;        // ear reach from the web's i
 export const STEP_EAR_DROP = 1 * inch;             // ear's straight part, from axle z - 1 to axle z
 export const STEP_AXLE_X0 = 11.87 * inch;          // back end is the hook pin, through the keyhole
 export const STEP_AXLE_X1 = 17.86 * inch;          // 152.1 mm (5.99) long
-
-// ---------------------------------------------------------------------------
-// Fold check
-// ---------------------------------------------------------------------------
-// 0 degrees = open and in use, 90 degrees = folded flat against the cabinet.
-// The treads, outer rail, step clip and outer axles move; the rest stays put.
-export const FOLD_ANGLE = 0 * degree;

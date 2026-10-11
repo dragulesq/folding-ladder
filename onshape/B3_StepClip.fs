@@ -9,7 +9,7 @@ import(path : "onshape/std/common.fs", version : "2641.0");
 /*
  * B3 Step Clip, 1/8" sheet: small angle riveted inside the outer rail. Its
  * keyhole takes the hook pin on the back end of the hook-on step's outer
- * leg axle. Moves with the rail, so it follows FOLD_ANGLE.
+ * leg axle.
  */
 annotation { "Feature Type Name" : "B3 Step Clip" }
 export const b3StepClip = defineFeature(function(context is Context, id is Id, definition is map)
@@ -35,6 +35,6 @@ export const b3StepClip = defineFeature(function(context is Context, id is Id, d
 
         b3Union(context, id + "join", b3Solids(id));
         const clip = b3Solids(id);
-        opTransform(context, id + "fold", { "bodies" : clip, "transform" : b3RailFold() });
         b3Finish(context, clip, "Step clip", RGB_ALU_DARK);
+        b3Mc(context, id + "mcRail", clip, "Step clip", "Outer rail", b3StepClipJoint());
     });

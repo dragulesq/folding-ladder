@@ -28,5 +28,7 @@ export const b3StepLedge = defineFeature(function(context is Context, id is Id, 
         b3PrismXZ(context, id + "leg", b3Rect(0 * inch, top - LEDGE_LEG_H, LEDGE_LEN, top), screws, 0 * inch, SHEET_T);
 
         b3Union(context, id + "join", b3Solids(id));
-        b3Finish(context, b3Solids(id), "Step ledge", RGB_ALU_DARK);
+        const body = b3Solids(id);
+        b3Finish(context, body, "Step ledge", RGB_ALU_DARK);
+        b3Mc(context, id + "mcCabinet", body, "Step ledge", "Cabinet", b3StepLedgeJoint());
     });

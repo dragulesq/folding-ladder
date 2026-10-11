@@ -17,9 +17,10 @@ import(path : "onshape/std/common.fs", version : "2641.0");
  * Datum (same as the B3 page). Origin on the floor, at the side panel's face,
  * at the stair's bed end (the end the top tread is on).
  *   x  along the cabinet toward its front edge; the stair spans x = 0 to 12
- *   y  out from the panel face into the room
+ *   y  out from the panel face into the room (Onshape's -Y)
  *   z  up from the floor
- * All parts are built where they sit when the stair is open.
+ * Each part is built once, where its first use sits when the stair is open;
+ * the assembly places the rest.
  *
  * Sizes are to the outside of bends. Bends are modeled sharp; the page's
  * inside radii are BEND_R_SHEET, BEND_R_PLATE and BEND_R_LIP for the
@@ -183,13 +184,6 @@ export const STEP_EAR_DROP = 1 * inch;             // ear's straight part, from 
 export const STEP_AXLE_X0 = 11.87 * inch;          // back end is the hook pin, through the keyhole
 export const STEP_AXLE_X1 = 17.86 * inch;          // 152.1 mm (5.99) long
 
-// ---------------------------------------------------------------------------
-// Fold check
-// ---------------------------------------------------------------------------
-// 0 degrees = open and in use, 90 degrees = folded flat against the cabinet.
-// The treads, outer rail, step clip and outer axles move; the rest stays put.
-export const FOLD_ANGLE = 0 * degree;
-
 // ===========================================================================
 // B3_Lib.fs
 // ===========================================================================
@@ -239,44 +233,123 @@ export function b3EarRanges(n is number) returns array
     return [[f[0], f[0] + PLATE_T], [f[1] - PLATE_T, f[1]]];
 }
 
-export function b3CabAxle(n is number) returns Vector
+// ---------------------------------------------------------------------------
+// Page coordinates to Onshape
+// ---------------------------------------------------------------------------
+// The page's x, y, z are a left-handed set as installed (facing the bed-end
+// wall, the cabinet is on the right), so the page's y runs along Onshape's -Y.
+// Every helper below takes page coordinates.
+export function b3V(p is Vector) returns Vector
 {
-    return vector(b3GoingX(n), CAB_AXLE_Y, b3T(n) - CAB_AXLE_DROP);
+    return vector(p[0], -p[1], p[2]);
 }
 
 // ---------------------------------------------------------------------------
-// Fold transforms (FOLD_ANGLE: 0 = open, 90 degrees = folded)
+// Mate connectors
 // ---------------------------------------------------------------------------
-// Each tread turns about its cabinet axle; the outer edge swings up toward the panel.
-export function b3TreadFold(n is number) returns Transform
+// Joints between parts, in page coordinates: each is the frame where two
+// parts' mate connectors meet when the stair is open. Pivot and axle frames
+// have z along -x (toward the bed end) and x along y.
+export function b3Joint(origin is Vector, zAxis is Vector, xAxis is Vector) returns map
 {
-    return rotationAround(line(b3CabAxle(n), vector(1, 0, 0)), FOLD_ANGLE);
+    return { "origin" : origin, "zAxis" : zAxis, "xAxis" : xAxis };
 }
 
-// The treads and rail form a parallelogram, so the rail, its clip and the
-// outer axles translate without turning.
-export function b3RailFold() returns Transform
+export function b3AxleJoint(x is ValueWithUnits, y is ValueWithUnits, z is ValueWithUnits) returns map
 {
-    const vy = OUT_AXLE_Y - CAB_AXLE_Y;
-    const vz = CAB_AXLE_DROP - OUT_AXLE_DROP;
-    const c = cos(FOLD_ANGLE);
-    const s = sin(FOLD_ANGLE);
-    return transform(vector(0 * inch, vy * c - vz * s - vy, vz * c + vy * s - vz));
+    return b3Joint(vector(x, y, z), vector(-1, 0, 0), vector(0, 1, 0));
+}
+
+// On the panel face (z out into the room, x along the cabinet).
+export function b3PanelJoint(x is ValueWithUnits, z is ValueWithUnits) returns map
+{
+    return b3Joint(vector(x, 0 * inch, z), vector(0, 1, 0), vector(1, 0, 0));
+}
+
+// Tread n's cabinet and outer axles, at the axle's bed-end tip.
+export function b3CabAxleJoint(n is number) returns map
+{
+    return b3AxleJoint(b3GoingX(n) + TREAD_AXLE_X0, CAB_AXLE_Y, b3T(n) - CAB_AXLE_DROP);
+}
+
+export function b3OutAxleJoint(n is number) returns map
+{
+    return b3AxleJoint(b3GoingX(n) + TREAD_AXLE_X0, OUT_AXLE_Y, b3T(n) - OUT_AXLE_DROP);
+}
+
+// Bracket n on the panel: the web's bottom corner at the bed end.
+export function b3BracketJoint(n is number) returns map
+{
+    return b3PanelJoint(b3EarFaces(n)[0], b3T(n) - BRACKET_TOP_DROP - BRACKET_H);
+}
+
+// Front angle on the panel: its bottom front corner.
+export function b3FrontAngleJoint() returns map
+{
+    return b3PanelJoint(FA_X1, FA_BOTTOM_Z);
+}
+
+// Step ledge on the panel: the leg's bottom corner at the bed end.
+export function b3StepLedgeJoint() returns map
+{
+    return b3PanelJoint(0 * inch, LEDGE_TOP_Z - LEDGE_LEG_H);
+}
+
+// Tread n's stop pins, on the bracket ear's inside face, z along the pin.
+export function b3StopPinJoint(n is number, front is boolean) returns map
+{
+    const r = b3EarRanges(n);
+    const p = vector(front ? r[1][0] : r[0][1], STOP_PIN_Y, b3T(n) - STOP_PIN_DROP);
+    return b3Joint(p, vector(front ? 1 : -1, 0, 0), vector(0, 1, 0));
+}
+
+// Step clip on the rail's inner face, at the clip's bottom corner on the bed-end side.
+export function b3StepClipJoint() returns map
+{
+    return b3Joint(vector(CLIP_X0, RAIL_Y, CLIP_Z0), vector(0, -1, 0), vector(1, 0, 0));
+}
+
+export function b3StepCabAxleJoint() returns map
+{
+    return b3AxleJoint(STEP_AXLE_X0, STEP_CAB_AXLE_Y, STEP_CAB_AXLE_Z);
+}
+
+export function b3StepOutAxleJoint() returns map
+{
+    return b3AxleJoint(STEP_AXLE_X0, STEP_OUT_AXLE_Y, STEP_OUT_AXLE_Z);
+}
+
+// A mate connector named mcName on the part partName (the bodies in owner),
+// at a joint. The assembly script finds it by its "b3Mc" attribute; an
+// assembly mate names it by its id, joined with dots.
+export function b3Mc(context is Context, id is Id, owner is Query, partName is string, mcName is string, joint is map)
+{
+    opMateConnector(context, id, {
+                "coordSystem" : coordSystem(b3V(joint.origin), b3V(joint.xAxis), b3V(joint.zAxis)),
+                "owner" : owner
+            });
+    var fullId = id[0];
+    for (var i = 1; i < size(id); i += 1)
+    {
+        fullId = fullId ~ "." ~ id[i];
+    }
+    setAttribute(context, { "entities" : qCreatedBy(id, EntityType.BODY), "name" : "b3Mc",
+                "attribute" : { "part" : partName, "name" : mcName, "featureId" : fullId } });
 }
 
 // ---------------------------------------------------------------------------
 // Sketch planes and prisms
 // ---------------------------------------------------------------------------
-// Sketch (u, v) = (y, z), extruded along +x.
+// Sketch (u, v) = (y, z), extruded along -x.
 export function b3PlaneYZ(x is ValueWithUnits) returns Plane
 {
-    return plane(vector(x, 0 * inch, 0 * inch), vector(1, 0, 0), vector(0, 1, 0));
+    return plane(b3V(vector(x, 0 * inch, 0 * inch)), vector(-1, 0, 0), b3V(vector(0, 1, 0)));
 }
 
-// Sketch (u, v) = (x, z), extruded along -y.
+// Sketch (u, v) = (x, z), extruded along +y.
 export function b3PlaneXZ(y is ValueWithUnits) returns Plane
 {
-    return plane(vector(0 * inch, y, 0 * inch), vector(0, -1, 0), vector(1, 0, 0));
+    return plane(b3V(vector(0 * inch, y, 0 * inch)), b3V(vector(0, 1, 0)), vector(1, 0, 0));
 }
 
 // Closed loop through 2D points. An entry {"mid" : p, "end" : q} draws an arc
@@ -333,25 +406,25 @@ export function b3Prism(context is Context, id is Id, frame is Plane, path is ar
 // Outline in (y, z), from x0 to x1.
 export function b3PrismYZ(context is Context, id is Id, path is array, holes is array, x0 is ValueWithUnits, x1 is ValueWithUnits)
 {
-    b3Prism(context, id, b3PlaneYZ(x0), path, holes, x1 - x0);
+    b3Prism(context, id, b3PlaneYZ(x1), path, holes, x1 - x0);
 }
 
 // Outline in (x, z), from y0 to y1.
 export function b3PrismXZ(context is Context, id is Id, path is array, holes is array, y0 is ValueWithUnits, y1 is ValueWithUnits)
 {
-    b3Prism(context, id, b3PlaneXZ(y1), path, holes, y1 - y0);
+    b3Prism(context, id, b3PlaneXZ(y0), path, holes, y1 - y0);
 }
 
 export function b3Box(context is Context, id is Id, lo is Vector, hi is Vector)
 {
-    fCuboid(context, id, { "corner1" : lo, "corner2" : hi });
+    fCuboid(context, id, { "corner1" : b3V(lo), "corner2" : b3V(hi) });
 }
 
 // Cylinder along x.
 export function b3CylX(context is Context, id is Id, y is ValueWithUnits, z is ValueWithUnits,
     x0 is ValueWithUnits, x1 is ValueWithUnits, dia is ValueWithUnits)
 {
-    fCylinder(context, id, { "bottomCenter" : vector(x0, y, z), "topCenter" : vector(x1, y, z), "radius" : dia / 2 });
+    fCylinder(context, id, { "bottomCenter" : b3V(vector(x0, y, z)), "topCenter" : b3V(vector(x1, y, z)), "radius" : dia / 2 });
 }
 
 // Tube along x, x0 < x1, with a bore.
@@ -503,8 +576,10 @@ function b3Part(context is Context, bodies is Query, partName is string, mat is 
 /*
  * B3 Reference: simple blocks for the surroundings, to check clearances.
  * The cabinet with its side panel, the bed-end wall, the mattress, the cab
- * door handle and the floor. Their names start with "REF"; hide them or
- * leave them out of exports.
+ * door handle and the floor. Their names start with "REF". Add this feature
+ * in a Part Studio of its own ("Surroundings"), so the stair's Part Studio
+ * holds only the parts to make. The cabinet carries the mate connectors for
+ * the brackets, the front angle and the step ledge.
  */
 annotation { "Feature Type Name" : "B3 Reference" }
 export const b3Reference = defineFeature(function(context is Context, id is Id, definition is map)
@@ -519,6 +594,12 @@ export const b3Reference = defineFeature(function(context is Context, id is Id, 
         b3Ref(context, id + "wall", vector(wallX - 1 * inch, 0 * inch, 0 * inch), vector(wallX, far, BED_PLATFORM_Z), "REF bed-end wall");
         b3Ref(context, id + "mattress", vector(-far, -CABINET_WIDTH, BED_PLATFORM_Z), vector(wallX, far, BED_PLATFORM_Z + MATTRESS_THICK), "REF mattress");
         b3Ref(context, id + "handle", vector(wallX, HANDLE_Y, HANDLE_Z - 0.5 * inch), vector(wallX + HANDLE_PROJECTION, HANDLE_Y + 4 * inch, HANDLE_Z + 0.5 * inch), "REF door handle");
+
+        const cabinet = b3Solids(id + "cabinet");
+        b3Mc(context, id + "mcBracketTop", cabinet, "REF cabinet", "Bracket, top tread", b3BracketJoint(TREAD_TOP));
+        b3Mc(context, id + "mcBracketMiddle", cabinet, "REF cabinet", "Bracket, middle tread", b3BracketJoint(TREAD_MIDDLE));
+        b3Mc(context, id + "mcFrontAngle", cabinet, "REF cabinet", "Front angle", b3FrontAngleJoint());
+        b3Mc(context, id + "mcLedge", cabinet, "REF cabinet", "Step ledge", b3StepLedgeJoint());
     });
 
 function b3Ref(context is Context, id is Id, lo is Vector, hi is Vector, partName is string)
@@ -533,84 +614,83 @@ function b3Ref(context is Context, id is Id, lo is Vector, hi is Vector, partNam
 // B3_Treads.fs
 // ===========================================================================
 /*
- * B3 Treads (2), 1/8" sheet: 18 x 5 5/8 skin with 2" lips bent down at the
- * x ends, bushing holes through both lips for the cabinet and outer axles,
+ * B3 Tread, 1/8" sheet: 18 x 5 5/8 skin with 2" lips bent down at the x
+ * ends, bushing holes through both lips for the cabinet and outer axles,
  * and a 1/2" radius on each lip's bottom outer corner to clear the rail.
- * Follows FOLD_ANGLE.
+ * The stair uses it twice; it is built once, where the top tread sits, and
+ * the assembly places both.
  */
-annotation { "Feature Type Name" : "B3 Treads" }
+annotation { "Feature Type Name" : "B3 Tread" }
 export const b3Treads = defineFeature(function(context is Context, id is Id, definition is map)
     precondition
     {
     }
     {
-        b3Tread(context, id + "top", TREAD_TOP, "Top tread");
-        b3Tread(context, id + "middle", TREAD_MIDDLE, "Middle tread");
+        const n = TREAD_TOP;
+        const top = b3T(n);
+        const holes = [
+                b3Hole(CAB_AXLE_Y, top - CAB_AXLE_DROP, HOLE_DIA),
+                b3Hole(OUT_AXLE_Y, top - OUT_AXLE_DROP, HOLE_DIA)
+            ];
+        b3Tray(context, id + "tray", b3GoingX(n) + TRAY_INSET, top, holes, LIP_CORNER_R);
+
+        const body = b3Solids(id + "tray");
+        b3Finish(context, body, "Tread", RGB_ALU);
+        b3Mc(context, id + "mcCab", body, "Tread", "Cabinet axle", b3CabAxleJoint(n));
+        b3Mc(context, id + "mcOut", body, "Tread", "Outer axle", b3OutAxleJoint(n));
     });
-
-function b3Tread(context is Context, id is Id, n is number, partName is string)
-{
-    const top = b3T(n);
-    const holes = [
-            b3Hole(CAB_AXLE_Y, top - CAB_AXLE_DROP, HOLE_DIA),
-            b3Hole(OUT_AXLE_Y, top - OUT_AXLE_DROP, HOLE_DIA)
-        ];
-    b3Tray(context, id, b3GoingX(n) + TRAY_INSET, top, holes, LIP_CORNER_R);
-
-    const body = b3Solids(id);
-    opTransform(context, id + "fold", { "bodies" : body, "transform" : b3TreadFold(n) });
-    b3Finish(context, body, partName, RGB_ALU);
-}
 
 // ===========================================================================
 // B3_Brackets.fs
 // ===========================================================================
 /*
- * B3 Cabinet Brackets (2), 3/16" sheet. The 5 1/8 x 2 web sits flat on the
+ * B3 Cabinet Bracket, 3/16" sheet. The 5 1/8 x 2 web sits flat on the
  * panel with four M6 holes (countersinks not modeled); a hook-shaped ear is
  * bent 90 degrees toward the room at each end to carry the tread's cabinet
- * axle and its stop pin.
+ * axle and its stop pin. The stair uses it twice; it is built once, where
+ * the top tread's bracket sits.
  */
-annotation { "Feature Type Name" : "B3 Cabinet Brackets" }
+annotation { "Feature Type Name" : "B3 Cabinet Bracket" }
 export const b3CabinetBrackets = defineFeature(function(context is Context, id is Id, definition is map)
     precondition
     {
     }
     {
-        b3Bracket(context, id + "top", TREAD_TOP, "Bracket, top tread");
-        b3Bracket(context, id + "middle", TREAD_MIDDLE, "Bracket, middle tread");
+        const n = TREAD_TOP;
+        const top = b3T(n);
+        const xg = b3GoingX(n);
+        const faces = b3EarFaces(n);
+        const webTop = top - BRACKET_TOP_DROP;
+        const webBot = webTop - BRACKET_H;
+
+        // Web, flat on the panel, with the screw row.
+        var screws = [];
+        for (var k = 0; k < size(SCREW_X); k += 1)
+        {
+            screws = append(screws, b3Hole(xg + SCREW_X[k], top - SCREW_DROP, SCREW_HOLE_DIA));
+        }
+        b3PrismXZ(context, id + "web", b3Rect(faces[0], webBot, faces[1], webTop), screws, 0 * inch, PLATE_T);
+
+        // Ears, in (y, z).
+        const axZ = top - CAB_AXLE_DROP;
+        const ear = b3EarOutline(0 * inch, PLATE_T + EAR_W, PLATE_T + HOOK_U0, webBot, webTop, CAB_AXLE_Y, axZ);
+        const earHoles = [
+                b3Hole(CAB_AXLE_Y, axZ, HOLE_DIA),
+                b3Hole(STOP_PIN_Y, top - STOP_PIN_DROP, STOP_PIN_DIA)
+            ];
+        const ranges = b3EarRanges(n);
+        b3PrismYZ(context, id + "earBack", ear, earHoles, ranges[0][0], ranges[0][1]);
+        b3PrismYZ(context, id + "earFront", ear, earHoles, ranges[1][0], ranges[1][1]);
+
+        b3Union(context, id + "join", b3Solids(id));
+        const body = b3Solids(id);
+        const name = "Cabinet bracket";
+        b3Finish(context, body, name, RGB_ALU_DARK);
+        b3Mc(context, id + "mcCabinet", body, name, "Cabinet", b3BracketJoint(n));
+        b3Mc(context, id + "mcAxle", body, name, "Axle", b3CabAxleJoint(n));
+        b3Mc(context, id + "mcPinBack", body, name, "Stop pin, back", b3StopPinJoint(n, false));
+        b3Mc(context, id + "mcPinFront", body, name, "Stop pin, front", b3StopPinJoint(n, true));
     });
-
-function b3Bracket(context is Context, id is Id, n is number, partName is string)
-{
-    const top = b3T(n);
-    const xg = b3GoingX(n);
-    const faces = b3EarFaces(n);
-    const webTop = top - BRACKET_TOP_DROP;
-    const webBot = webTop - BRACKET_H;
-
-    // Web, flat on the panel, with the screw row.
-    var screws = [];
-    for (var k = 0; k < size(SCREW_X); k += 1)
-    {
-        screws = append(screws, b3Hole(xg + SCREW_X[k], top - SCREW_DROP, SCREW_HOLE_DIA));
-    }
-    b3PrismXZ(context, id + "web", b3Rect(faces[0], webBot, faces[1], webTop), screws, 0 * inch, PLATE_T);
-
-    // Ears, in (y, z).
-    const axZ = top - CAB_AXLE_DROP;
-    const ear = b3EarOutline(0 * inch, PLATE_T + EAR_W, PLATE_T + HOOK_U0, webBot, webTop, CAB_AXLE_Y, axZ);
-    const earHoles = [
-            b3Hole(CAB_AXLE_Y, axZ, HOLE_DIA),
-            b3Hole(STOP_PIN_Y, top - STOP_PIN_DROP, STOP_PIN_DIA)
-        ];
-    const ranges = b3EarRanges(n);
-    b3PrismYZ(context, id + "earBack", ear, earHoles, ranges[0][0], ranges[0][1]);
-    b3PrismYZ(context, id + "earFront", ear, earHoles, ranges[1][0], ranges[1][1]);
-
-    b3Union(context, id + "join", b3Solids(id));
-    b3Finish(context, b3Solids(id), partName, RGB_ALU_DARK);
-}
 
 // ===========================================================================
 // B3_OuterRail.fs
@@ -621,7 +701,6 @@ function b3Bracket(context is Context, id is Id, n is number, partName is string
  * bed-side, cut-back, bottom, foot and front edges, a hand slot, the step
  * clip's rivet holes, and two hook-shaped pivot ears per tread bent toward
  * the cabinet. The bed-side and front flanges stop short of the ears.
- * Follows FOLD_ANGLE.
  *
  * Not modeled: bend reliefs, the notches left where the ear tabs are cut,
  * and the latch holes.
@@ -692,8 +771,11 @@ export const b3OuterRail = defineFeature(function(context is Context, id is Id, 
 
         b3Union(context, id + "join", b3Solids(id));
         const rail = b3Solids(id);
-        opTransform(context, id + "fold", { "bodies" : rail, "transform" : b3RailFold() });
-        b3Finish(context, rail, "Outer rail", RGB_ALU);
+        const name = "Outer rail";
+        b3Finish(context, rail, name, RGB_ALU);
+        b3Mc(context, id + "mcTop", rail, name, "Top tread axle", b3OutAxleJoint(TREAD_TOP));
+        b3Mc(context, id + "mcMiddle", rail, name, "Middle tread axle", b3OutAxleJoint(TREAD_MIDDLE));
+        b3Mc(context, id + "mcClip", rail, name, "Step clip", b3StepClipJoint());
     });
 
 // Two hook-shaped ears at tread n, bent toward the cabinet, in (y, z).
@@ -715,7 +797,7 @@ function b3RailEars(context is Context, id is Id, n is number)
 /*
  * B3 Step Clip, 1/8" sheet: small angle riveted inside the outer rail. Its
  * keyhole takes the hook pin on the back end of the hook-on step's outer
- * leg axle. Moves with the rail, so it follows FOLD_ANGLE.
+ * leg axle.
  */
 annotation { "Feature Type Name" : "B3 Step Clip" }
 export const b3StepClip = defineFeature(function(context is Context, id is Id, definition is map)
@@ -741,20 +823,24 @@ export const b3StepClip = defineFeature(function(context is Context, id is Id, d
 
         b3Union(context, id + "join", b3Solids(id));
         const clip = b3Solids(id);
-        opTransform(context, id + "fold", { "bodies" : clip, "transform" : b3RailFold() });
         b3Finish(context, clip, "Step clip", RGB_ALU_DARK);
+        b3Mc(context, id + "mcRail", clip, "Step clip", "Outer rail", b3StepClipJoint());
     });
 
 // ===========================================================================
 // B3_PivotHardware.fs
 // ===========================================================================
 /*
- * B3 Pivot Hardware: the four tread axles and the two hook-on step axles
- * (their back ends are the hook pins), all 12 mm aluminum tube with a 5 mm
- * bore, each end capped by an M6 fender washer and button-head screw, plus
- * the four 3/16" stop pins, for checking fit and folded clearances.
- * Bushings, thrust washers and wave washers aren't modeled. The outer tread
- * axles and their screws follow FOLD_ANGLE.
+ * B3 Pivot Hardware, one of each part, for checking fit and folded
+ * clearances in the assembly:
+ *   Tread axle (4 used) and step axle (2 used; the back end is the hook
+ *   pin), 12 mm aluminum tube with a 5 mm bore tapped M6 at both ends.
+ *   M6 fender washer and M6 button-head screw (12 each, one on each axle end).
+ *   Stop pin (4 used), 3/16" pin through each bracket ear.
+ * Each is built where its first use sits: the top tread's cabinet axle, the
+ * step's cabinet-side axle, the washer and screw on the top tread's cabinet
+ * axle at the bed end, and the top bracket's back stop pin.
+ * Bushings, thrust washers and wave washers aren't modeled.
  */
 annotation { "Feature Type Name" : "B3 Pivot Hardware" }
 export const b3PivotHardware = defineFeature(function(context is Context, id is Id, definition is map)
@@ -762,53 +848,45 @@ export const b3PivotHardware = defineFeature(function(context is Context, id is 
     {
     }
     {
-        b3TreadHardware(context, id + "top", TREAD_TOP, "top");
-        b3TreadHardware(context, id + "middle", TREAD_MIDDLE, "middle");
+        const tread = b3CabAxleJoint(TREAD_TOP);
+        b3Axle(context, id + "treadAxle", tread, TREAD_AXLE_LEN, "Tread axle");
+        b3Axle(context, id + "stepAxle", b3StepCabAxleJoint(), STEP_AXLE_X1 - STEP_AXLE_X0, "Step axle");
 
-        b3Axle(context, id + "stepCab", STEP_CAB_AXLE_Y, STEP_CAB_AXLE_Z, STEP_AXLE_X0, STEP_AXLE_X1, "step, cabinet side");
-        b3Axle(context, id + "stepOut", STEP_OUT_AXLE_Y, STEP_OUT_AXLE_Z, STEP_AXLE_X0, STEP_AXLE_X1, "step, outer");
+        // Washer and screw head, stacked out from the axle's bed-end tip.
+        const p = tread.origin;
+        const x0 = p[0];
+        const w = x0 - END_WASHER_T;
+        b3CylX(context, id + "washer", p[1], p[2], w, x0, END_WASHER_DIA);
+        const washer = b3Solids(id + "washer");
+        b3FinishSteel(context, washer, "M6 fender washer");
+        b3Mc(context, id + "mcWasherAxle", washer, "M6 fender washer", "Axle", tread);
+        const under = b3AxleJoint(w, p[1], p[2]);
+        b3Mc(context, id + "mcWasherScrew", washer, "M6 fender washer", "Screw", under);
+
+        b3CylX(context, id + "screw", p[1], p[2], w - END_HEAD_H, w, END_HEAD_DIA);
+        const screw = b3Solids(id + "screw");
+        b3FinishSteel(context, screw, "M6 button-head screw");
+        b3Mc(context, id + "mcScrew", screw, "M6 button-head screw", "Washer", under);
+
+        // Stop pin: flush with the bracket ear's inside face, sticking out under the lip.
+        const pin = b3StopPinJoint(TREAD_TOP, false);
+        const q = pin.origin;
+        b3CylX(context, id + "pin", q[1], q[2], q[0] - PLATE_T - STOP_PIN_OUT, q[0], STOP_PIN_DIA);
+        b3FinishSteel(context, b3Solids(id + "pin"), "Stop pin");
+        b3Mc(context, id + "mcPin", b3Solids(id + "pin"), "Stop pin", "Bracket", pin);
     });
 
-function b3TreadHardware(context is Context, id is Id, n is number, label is string)
+// A tube axle of length len from the joint at its bed-end tip, with a mate
+// connector on each tip pointing out of the tube.
+function b3Axle(context is Context, id is Id, tip is map, len is ValueWithUnits, partName is string)
 {
-    const top = b3T(n);
-    const x0 = b3GoingX(n) + TREAD_AXLE_X0;
-    const x1 = x0 + TREAD_AXLE_LEN;
-
-    b3Axle(context, id + "cabAxle", CAB_AXLE_Y, top - CAB_AXLE_DROP, x0, x1, "cabinet, " ~ label);
-
-    b3Axle(context, id + "outAxle", OUT_AXLE_Y, top - OUT_AXLE_DROP, x0, x1, "outer, " ~ label);
-    opTransform(context, id + "fold", { "bodies" : b3Solids(id + "outAxle"), "transform" : b3RailFold() });
-
-    // Stop pins: flush with each bracket ear's inside face, sticking out under the lip.
-    const ranges = b3EarRanges(n);
-    const pz = top - STOP_PIN_DROP;
-    b3CylX(context, id + "pinBack", STOP_PIN_Y, pz, ranges[0][0] - STOP_PIN_OUT, ranges[0][1], STOP_PIN_DIA);
-    b3CylX(context, id + "pinFront", STOP_PIN_Y, pz, ranges[1][0], ranges[1][1] + STOP_PIN_OUT, STOP_PIN_DIA);
-    b3FinishSteel(context, b3Solids(id + "pinBack"), "Stop pin, back, " ~ label);
-    b3FinishSteel(context, b3Solids(id + "pinFront"), "Stop pin, front, " ~ label);
-}
-
-// One axle from x0 to x1: the tube, then a fender washer and button head on each end.
-function b3Axle(context is Context, id is Id, y is ValueWithUnits, z is ValueWithUnits,
-    x0 is ValueWithUnits, x1 is ValueWithUnits, label is string)
-{
-    b3TubeX(context, id + "tube", y, z, x0, x1, AXLE_DIA, AXLE_BORE);
-    b3FinishTube(context, b3Solids(id + "tube"), "Axle, " ~ label);
-    b3AxleEnd(context, id + "back", y, z, x0, -1, "Axle screw, " ~ label ~ ", back");
-    b3AxleEnd(context, id + "front", y, z, x1, 1, "Axle screw, " ~ label ~ ", front");
-}
-
-// Fender washer and button head as one part, stacked outward from the tube end at x
-// (dir -1 toward the bed end, 1 toward the front).
-function b3AxleEnd(context is Context, id is Id, y is ValueWithUnits, z is ValueWithUnits, x is ValueWithUnits,
-    dir is number, partName is string)
-{
-    const w = x + dir * END_WASHER_T;
-    b3CylX(context, id + "washer", y, z, x, w, END_WASHER_DIA);
-    b3CylX(context, id + "head", y, z, w, w + dir * END_HEAD_H, END_HEAD_DIA);
-    b3Union(context, id + "join", b3Solids(id));
-    b3FinishSteel(context, b3Solids(id), partName);
+    const p = tip.origin;
+    b3TubeX(context, id + "tube", p[1], p[2], p[0], p[0] + len, AXLE_DIA, AXLE_BORE);
+    const tube = b3Solids(id + "tube");
+    b3FinishTube(context, tube, partName);
+    b3Mc(context, id + "mcBack", tube, partName, "Back end", tip);
+    b3Mc(context, id + "mcFront", tube, partName, "Front end",
+        b3Joint(vector(p[0] + len, p[1], p[2]), vector(1, 0, 0), vector(0, 1, 0)));
 }
 
 // ===========================================================================
@@ -838,7 +916,11 @@ export const b3FrontAngle = defineFeature(function(context is Context, id is Id,
             [b3Keyhole(FA_KEYHOLE_Y, FA_KEYHOLE_Z, FA_KEYHOLE_END_Z)], FA_X1 - SHEET_T, FA_X1);
 
         b3Union(context, id + "join", b3Solids(id));
-        b3Finish(context, b3Solids(id), "Front angle", RGB_ALU_DARK);
+        const body = b3Solids(id);
+        const name = "Front angle";
+        b3Finish(context, body, name, RGB_ALU_DARK);
+        b3Mc(context, id + "mcCabinet", body, name, "Cabinet", b3FrontAngleJoint());
+        b3Mc(context, id + "mcStep", body, name, "Hook-on step", b3StepCabAxleJoint());
     });
 
 // ===========================================================================
@@ -866,7 +948,9 @@ export const b3StepLedge = defineFeature(function(context is Context, id is Id, 
         b3PrismXZ(context, id + "leg", b3Rect(0 * inch, top - LEDGE_LEG_H, LEDGE_LEN, top), screws, 0 * inch, SHEET_T);
 
         b3Union(context, id + "join", b3Solids(id));
-        b3Finish(context, b3Solids(id), "Step ledge", RGB_ALU_DARK);
+        const body = b3Solids(id);
+        b3Finish(context, body, "Step ledge", RGB_ALU_DARK);
+        b3Mc(context, id + "mcCabinet", body, "Step ledge", "Cabinet", b3StepLedgeJoint());
     });
 
 // ===========================================================================
@@ -892,24 +976,30 @@ export const b3HookOnStep = defineFeature(function(context is Context, id is Id,
                 b3Hole(STEP_OUT_AXLE_Y, STEP_OUT_AXLE_Z, HOLE_DIA)
             ];
         b3Tray(context, id + "tray", b3GoingX(HOOK_STEP) + TRAY_INSET, top, holes, 0 * inch);
-        b3Finish(context, b3Solids(id + "tray"), "Hook-on step tray", RGB_STEP);
+        const tray = b3Solids(id + "tray");
+        const name = "Hook-on step tray";
+        b3Finish(context, tray, name, RGB_STEP);
+        b3Mc(context, id + "mcCab", tray, name, "Cabinet-side axle", b3StepCabAxleJoint());
+        b3Mc(context, id + "mcOut", tray, name, "Outer axle", b3StepOutAxleJoint());
 
         // Cabinet-side leg: web y 3/8 to 9/16, ears reach toward +y.
         const cabIn = STEP_LEG_CAB_Y0 + PLATE_T;
         b3StepLeg(context, id + "cabLeg", STEP_LEG_CAB_Y0, cabIn, cabIn + STEP_EAR_W,
-            STEP_CAB_AXLE_Y - EAR_HOOK_R, STEP_CAB_AXLE_Y, STEP_CAB_AXLE_Z, "Hook-on step leg, cabinet side");
+            STEP_CAB_AXLE_Y - EAR_HOOK_R, b3StepCabAxleJoint(), "Hook-on step leg, cabinet side");
 
         // Outer leg: web y 18 3/16 to 18 3/8, ears reach toward -y.
         const outIn = STEP_LEG_OUT_Y1 - PLATE_T;
         b3StepLeg(context, id + "outLeg", STEP_LEG_OUT_Y1, outIn, outIn - STEP_EAR_W,
-            STEP_OUT_AXLE_Y + EAR_HOOK_R, STEP_OUT_AXLE_Y, STEP_OUT_AXLE_Z, "Hook-on step leg, outer");
+            STEP_OUT_AXLE_Y + EAR_HOOK_R, b3StepOutAxleJoint(), "Hook-on step leg, outer");
     });
 
 // One leg. yOut and yIn are the web's faces; the ear runs from the web to
 // yFar below the axle, and its round top ends at yArc on the web side.
 function b3StepLeg(context is Context, id is Id, yOut is ValueWithUnits, yIn is ValueWithUnits, yFar is ValueWithUnits,
-    yArc is ValueWithUnits, axY is ValueWithUnits, axZ is ValueWithUnits, partName is string)
+    yArc is ValueWithUnits, axle is map, partName is string)
 {
+    const axY = axle.origin[1];
+    const axZ = axle.origin[2];
     const faces = b3EarFaces(HOOK_STEP);
     const ylo = min(yOut, yIn);
     const yhi = max(yOut, yIn);
@@ -929,4 +1019,5 @@ function b3StepLeg(context is Context, id is Id, yOut is ValueWithUnits, yIn is 
 
     b3Union(context, id + "join", b3Solids(id));
     b3Finish(context, b3Solids(id), partName, RGB_STEP);
+    b3Mc(context, id + "mcAxle", b3Solids(id), partName, "Axle", axle);
 }

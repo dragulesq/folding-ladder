@@ -52,44 +52,123 @@ export function b3EarRanges(n is number) returns array
     return [[f[0], f[0] + PLATE_T], [f[1] - PLATE_T, f[1]]];
 }
 
-export function b3CabAxle(n is number) returns Vector
+// ---------------------------------------------------------------------------
+// Page coordinates to Onshape
+// ---------------------------------------------------------------------------
+// The page's x, y, z are a left-handed set as installed (facing the bed-end
+// wall, the cabinet is on the right), so the page's y runs along Onshape's -Y.
+// Every helper below takes page coordinates.
+export function b3V(p is Vector) returns Vector
 {
-    return vector(b3GoingX(n), CAB_AXLE_Y, b3T(n) - CAB_AXLE_DROP);
+    return vector(p[0], -p[1], p[2]);
 }
 
 // ---------------------------------------------------------------------------
-// Fold transforms (FOLD_ANGLE: 0 = open, 90 degrees = folded)
+// Mate connectors
 // ---------------------------------------------------------------------------
-// Each tread turns about its cabinet axle; the outer edge swings up toward the panel.
-export function b3TreadFold(n is number) returns Transform
+// Joints between parts, in page coordinates: each is the frame where two
+// parts' mate connectors meet when the stair is open. Pivot and axle frames
+// have z along -x (toward the bed end) and x along y.
+export function b3Joint(origin is Vector, zAxis is Vector, xAxis is Vector) returns map
 {
-    return rotationAround(line(b3CabAxle(n), vector(1, 0, 0)), FOLD_ANGLE);
+    return { "origin" : origin, "zAxis" : zAxis, "xAxis" : xAxis };
 }
 
-// The treads and rail form a parallelogram, so the rail, its clip and the
-// outer axles translate without turning.
-export function b3RailFold() returns Transform
+export function b3AxleJoint(x is ValueWithUnits, y is ValueWithUnits, z is ValueWithUnits) returns map
 {
-    const vy = OUT_AXLE_Y - CAB_AXLE_Y;
-    const vz = CAB_AXLE_DROP - OUT_AXLE_DROP;
-    const c = cos(FOLD_ANGLE);
-    const s = sin(FOLD_ANGLE);
-    return transform(vector(0 * inch, vy * c - vz * s - vy, vz * c + vy * s - vz));
+    return b3Joint(vector(x, y, z), vector(-1, 0, 0), vector(0, 1, 0));
+}
+
+// On the panel face (z out into the room, x along the cabinet).
+export function b3PanelJoint(x is ValueWithUnits, z is ValueWithUnits) returns map
+{
+    return b3Joint(vector(x, 0 * inch, z), vector(0, 1, 0), vector(1, 0, 0));
+}
+
+// Tread n's cabinet and outer axles, at the axle's bed-end tip.
+export function b3CabAxleJoint(n is number) returns map
+{
+    return b3AxleJoint(b3GoingX(n) + TREAD_AXLE_X0, CAB_AXLE_Y, b3T(n) - CAB_AXLE_DROP);
+}
+
+export function b3OutAxleJoint(n is number) returns map
+{
+    return b3AxleJoint(b3GoingX(n) + TREAD_AXLE_X0, OUT_AXLE_Y, b3T(n) - OUT_AXLE_DROP);
+}
+
+// Bracket n on the panel: the web's bottom corner at the bed end.
+export function b3BracketJoint(n is number) returns map
+{
+    return b3PanelJoint(b3EarFaces(n)[0], b3T(n) - BRACKET_TOP_DROP - BRACKET_H);
+}
+
+// Front angle on the panel: its bottom front corner.
+export function b3FrontAngleJoint() returns map
+{
+    return b3PanelJoint(FA_X1, FA_BOTTOM_Z);
+}
+
+// Step ledge on the panel: the leg's bottom corner at the bed end.
+export function b3StepLedgeJoint() returns map
+{
+    return b3PanelJoint(0 * inch, LEDGE_TOP_Z - LEDGE_LEG_H);
+}
+
+// Tread n's stop pins, on the bracket ear's inside face, z along the pin.
+export function b3StopPinJoint(n is number, front is boolean) returns map
+{
+    const r = b3EarRanges(n);
+    const p = vector(front ? r[1][0] : r[0][1], STOP_PIN_Y, b3T(n) - STOP_PIN_DROP);
+    return b3Joint(p, vector(front ? 1 : -1, 0, 0), vector(0, 1, 0));
+}
+
+// Step clip on the rail's inner face, at the clip's bottom corner on the bed-end side.
+export function b3StepClipJoint() returns map
+{
+    return b3Joint(vector(CLIP_X0, RAIL_Y, CLIP_Z0), vector(0, -1, 0), vector(1, 0, 0));
+}
+
+export function b3StepCabAxleJoint() returns map
+{
+    return b3AxleJoint(STEP_AXLE_X0, STEP_CAB_AXLE_Y, STEP_CAB_AXLE_Z);
+}
+
+export function b3StepOutAxleJoint() returns map
+{
+    return b3AxleJoint(STEP_AXLE_X0, STEP_OUT_AXLE_Y, STEP_OUT_AXLE_Z);
+}
+
+// A mate connector named mcName on the part partName (the bodies in owner),
+// at a joint. The assembly script finds it by its "b3Mc" attribute; an
+// assembly mate names it by its id, joined with dots.
+export function b3Mc(context is Context, id is Id, owner is Query, partName is string, mcName is string, joint is map)
+{
+    opMateConnector(context, id, {
+                "coordSystem" : coordSystem(b3V(joint.origin), b3V(joint.xAxis), b3V(joint.zAxis)),
+                "owner" : owner
+            });
+    var fullId = id[0];
+    for (var i = 1; i < size(id); i += 1)
+    {
+        fullId = fullId ~ "." ~ id[i];
+    }
+    setAttribute(context, { "entities" : qCreatedBy(id, EntityType.BODY), "name" : "b3Mc",
+                "attribute" : { "part" : partName, "name" : mcName, "featureId" : fullId } });
 }
 
 // ---------------------------------------------------------------------------
 // Sketch planes and prisms
 // ---------------------------------------------------------------------------
-// Sketch (u, v) = (y, z), extruded along +x.
+// Sketch (u, v) = (y, z), extruded along -x.
 export function b3PlaneYZ(x is ValueWithUnits) returns Plane
 {
-    return plane(vector(x, 0 * inch, 0 * inch), vector(1, 0, 0), vector(0, 1, 0));
+    return plane(b3V(vector(x, 0 * inch, 0 * inch)), vector(-1, 0, 0), b3V(vector(0, 1, 0)));
 }
 
-// Sketch (u, v) = (x, z), extruded along -y.
+// Sketch (u, v) = (x, z), extruded along +y.
 export function b3PlaneXZ(y is ValueWithUnits) returns Plane
 {
-    return plane(vector(0 * inch, y, 0 * inch), vector(0, -1, 0), vector(1, 0, 0));
+    return plane(b3V(vector(0 * inch, y, 0 * inch)), b3V(vector(0, 1, 0)), vector(1, 0, 0));
 }
 
 // Closed loop through 2D points. An entry {"mid" : p, "end" : q} draws an arc
@@ -146,25 +225,25 @@ export function b3Prism(context is Context, id is Id, frame is Plane, path is ar
 // Outline in (y, z), from x0 to x1.
 export function b3PrismYZ(context is Context, id is Id, path is array, holes is array, x0 is ValueWithUnits, x1 is ValueWithUnits)
 {
-    b3Prism(context, id, b3PlaneYZ(x0), path, holes, x1 - x0);
+    b3Prism(context, id, b3PlaneYZ(x1), path, holes, x1 - x0);
 }
 
 // Outline in (x, z), from y0 to y1.
 export function b3PrismXZ(context is Context, id is Id, path is array, holes is array, y0 is ValueWithUnits, y1 is ValueWithUnits)
 {
-    b3Prism(context, id, b3PlaneXZ(y1), path, holes, y1 - y0);
+    b3Prism(context, id, b3PlaneXZ(y0), path, holes, y1 - y0);
 }
 
 export function b3Box(context is Context, id is Id, lo is Vector, hi is Vector)
 {
-    fCuboid(context, id, { "corner1" : lo, "corner2" : hi });
+    fCuboid(context, id, { "corner1" : b3V(lo), "corner2" : b3V(hi) });
 }
 
 // Cylinder along x.
 export function b3CylX(context is Context, id is Id, y is ValueWithUnits, z is ValueWithUnits,
     x0 is ValueWithUnits, x1 is ValueWithUnits, dia is ValueWithUnits)
 {
-    fCylinder(context, id, { "bottomCenter" : vector(x0, y, z), "topCenter" : vector(x1, y, z), "radius" : dia / 2 });
+    fCylinder(context, id, { "bottomCenter" : b3V(vector(x0, y, z)), "topCenter" : b3V(vector(x1, y, z)), "radius" : dia / 2 });
 }
 
 // Tube along x, x0 < x1, with a bore.

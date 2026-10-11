@@ -9,8 +9,10 @@ import(path : "onshape/std/common.fs", version : "2641.0");
 /*
  * B3 Reference: simple blocks for the surroundings, to check clearances.
  * The cabinet with its side panel, the bed-end wall, the mattress, the cab
- * door handle and the floor. Their names start with "REF"; hide them or
- * leave them out of exports.
+ * door handle and the floor. Their names start with "REF". Add this feature
+ * in a Part Studio of its own ("Surroundings"), so the stair's Part Studio
+ * holds only the parts to make. The cabinet carries the mate connectors for
+ * the brackets, the front angle and the step ledge.
  */
 annotation { "Feature Type Name" : "B3 Reference" }
 export const b3Reference = defineFeature(function(context is Context, id is Id, definition is map)
@@ -25,6 +27,12 @@ export const b3Reference = defineFeature(function(context is Context, id is Id, 
         b3Ref(context, id + "wall", vector(wallX - 1 * inch, 0 * inch, 0 * inch), vector(wallX, far, BED_PLATFORM_Z), "REF bed-end wall");
         b3Ref(context, id + "mattress", vector(-far, -CABINET_WIDTH, BED_PLATFORM_Z), vector(wallX, far, BED_PLATFORM_Z + MATTRESS_THICK), "REF mattress");
         b3Ref(context, id + "handle", vector(wallX, HANDLE_Y, HANDLE_Z - 0.5 * inch), vector(wallX + HANDLE_PROJECTION, HANDLE_Y + 4 * inch, HANDLE_Z + 0.5 * inch), "REF door handle");
+
+        const cabinet = b3Solids(id + "cabinet");
+        b3Mc(context, id + "mcBracketTop", cabinet, "REF cabinet", "Bracket, top tread", b3BracketJoint(TREAD_TOP));
+        b3Mc(context, id + "mcBracketMiddle", cabinet, "REF cabinet", "Bracket, middle tread", b3BracketJoint(TREAD_MIDDLE));
+        b3Mc(context, id + "mcFrontAngle", cabinet, "REF cabinet", "Front angle", b3FrontAngleJoint());
+        b3Mc(context, id + "mcLedge", cabinet, "REF cabinet", "Step ledge", b3StepLedgeJoint());
     });
 
 function b3Ref(context is Context, id is Id, lo is Vector, hi is Vector, partName is string)

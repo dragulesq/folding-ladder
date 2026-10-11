@@ -12,7 +12,6 @@ import(path : "onshape/std/common.fs", version : "2641.0");
  * bed-side, cut-back, bottom, foot and front edges, a hand slot, the step
  * clip's rivet holes, and two hook-shaped pivot ears per tread bent toward
  * the cabinet. The bed-side and front flanges stop short of the ears.
- * Follows FOLD_ANGLE.
  *
  * Not modeled: bend reliefs, the notches left where the ear tabs are cut,
  * and the latch holes.
@@ -83,8 +82,11 @@ export const b3OuterRail = defineFeature(function(context is Context, id is Id, 
 
         b3Union(context, id + "join", b3Solids(id));
         const rail = b3Solids(id);
-        opTransform(context, id + "fold", { "bodies" : rail, "transform" : b3RailFold() });
-        b3Finish(context, rail, "Outer rail", RGB_ALU);
+        const name = "Outer rail";
+        b3Finish(context, rail, name, RGB_ALU);
+        b3Mc(context, id + "mcTop", rail, name, "Top tread axle", b3OutAxleJoint(TREAD_TOP));
+        b3Mc(context, id + "mcMiddle", rail, name, "Middle tread axle", b3OutAxleJoint(TREAD_MIDDLE));
+        b3Mc(context, id + "mcClip", rail, name, "Step clip", b3StepClipJoint());
     });
 
 // Two hook-shaped ears at tread n, bent toward the cabinet, in (y, z).
