@@ -25,56 +25,35 @@ export const RGB_REF = [0.85, 0.75, 0.57];
 // ---------------------------------------------------------------------------
 // Derived positions
 // ---------------------------------------------------------------------------
-export function b3TreadTopZ(n is number) returns ValueWithUnits
+// Tread top T.
+export function b3T(n is number) returns ValueWithUnits
 {
     return (n + 1) * RISE;
 }
 
-export function b3TreadBackY(n is number) returns ValueWithUnits
+// Start of the tread's going along x: top 0, middle 6, step 12.
+export function b3GoingX(n is number) returns ValueWithUnits
 {
-    return STAIR_Y0 + (2 - n) * TREAD_GOING;
+    return (2 - n) * GOING;
 }
 
-export function b3TreadMidY(n is number) returns ValueWithUnits
+// Outer faces of the two ears in a going (back, front).
+export function b3EarFaces(n is number) returns array
 {
-    return b3TreadBackY(n) + TREAD_GOING / 2;
+    const xg = b3GoingX(n);
+    return [xg + EAR_X0, xg + GOING - EAR_X0];
 }
 
-export function b3StairFrontY() returns ValueWithUnits
+// The two ears' x ranges, each PLATE_T thick inboard of its outer face.
+export function b3EarRanges(n is number) returns array
 {
-    return STAIR_Y0 + 2 * TREAD_GOING;
-}
-
-export function b3TreadX0() returns ValueWithUnits
-{
-    return PANEL_GAP;
-}
-
-export function b3TreadX1() returns ValueWithUnits
-{
-    return PANEL_GAP + TREAD_WIDTH;
-}
-
-// Inner face of the outer rail's plate.
-export function b3RailX0() returns ValueWithUnits
-{
-    return b3TreadX1() + RAIL_CLEAR;
-}
-
-// Hook-on step studs on the outer rail's front flange.
-export function b3OutStudX() returns ValueWithUnits
-{
-    return b3RailX0() + PLATE_T + RAIL_FLANGE / 2;
+    const f = b3EarFaces(n);
+    return [[f[0], f[0] + PLATE_T], [f[1] - PLATE_T, f[1]]];
 }
 
 export function b3CabAxle(n is number) returns Vector
 {
-    return vector(PLATE_T + CAB_AXLE_OUT, b3TreadMidY(n), b3TreadTopZ(n) - CAB_AXLE_DROP);
-}
-
-export function b3OutAxle(n is number) returns Vector
-{
-    return vector(b3RailX0() - OUT_AXLE_IN, b3TreadMidY(n), b3TreadTopZ(n) - OUT_AXLE_DROP);
+    return vector(b3GoingX(n), CAB_AXLE_Y, b3T(n) - CAB_AXLE_DROP);
 }
 
 // ---------------------------------------------------------------------------
@@ -83,41 +62,37 @@ export function b3OutAxle(n is number) returns Vector
 // Each tread turns about its cabinet axle; the outer edge swings up toward the panel.
 export function b3TreadFold(n is number) returns Transform
 {
-    return rotationAround(line(b3CabAxle(n), vector(0, -1, 0)), FOLD_ANGLE);
+    return rotationAround(line(b3CabAxle(n), vector(1, 0, 0)), FOLD_ANGLE);
 }
 
-// The treads and rail form a parallelogram, so the rail and the outer axles
-// translate without turning.
+// The treads and rail form a parallelogram, so the rail, its clip and the
+// outer axles translate without turning.
 export function b3RailFold() returns Transform
 {
-    const v = b3OutAxle(TREAD_TOP) - b3CabAxle(TREAD_TOP);
+    const vy = OUT_AXLE_Y - CAB_AXLE_Y;
+    const vz = CAB_AXLE_DROP - OUT_AXLE_DROP;
     const c = cos(FOLD_ANGLE);
     const s = sin(FOLD_ANGLE);
-    const moved = vector(v[0] * c - v[2] * s, v[1], v[2] * c + v[0] * s);
-    return transform(moved - v);
+    return transform(vector(0 * inch, vy * c - vz * s - vy, vz * c + vy * s - vz));
 }
 
 // ---------------------------------------------------------------------------
-// Sketch planes. Each maps sketch (u, v) to two world axes and extrudes
-// along the third.
+// Sketch planes and prisms
 // ---------------------------------------------------------------------------
-// (u, v) = (Y, Z); extrudes toward +X from x.
-export function b3FrameYZ(x is ValueWithUnits) returns Plane
+// Sketch (u, v) = (y, z), extruded along +x.
+export function b3PlaneYZ(x is ValueWithUnits) returns Plane
 {
     return plane(vector(x, 0 * inch, 0 * inch), vector(1, 0, 0), vector(0, 1, 0));
 }
 
-// (u, v) = (X, Z); extrudes toward -Y from y.
-export function b3FrameXZ(y is ValueWithUnits) returns Plane
+// Sketch (u, v) = (x, z), extruded along -y.
+export function b3PlaneXZ(y is ValueWithUnits) returns Plane
 {
     return plane(vector(0 * inch, y, 0 * inch), vector(0, -1, 0), vector(1, 0, 0));
 }
 
-// ---------------------------------------------------------------------------
-// Geometry helpers
-// ---------------------------------------------------------------------------
 // Closed loop through 2D points. An entry {"mid" : p, "end" : q} draws an arc
-// from the previous point through p to q. The last entry must be a point.
+// from the previous point through p to q. The loop closes with a line.
 export function b3SketchLoop(sketch is Sketch, prefix is string, path is array)
 {
     const first = path[0];
@@ -138,7 +113,7 @@ export function b3SketchLoop(sketch is Sketch, prefix is string, path is array)
     }
 }
 
-// Extrudes a 2D outline by depth. Each hole is {"center" : p, "radius" : r}
+// Extrudes a 2D outline by depth. Each hole is {"center" : p, "dia" : d}
 // or a closed path like the outline.
 export function b3Prism(context is Context, id is Id, frame is Plane, path is array, holes is array, depth is ValueWithUnits)
 {
@@ -150,7 +125,7 @@ export function b3Prism(context is Context, id is Id, frame is Plane, path is ar
         const h = holes[i];
         if (h is map)
         {
-            skCircle(sketch, "hole" ~ toString(i), { "center" : h.center, "radius" : h.radius });
+            skCircle(sketch, "hole" ~ toString(i), { "center" : h.center, "radius" : h.dia / 2 });
         }
         else
         {
@@ -167,25 +142,127 @@ export function b3Prism(context is Context, id is Id, frame is Plane, path is ar
     opDeleteBodies(context, id + "cleanup", { "entities" : qCreatedBy(sketchId, EntityType.BODY) });
 }
 
+// Outline in (y, z), from x0 to x1.
+export function b3PrismYZ(context is Context, id is Id, path is array, holes is array, x0 is ValueWithUnits, x1 is ValueWithUnits)
+{
+    b3Prism(context, id, b3PlaneYZ(x0), path, holes, x1 - x0);
+}
+
+// Outline in (x, z), from y0 to y1.
+export function b3PrismXZ(context is Context, id is Id, path is array, holes is array, y0 is ValueWithUnits, y1 is ValueWithUnits)
+{
+    b3Prism(context, id, b3PlaneXZ(y1), path, holes, y1 - y0);
+}
+
 export function b3Box(context is Context, id is Id, lo is Vector, hi is Vector)
 {
     fCuboid(context, id, { "corner1" : lo, "corner2" : hi });
 }
 
-// Cylinder along Y.
-export function b3CylY(context is Context, id is Id, x is ValueWithUnits, z is ValueWithUnits,
-    y0 is ValueWithUnits, y1 is ValueWithUnits, r is ValueWithUnits)
-{
-    fCylinder(context, id, { "bottomCenter" : vector(x, y0, z), "topCenter" : vector(x, y1, z), "radius" : r });
-}
-
-// Cylinder along X.
+// Cylinder along x.
 export function b3CylX(context is Context, id is Id, y is ValueWithUnits, z is ValueWithUnits,
-    x0 is ValueWithUnits, x1 is ValueWithUnits, r is ValueWithUnits)
+    x0 is ValueWithUnits, x1 is ValueWithUnits, dia is ValueWithUnits)
 {
-    fCylinder(context, id, { "bottomCenter" : vector(x0, y, z), "topCenter" : vector(x1, y, z), "radius" : r });
+    fCylinder(context, id, { "bottomCenter" : vector(x0, y, z), "topCenter" : vector(x1, y, z), "radius" : dia / 2 });
 }
 
+// ---------------------------------------------------------------------------
+// 2D shapes
+// ---------------------------------------------------------------------------
+export function b3Rect(u0 is ValueWithUnits, v0 is ValueWithUnits, u1 is ValueWithUnits, v1 is ValueWithUnits) returns array
+{
+    return [vector(u0, v0), vector(u1, v0), vector(u1, v1), vector(u0, v1)];
+}
+
+export function b3Hole(u is ValueWithUnits, v is ValueWithUnits, dia is ValueWithUnits) returns map
+{
+    return { "center" : vector(u, v), "dia" : dia };
+}
+
+// Strip along the edge p -> q, offset to the left of travel by t.
+export function b3Strip(p is Vector, q is Vector, t is ValueWithUnits) returns array
+{
+    const d = (q - p) / norm(q - p);
+    const left = vector(-d[1], d[0]);
+    return [p, q, q + left * t, p + left * t];
+}
+
+// Obround slot centered on c, l long along u and h tall along v.
+export function b3Slot(c is Vector, l is ValueWithUnits, h is ValueWithUnits) returns array
+{
+    const r = h / 2;
+    const a = l / 2 - r;
+    return [
+            vector(c[0] - a, c[1] + r),
+            { "mid" : vector(c[0] - a - r, c[1]), "end" : vector(c[0] - a, c[1] - r) },
+            vector(c[0] + a, c[1] - r),
+            { "mid" : vector(c[0] + a + r, c[1]), "end" : vector(c[0] + a, c[1] + r) }
+        ];
+}
+
+// Keyhole: KEYHOLE_DIA hole centered (u, vHole), with a KEYHOLE_SLOT_W slot
+// running down to a round end centered at vEnd.
+export function b3Keyhole(u is ValueWithUnits, vHole is ValueWithUnits, vEnd is ValueWithUnits) returns array
+{
+    const big = KEYHOLE_DIA / 2;
+    const h = KEYHOLE_SLOT_W / 2;
+    const meet = vHole - sqrt(big * big - h * h);
+    return [
+            vector(u - h, vEnd),
+            { "mid" : vector(u, vEnd - h), "end" : vector(u + h, vEnd) },
+            vector(u + h, meet),
+            { "mid" : vector(u, vHole + big), "end" : vector(u - h, meet) }
+        ];
+}
+
+// Hook-shaped ear in (y, z). The ear runs from the root face yRoot to yFar,
+// over z zLo to zHi; above that the hook (yHookIn to yFar) rises to a round
+// top of radius EAR_HOOK_R on the axle (axY, axZ). Works either way along y.
+export function b3EarOutline(yRoot is ValueWithUnits, yFar is ValueWithUnits, yHookIn is ValueWithUnits,
+    zLo is ValueWithUnits, zHi is ValueWithUnits, axY is ValueWithUnits, axZ is ValueWithUnits) returns array
+{
+    return [
+            vector(yRoot, zLo),
+            vector(yFar, zLo),
+            vector(yFar, axZ),
+            { "mid" : vector(axY, axZ + EAR_HOOK_R), "end" : vector(yHookIn, axZ) },
+            vector(yHookIn, zHi),
+            vector(yRoot, zHi)
+        ];
+}
+
+// ---------------------------------------------------------------------------
+// Tray (treads and hook-on step): skin plus two lips at the x ends.
+// Holes are in (y, z) and go through both lips. cornerR > 0 rounds each
+// lip's bottom outer corner.
+// ---------------------------------------------------------------------------
+export function b3Tray(context is Context, id is Id, x0 is ValueWithUnits, top is ValueWithUnits, holes is array, cornerR is ValueWithUnits)
+{
+    const y0 = TRAY_Y0;
+    const y1 = TRAY_Y0 + TRAY_W;
+    const x1 = x0 + TRAY_D;
+    const zb = top - LIP;
+    var lip = [vector(y0, top), vector(y1, top), vector(y1, zb), vector(y0, zb)];
+    if (cornerR > 0 * inch)
+    {
+        const k = 1 - sqrt(0.5);
+        lip = [
+                vector(y0, top),
+                vector(y1, top),
+                vector(y1, zb + cornerR),
+                { "mid" : vector(y1 - cornerR * k, zb + cornerR * k), "end" : vector(y1 - cornerR, zb) },
+                vector(y0, zb)
+            ];
+    }
+    b3Box(context, id + "skin", vector(x0, y0, top - SHEET_T), vector(x1, y1, top));
+    b3PrismYZ(context, id + "lipBack", lip, holes, x0, x0 + SHEET_T);
+    b3PrismYZ(context, id + "lipFront", lip, holes, x1 - SHEET_T, x1);
+    b3Union(context, id + "join", b3Solids(id));
+}
+
+// ---------------------------------------------------------------------------
+// Booleans and finishing
+// ---------------------------------------------------------------------------
 export function b3Solids(id is Id) returns Query
 {
     return qBodyType(qCreatedBy(id, EntityType.BODY), BodyType.SOLID);
@@ -199,49 +276,6 @@ export function b3Union(context is Context, id is Id, bodies is Query)
     }
 }
 
-export function b3Subtract(context is Context, id is Id, targets is Query, tools is Query)
-{
-    if (size(evaluateQuery(context, tools)) > 0)
-    {
-        opBoolean(context, id, { "targets" : targets, "tools" : tools, "operationType" : BooleanOperationType.SUBTRACTION });
-    }
-}
-
-// Strip along the edge p -> q, offset to the left of travel by t.
-export function b3Strip(p is Vector, q is Vector, t is ValueWithUnits) returns array
-{
-    const d = (q - p) / norm(q - p);
-    const left = vector(-d[1], d[0]);
-    return [p, q, q + left * t, p + left * t];
-}
-
-// Rounded slot centered on c, w long along u and h tall along v.
-export function b3Slot(c is Vector, w is ValueWithUnits, h is ValueWithUnits) returns array
-{
-    const r = h / 2;
-    const a = w / 2 - r;
-    return [
-            vector(c[0] - a, c[1] + r),
-            { "mid" : vector(c[0] - a - r, c[1]), "end" : vector(c[0] - a, c[1] - r) },
-            vector(c[0] + a, c[1] - r),
-            { "mid" : vector(c[0] + a + r, c[1]), "end" : vector(c[0] + a, c[1] + r) }
-        ];
-}
-
-// Tray with lips bent down at the back (yb) and front, in (Y, Z).
-export function b3TrayOutline(yb is ValueWithUnits, top is ValueWithUnits, lip is ValueWithUnits) returns array
-{
-    const yf = yb + TREAD_GOING;
-    const t = SHEET_T;
-    return [
-            vector(yb, top), vector(yf, top), vector(yf, top - lip), vector(yf - t, top - lip),
-            vector(yf - t, top - t), vector(yb + t, top - t), vector(yb + t, top - lip), vector(yb, top - lip)
-        ];
-}
-
-// ---------------------------------------------------------------------------
-// Part names, materials and colors
-// ---------------------------------------------------------------------------
 export function b3Finish(context is Context, bodies is Query, partName is string, rgb is array)
 {
     setProperty(context, { "entities" : bodies, "propertyType" : PropertyType.NAME, "value" : partName });

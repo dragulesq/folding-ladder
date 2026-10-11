@@ -19,11 +19,12 @@ export const b3Reference = defineFeature(function(context is Context, id is Id, 
     }
     {
         const far = 30 * inch;
-        b3Ref(context, id + "floor", vector(-CABINET_WIDTH, -far, -0.5 * inch), vector(far, far, 0 * inch), "REF floor");
-        b3Ref(context, id + "cabinet", vector(-CABINET_WIDTH, 0 * inch, 0 * inch), vector(0 * inch, CABINET_DEPTH, CABINET_TOP_Z), "REF cabinet");
-        b3Ref(context, id + "wall", vector(0 * inch, -1 * inch, 0 * inch), vector(far, 0 * inch, BED_PLATFORM_Z), "REF bed-end wall");
-        b3Ref(context, id + "mattress", vector(-CABINET_WIDTH, -far, BED_PLATFORM_Z), vector(far, 0 * inch, BED_PLATFORM_Z + MATTRESS_THICK), "REF mattress");
-        b3Ref(context, id + "handle", vector(HANDLE_X, 0 * inch, HANDLE_Z - 0.5 * inch), vector(HANDLE_X + 4 * inch, HANDLE_PROJECTION, HANDLE_Z + 0.5 * inch), "REF door handle");
+        const wallX = -WALL_GAP;
+        b3Ref(context, id + "floor", vector(-far, -CABINET_WIDTH, -0.5 * inch), vector(far, far, 0 * inch), "REF floor");
+        b3Ref(context, id + "cabinet", vector(wallX, -CABINET_WIDTH, 0 * inch), vector(wallX + CABINET_DEPTH, 0 * inch, CABINET_TOP_Z), "REF cabinet");
+        b3Ref(context, id + "wall", vector(wallX - 1 * inch, 0 * inch, 0 * inch), vector(wallX, far, BED_PLATFORM_Z), "REF bed-end wall");
+        b3Ref(context, id + "mattress", vector(-far, -CABINET_WIDTH, BED_PLATFORM_Z), vector(wallX, far, BED_PLATFORM_Z + MATTRESS_THICK), "REF mattress");
+        b3Ref(context, id + "handle", vector(wallX, HANDLE_Y, HANDLE_Z - 0.5 * inch), vector(wallX + HANDLE_PROJECTION, HANDLE_Y + 4 * inch, HANDLE_Z + 0.5 * inch), "REF door handle");
     });
 
 function b3Ref(context is Context, id is Id, lo is Vector, hi is Vector, partName is string)

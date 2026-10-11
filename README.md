@@ -12,10 +12,11 @@ FeatureScript for Onshape that builds design **B3** of the folding camper bed st
 | `onshape/B3_Treads.fs` | B3 Treads | Top and middle treads |
 | `onshape/B3_Brackets.fs` | B3 Cabinet Brackets | The two brackets with pivot ears |
 | `onshape/B3_OuterRail.fs` | B3 Outer Rail | Stepped rail with flanges, hand slot and pivot ears |
-| `onshape/B3_PivotHardware.fs` | B3 Pivot Hardware | Four axles and four stop pins |
+| `onshape/B3_StepClip.fs` | B3 Step Clip | Clip inside the outer rail with the outer keyhole |
+| `onshape/B3_PivotHardware.fs` | B3 Pivot Hardware | Tread and step axles, stop pins |
 | `onshape/B3_FrontAngle.fs` | B3 Front Angle | Angle on the cabinet's front post |
 | `onshape/B3_StepLedge.fs` | B3 Step Ledge | Ledge that holds the folded step |
-| `onshape/B3_HookOnStep.fs` | B3 Hook-on Step | Step tray and two legs (provisional) |
+| `onshape/B3_HookOnStep.fs` | B3 Hook-on Step | Step tray and two folding legs |
 | `onshape/B3_AllInOne.fs` | all of the above | Everything joined into one file, no imports needed |
 
 ## Quick start: one Feature Studio
@@ -37,20 +38,19 @@ When you paste an updated file from the repo later, keep the import line Onshape
 
 ## Changing dimensions
 
-Edit `B3 Parameters` (or the parameters section at the top of the all-in-one file) and commit. The Part Studio rebuilds to match. The numbers are commented with what they measure.
+Edit `B3 Parameters` (or the parameters section at the top of the all-in-one file) and commit. The Part Studio rebuilds to match. The names and values follow the "Part definitions" section of the Bed Stair B3 page, and each is commented with what it measures.
 
-Set `FOLD_ANGLE` to `90 * degree` to see the stair folded flat, or any angle in between to check clearances through the swing. The treads, outer rail and outer axles move; the brackets and everything on the cabinet stay put.
+Set `FOLD_ANGLE` to `90 * degree` to see the stair folded flat, or any angle in between to check clearances through the swing. The treads, outer rail, step clip and outer axles move; the brackets and everything on the cabinet stay put.
 
 ## Coordinates
 
-All parts are built where they sit when the stair is open:
+Same datum as the B3 page. The origin is on the floor, at the side panel's face, at the stair's bed end. All parts are built where they sit when the stair is open.
 
-- **X** out from the cabinet's side panel face into the room (panel face at X = 0)
-- **Y** along the stair's depth, from the bed-end wall (Y = 0) toward the cabinet's front post
-- **Z** up from the floor
+- **x** along the cabinet toward its front edge; the stair spans x = 0 to 12
+- **y** out from the panel face into the room
+- **z** up from the floor
 
 ## Limitations
 
-- **Solid parts.** Parts are plain solids with sharp 90° bends, not Onshape sheet-metal parts, so there are no flat patterns yet.
-- **Unfinished details.** Not modeled yet: corner relief on the treads, bend reliefs, countersinks and the hook-on step's leg hinges.
-- **Hook-on step is provisional.** The B3 design page doesn't detail it yet.
+- **Solid parts.** Parts are plain solids with sharp 90° bends, sized to the outside of the bends, not Onshape sheet-metal parts, so there are no flat patterns yet. The page's bend radii and K-factor are in the parameters for that step.
+- **Not modeled:** bend reliefs, countersinks, the notches left where the rail's ear tabs are cut, latch and keeper holes, bushings, washers, E-clips and rubber parts.

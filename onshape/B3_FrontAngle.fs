@@ -7,10 +7,11 @@ import(path : "onshape/std/common.fs", version : "2641.0");
 // </B3-IMPORT>
 
 /*
- * B3 Front Angle: 1/8" angle screwed to the cabinet's front post. The leg on
- * the panel takes the M6 screws and stops short of the middle bracket; the
- * outward leg sits flush with the front edge, carries the hook-on step's
- * cabinet-side studs and runs up to the travel-latch keeper.
+ * B3 Front Angle, 1/8" sheet, on the cabinet's front post. The panel leg
+ * takes three screws into the post and stops at 16 1/2" to clear the middle
+ * bracket. The outward leg is flush with the front edge and carries the
+ * keyhole for the hook-on step's cabinet-side pin. Not modeled: the keeper
+ * holes (drill to suit the latch) and the bend relief.
  */
 annotation { "Feature Type Name" : "B3 Front Angle" }
 export const b3FrontAngle = defineFeature(function(context is Context, id is Id, definition is map)
@@ -18,25 +19,16 @@ export const b3FrontAngle = defineFeature(function(context is Context, id is Id,
     {
     }
     {
-        const yf = b3StairFrontY();
-        const over = 0.1 * inch;
-
-        b3Box(context, id + "panelLeg", vector(0 * inch, yf - FA_PANEL_LEG, FA_BOTTOM_Z), vector(SHEET_T, yf, FA_PANEL_LEG_TOP));
-        b3Box(context, id + "outLeg", vector(0 * inch, yf - SHEET_T, FA_BOTTOM_Z), vector(FA_OUT_LEG, yf, FA_TOP_Z));
-        b3Union(context, id + "join", b3Solids(id));
-
-        // M6 screws into the front post.
+        var screws = [];
         for (var i = 0; i < size(FA_SCREW_Z); i += 1)
         {
-            b3CylX(context, id + ("screw" ~ toString(i)), yf - FA_SCREW_INSET, FA_SCREW_Z[i], -over, SHEET_T + over, SCREW_HOLE_DIA / 2);
+            screws = append(screws, b3Hole(FA_SCREW_X, FA_SCREW_Z[i], FA_SCREW_HOLE_DIA));
         }
-        // Hook-on step studs and the latch keeper, through the outward leg.
-        b3CylY(context, id + "stud1", CAB_STUD_X, STUD_Z1, yf - SHEET_T - over, yf + over, STUD_HOLE_DIA / 2);
-        b3CylY(context, id + "stud2", CAB_STUD_X, STUD_Z2, yf - SHEET_T - over, yf + over, STUD_HOLE_DIA / 2);
-        b3CylY(context, id + "keeper", CAB_STUD_X, KEEPER_Z, yf - SHEET_T - over, yf + over, STUD_HOLE_DIA / 2);
+        b3PrismXZ(context, id + "panelLeg", b3Rect(FA_PANEL_LEG_X0, FA_BOTTOM_Z, FA_X1, FA_PANEL_LEG_TOP), screws, 0 * inch, SHEET_T);
 
-        const fa = qUnion([b3Solids(id + "panelLeg"), b3Solids(id + "outLeg")]);
-        const cutters = qSubtraction(b3Solids(id), fa);
-        b3Subtract(context, id + "holes", fa, cutters);
+        b3PrismYZ(context, id + "outLeg", b3Rect(0 * inch, FA_BOTTOM_Z, FA_OUT_LEG, FA_TOP_Z),
+            [b3Keyhole(FA_KEYHOLE_Y, FA_KEYHOLE_Z, FA_KEYHOLE_END_Z)], FA_X1 - SHEET_T, FA_X1);
+
+        b3Union(context, id + "join", b3Solids(id));
         b3Finish(context, b3Solids(id), "Front angle", RGB_ALU_DARK);
     });

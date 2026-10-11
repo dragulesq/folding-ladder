@@ -11,136 +11,176 @@ import(path : "onshape/std/common.fs", version : "2641.0");
  * B3 folding bed stair: global parameters.
  *
  * Every dimension the part features use lives here. Change a number, and
- * every Part Studio that uses the B3 features rebuilds to match.
+ * every Part Studio that uses the B3 features rebuilds to match. Names and
+ * values follow the "Part definitions" section of the Bed Stair B3 page.
  *
- * Coordinate system (all parts are built in their in-use position):
- *   X  out from the cabinet's side panel face into the room (panel face at X = 0)
- *   Y  along the stair's depth, from the bed-end wall (Y = 0) toward the
- *      cabinet's front post
- *   Z  up from the floor (Z = 0)
+ * Datum (same as the B3 page). Origin on the floor, at the side panel's face,
+ * at the stair's bed end (the end the top tread is on).
+ *   x  along the cabinet toward its front edge; the stair spans x = 0 to 12
+ *   y  out from the panel face into the room
+ *   z  up from the floor
+ * All parts are built where they sit when the stair is open.
  *
- * Source: the "Bed Stair B3" design page from the project's Ladder step
- * spacing thread. Values marked "assumed" were not on that page and are
- * best guesses to check.
+ * Sizes are to the outside of bends. Bends are modeled sharp; the page's
+ * inside radii are BEND_R_SHEET, BEND_R_PLATE and BEND_R_LIP for the
+ * sheet-metal conversion.
  */
 
 // ---------------------------------------------------------------------------
-// Room and cabinet
+// Room and cabinet (reference only)
 // ---------------------------------------------------------------------------
-export const CABINET_TOP_Z = 48 * inch;            // cabinet top, including the 1/4" Plyboo top panel
-export const BED_PLATFORM_Z = 47.75 * inch;        // bed platform height
-export const MATTRESS_THICK = 4 * inch;            // mattress, uncompressed
-export const CABINET_DEPTH = 12.5 * inch;          // along Y, bed-end wall to front post
-export const CABINET_WIDTH = 13 * inch;            // along X, behind the side panel
-export const PANEL_THICK = 0.5 * inch;             // side panel (Plyboo)
-export const HANDLE_X = 19 * inch;                 // closest point of the cab door handle, from the panel face
-export const HANDLE_Z = 18 * inch;                 // door handle height
-export const HANDLE_PROJECTION = 2.5 * inch;       // how far the handle sticks out from the wall
+export const CABINET_TOP_Z = 48 * inch;            // folded stair tops out at 47 9/16
+export const BED_PLATFORM_Z = 47.75 * inch;
+export const MATTRESS_THICK = 4 * inch;
+export const WALL_GAP = 0.5 * inch;                // bed-end wall to the stair's bed end
+export const CABINET_DEPTH = 12.5 * inch;          // along x, wall to front post
+export const CABINET_WIDTH = 13 * inch;            // behind the side panel
+export const HANDLE_Y = 19 * inch;                 // cab door handle's closest point to the panel
+export const HANDLE_Z = 18 * inch;
+export const HANDLE_PROJECTION = 2.5 * inch;       // out from the bed-end wall
 
 // ---------------------------------------------------------------------------
-// Stair layout
+// Layout and material
 // ---------------------------------------------------------------------------
-export const RISE = 10.25 * inch;                  // every rise; tread tops at 1x, 2x, 3x RISE
-export const TREAD_GOING = 6 * inch;               // depth of each tread along Y
-export const STAIR_Y0 = 0.5 * inch;                // gap from the bed-end wall to the back of the top tread
-export const TREAD_WIDTH = 18 * inch;              // along X
-export const PANEL_GAP = (3 / 8) * inch;           // tread's cabinet-side edge to the panel face
-
-// ---------------------------------------------------------------------------
-// Material
-// ---------------------------------------------------------------------------
-export const SHEET_T = (1 / 8) * inch;             // treads, hook-on step, front angle, ledge
-export const PLATE_T = (3 / 16) * inch;            // outer rail and cabinet brackets
+export const RISE = 10.25 * inch;                  // tread tops T1, T2, T3 = 1x, 2x, 3x RISE
+export const GOING = 6 * inch;                     // top tread x 0-6, middle 6-12, step 12-18
+export const SHEET_T = (1 / 8) * inch;             // treads, step tray, front angle, step clip, ledge
+export const PLATE_T = (3 / 16) * inch;            // outer rail, brackets, step legs
+export const BEND_R_SHEET = (1 / 8) * inch;        // inside bend radius on 1/8" sheet
+export const BEND_R_PLATE = (3 / 16) * inch;       // inside bend radius on 3/16" sheet
+export const BEND_R_LIP = (3 / 16) * inch;         // tread and step lips, on 1/8" sheet
+export const K_FACTOR = 0.42;
 export const ALU_DENSITY = 2.68 * gram / (centimeter ^ 3);   // 5052-H32
 export const STEEL_DENSITY = 8.0 * gram / (centimeter ^ 3);  // 304 stainless
 
 // ---------------------------------------------------------------------------
-// Treads
+// Treads and step tray
 // ---------------------------------------------------------------------------
-export const TREAD_LIP = 2 * inch;                 // front and back lips, bent down
+export const TRAY_W = 18 * inch;                   // along y
+export const TRAY_Y0 = (3 / 8) * inch;             // tray's cabinet-side edge
+export const TRAY_D = (45 / 8) * inch;             // 5 5/8 along x
+export const TRAY_INSET = (3 / 16) * inch;         // tray starts this far into its going
+export const LIP = 2 * inch;                       // lips bent down at the x ends
+export const LIP_CORNER_R = 0.5 * inch;            // relief on each lip's bottom outer corner (treads only)
 
 // ---------------------------------------------------------------------------
-// Pivots (axles run along Y, front to back)
+// Pivots
 // ---------------------------------------------------------------------------
-export const CAB_AXLE_OUT = 0.75 * inch;           // cabinet axle, out from the bracket web's outer face
-export const CAB_AXLE_DROP = (5 / 8) * inch;       // cabinet axle, below the tread top
-export const OUT_AXLE_IN = 0.75 * inch;            // outer axle, in from the rail's inner face
-export const OUT_AXLE_DROP = 1.5 * inch;           // outer axle, below the tread top
+export const CAB_AXLE_Y = (15 / 16) * inch;
+export const CAB_AXLE_DROP = (5 / 8) * inch;       // below T
+export const OUT_AXLE_Y = 17.75 * inch;
+export const OUT_AXLE_DROP = 1.5 * inch;           // below T
+export const HOLE_DIA = (7 / 16) * inch;           // bushing bore, reamed (cut 3/8 pilots)
+export const EAR_X0 = (7 / 16) * inch;             // ear outer faces at EAR_X0 and GOING - EAR_X0 in each going
+export const EAR_HOOK_R = (7 / 16) * inch;         // round top of every hook, on its axle hole
+export const EAR_W = (19 / 16) * inch;             // ear reach, u 0 to 1 3/16 (brackets and rail)
+export const HOOK_U0 = (5 / 16) * inch;            // hook part of each ear starts at u = 5/16
 export const AXLE_DIA = (5 / 16) * inch;
-export const AXLE_LEN = 6.25 * inch;
-export const BUSHING_OD = (7 / 16) * inch;         // hole size for the flanged bushings
-export const EAR_INSET = (7 / 16) * inch;          // tread lip's outer face to the ear's outer face
-export const EAR_HOOK_R = 0.4 * inch;              // radius of the hook around each axle
+export const TREAD_AXLE_X0 = (1 / 16) * inch;      // tread axles run x 1/16 to 5 15/16 in each going
+export const TREAD_AXLE_LEN = (47 / 8) * inch;     // 5 7/8
 
 // ---------------------------------------------------------------------------
-// Cabinet brackets (one per tread)
+// Cabinet brackets
 // ---------------------------------------------------------------------------
-export const BRACKET_DROP = (13 / 8) * inch;       // web's top edge below the tread top
-export const BRACKET_H = 2 * inch;                 // web height
-export const SCREW_DROP = (17 / 8) * inch;         // screw row below the tread top
-export const SCREW_PITCH = 1 * inch;
-export const SCREW_COUNT = 4;
+export const BRACKET_TOP_DROP = (13 / 8) * inch;   // web top at T - 1 5/8
+export const BRACKET_H = 2 * inch;                 // web bottom at T - 3 5/8
+export const SCREW_X = [1.5 * inch, 2.5 * inch, 3.5 * inch, 4.5 * inch];   // within the going
+export const SCREW_DROP = (17 / 8) * inch;         // screw row at T - 2 1/8
 export const SCREW_HOLE_DIA = 6.6 * millimeter;    // M6 clearance
+export const SCREW_CSK_DIA = 12.4 * millimeter;    // 90 degree countersink, room side (not modeled)
+export const STOP_PIN_Y = (17 / 16) * inch;
+export const STOP_PIN_DROP = (67 / 32) * inch;     // T - 2 3/32
 export const STOP_PIN_DIA = (3 / 16) * inch;
-export const STOP_PIN_OUT = 0.1 * inch;            // stop pin, outboard of the cabinet axle
-export const STOP_PIN_DROP = 2.1 * inch;           // stop pin center, below the tread top
+export const STOP_PIN_OUT = (5 / 16) * inch;       // sticks out under the lip; flush on the ear's inside
 
 // ---------------------------------------------------------------------------
 // Outer rail
 // ---------------------------------------------------------------------------
-export const RAIL_CLEAR = (1 / 8) * inch;          // tread's outer edge to the rail
-export const RAIL_STEP_DROP = 2 * inch;            // rail's step edges below each tread top
-export const RAIL_BACK_DROP = 5.25 * inch;         // bed-side edge drops this far from the top step
-export const RAIL_CUTBACK = 3 * inch;              // then angles this far toward the front (door handle cut-back)
-export const RAIL_CUTBACK_Z = 20 * inch;           // reaching this height off the floor, then on to the foot
-export const RAIL_FOOT_LEN = 3.75 * inch;          // foot length along Y, at the front
-export const RAIL_FOOT_Z = 0.5 * inch;             // rail bottom above the floor (rubber pad)
-export const RAIL_FLANGE = 0.75 * inch;            // outward flange, beyond the plate
-export const RAIL_FOOT_FLANGE = 1 * inch;          // wider flange along the foot
-export const RAIL_EAR_BOTTOM_DROP = 3.1 * inch;    // rail ear's bottom edge below the tread top
-export const RAIL_NOTCH_DROP = 2.1 * inch;         // bottom of the hook notch below the tread top
-export const HAND_SLOT_W = 4 * inch;               // along Y
+export const RAIL_Y = 18.5 * inch;                 // inner face
+export const RAIL_STEP_DROP = 2 * inch;            // step edges at T - 2 (28 3/4 and 18 1/2)
+export const RAIL_BACK_Z = 23.5 * inch;            // bed-side edge, bottom of the straight part
+export const RAIL_CUTBACK_X = 3 * inch;            // cut-back for the door handle reaches (3, 20)
+export const RAIL_CUTBACK_Z = 20 * inch;
+export const RAIL_FOOT_X = 8.25 * inch;            // foot runs x 8 1/4 to 12
+export const RAIL_FOOT_Z = 0.5 * inch;
+export const RAIL_FLANGE = 0.75 * inch;            // outward, beyond the plate (out to y 19 7/16)
+export const RAIL_BACK_FLANGE_TOP = (217 / 8) * inch;    // 27 1/8: stops short of the top ears
+export const RAIL_FRONT_FLANGE_TOP = 17 * inch;          // stops short of the middle ears
+export const RAIL_EAR_ROOT_LO = (25 / 8) * inch;   // ear root (1" bend line) from T - 3 1/8
+export const RAIL_EAR_ROOT_HI = (17 / 8) * inch;   //   to T - 2 1/8
+export const HAND_SLOT_X = 3 * inch;
+export const HAND_SLOT_Z = 25 * inch;
+export const HAND_SLOT_L = 4 * inch;               // along x
 export const HAND_SLOT_H = 1.25 * inch;
-export const HAND_SLOT_Z = 25 * inch;              // slot center height
-export const HAND_SLOT_IN = 3 * inch;              // slot center, in from the bed-side edge
+export const CLIP_RIVET_X = [(83 / 8) * inch, 11.25 * inch];   // 10 3/8 and 11 1/4
+export const CLIP_RIVET_Z = 9.5 * inch;
+export const RIVET_HOLE_DIA = 0.196 * inch;        // #9 drill
 
 // ---------------------------------------------------------------------------
-// Front angle (on the cabinet's front post)
+// Keyholes (front angle and step clip)
 // ---------------------------------------------------------------------------
-export const FA_PANEL_LEG = 1.5 * inch;            // leg flat on the panel
-export const FA_OUT_LEG = 1.25 * inch;             // leg sticking out, flush with the front edge
-export const FA_BOTTOM_Z = 0.5 * inch;             // assumed
-export const FA_PANEL_LEG_TOP = 16.5 * inch;       // panel leg stops here to clear the middle bracket
-export const FA_TOP_Z = 17.75 * inch;              // outward leg runs up past the keeper (assumed)
-export const FA_SCREW_Z = [2.5 * inch, 8.5 * inch, 14.5 * inch];   // assumed
-export const FA_SCREW_INSET = 0.6 * inch;          // screw line, back from the front edge (assumed)
-export const KEEPER_Z = 17.25 * inch;              // travel-latch keeper height
+export const KEYHOLE_DIA = (11 / 16) * inch;
+export const KEYHOLE_SLOT_W = (11 / 32) * inch;
 
 // ---------------------------------------------------------------------------
-// Hook-on step (provisional: B3 doesn't detail it yet)
+// Front angle
 // ---------------------------------------------------------------------------
-export const STEP_WIDTH = 18 * inch;               // match TREAD_WIDTH
-export const STEP_LIP = 2 * inch;
-export const STUD_Z1 = 2 * inch;                   // keyhole studs, height off the floor
-export const STUD_Z2 = 7 * inch;
-export const STUD_HOLE_DIA = 0.257 * inch;         // 1/4" studs
-export const CAB_STUD_X = 0.75 * inch;             // studs on the front angle, out from the panel
-export const STEP_LEG_BOTTOM_Z = (3 / 8) * inch;   // leg bottom above the floor (rubber boot)
-export const STEP_LEG_PIVOT_DROP = 1 * inch;       // leg axle below the step top (assumed)
+export const FA_X1 = 12 * inch;                    // flush with the cabinet's front edge
+export const FA_PANEL_LEG_X0 = (85 / 8) * inch;    // 10 5/8
+export const FA_PANEL_LEG_TOP = 16.5 * inch;
+export const FA_OUT_LEG = 2 * inch;                // along y
+export const FA_BOTTOM_Z = 1 * inch;
+export const FA_TOP_Z = 18 * inch;
+export const FA_SCREW_X = (365 / 32) * inch;       // 11 13/32, front post centerline
+export const FA_SCREW_Z = [4.5 * inch, 12.25 * inch, 15.5 * inch];
+export const FA_SCREW_HOLE_DIA = (17 / 64) * inch;
+export const FA_KEYHOLE_Y = (19 / 16) * inch;
+export const FA_KEYHOLE_Z = 10 * inch;             // hole center
+export const FA_KEYHOLE_END_Z = (151 / 16) * inch; // 9 7/16, slot's round end
 
 // ---------------------------------------------------------------------------
-// Step ledge (holds the folded hook-on step)
+// Step clip (riveted inside the outer rail)
 // ---------------------------------------------------------------------------
-export const LEDGE_LEN = 6 * inch;                 // along Y, starting at STAIR_Y0
-export const LEDGE_SHELF = 2.5 * inch;             // shelf depth, out from the panel
-export const LEDGE_Z = (5 / 8) * inch;             // shelf bottom above the floor
-export const LEDGE_LEG_H = (11 / 8) * inch;        // leg height on the panel
+export const CLIP_X0 = (79 / 8) * inch;            // 9 7/8; outer face at x 12
+export const CLIP_Z0 = 8.5 * inch;
+export const CLIP_H = 2 * inch;
+export const CLIP_KEY_LEG_Y0 = (131 / 8) * inch;   // 16 3/8
+export const CLIP_KEYHOLE_Y = (281 / 16) * inch;   // 17 9/16
+export const CLIP_KEYHOLE_Z = (155 / 16) * inch;   // 9 11/16
+export const CLIP_KEYHOLE_END_Z = (73 / 8) * inch; // 9 1/8
+
+// ---------------------------------------------------------------------------
+// Step ledge
+// ---------------------------------------------------------------------------
+export const LEDGE_LEN = 6 * inch;                 // x 0 to 6
+export const LEDGE_SHELF = 2.5 * inch;             // along y
+export const LEDGE_TOP_Z = (9 / 8) * inch;
+export const LEDGE_LEG_H = 1 * inch;
+export const LEDGE_SCREW_X = [1.5 * inch, 4.5 * inch];
+export const LEDGE_SCREW_Z = (5 / 8) * inch;
+export const LEDGE_SCREW_DIA = 0.177 * inch;       // #8 clearance (countersink not modeled)
+
+// ---------------------------------------------------------------------------
+// Hook-on step
+// ---------------------------------------------------------------------------
+export const STEP_CAB_AXLE_Y = (19 / 16) * inch;
+export const STEP_CAB_AXLE_Z = (153 / 16) * inch;  // 9 9/16
+export const STEP_OUT_AXLE_Y = (281 / 16) * inch;  // 17 9/16
+export const STEP_OUT_AXLE_Z = 9.25 * inch;
+export const STEP_LEG_CAB_Y0 = (3 / 8) * inch;     // cabinet leg web, outer face
+export const STEP_LEG_OUT_Y1 = (147 / 8) * inch;   // 18 3/8, outer leg web, outer face
+export const STEP_LEG_BOTTOM_Z = (3 / 8) * inch;
+export const STEP_LEG_TOP_Z = (81 / 8) * inch;     // 10 1/8, stops against the skin's underside
+export const STEP_EAR_W = (17 / 16) * inch;        // ear reach from the web's inner face
+export const STEP_EAR_DROP = 1 * inch;             // ear's straight part, from axle z - 1 to axle z
+export const STEP_AXLE_X0 = 11.75 * inch;          // back end is the hook pin
+export const STEP_AXLE_X1 = (287 / 16) * inch;     // 17 15/16
 
 // ---------------------------------------------------------------------------
 // Fold check
 // ---------------------------------------------------------------------------
 // 0 degrees = open and in use, 90 degrees = folded flat against the cabinet.
-// The treads, outer rail and outer axles move; everything else stays put.
+// The treads, outer rail, step clip and outer axles move; the rest stays put.
 export const FOLD_ANGLE = 0 * degree;
 
 // ===========================================================================
@@ -165,56 +205,35 @@ export const RGB_REF = [0.85, 0.75, 0.57];
 // ---------------------------------------------------------------------------
 // Derived positions
 // ---------------------------------------------------------------------------
-export function b3TreadTopZ(n is number) returns ValueWithUnits
+// Tread top T.
+export function b3T(n is number) returns ValueWithUnits
 {
     return (n + 1) * RISE;
 }
 
-export function b3TreadBackY(n is number) returns ValueWithUnits
+// Start of the tread's going along x: top 0, middle 6, step 12.
+export function b3GoingX(n is number) returns ValueWithUnits
 {
-    return STAIR_Y0 + (2 - n) * TREAD_GOING;
+    return (2 - n) * GOING;
 }
 
-export function b3TreadMidY(n is number) returns ValueWithUnits
+// Outer faces of the two ears in a going (back, front).
+export function b3EarFaces(n is number) returns array
 {
-    return b3TreadBackY(n) + TREAD_GOING / 2;
+    const xg = b3GoingX(n);
+    return [xg + EAR_X0, xg + GOING - EAR_X0];
 }
 
-export function b3StairFrontY() returns ValueWithUnits
+// The two ears' x ranges, each PLATE_T thick inboard of its outer face.
+export function b3EarRanges(n is number) returns array
 {
-    return STAIR_Y0 + 2 * TREAD_GOING;
-}
-
-export function b3TreadX0() returns ValueWithUnits
-{
-    return PANEL_GAP;
-}
-
-export function b3TreadX1() returns ValueWithUnits
-{
-    return PANEL_GAP + TREAD_WIDTH;
-}
-
-// Inner face of the outer rail's plate.
-export function b3RailX0() returns ValueWithUnits
-{
-    return b3TreadX1() + RAIL_CLEAR;
-}
-
-// Hook-on step studs on the outer rail's front flange.
-export function b3OutStudX() returns ValueWithUnits
-{
-    return b3RailX0() + PLATE_T + RAIL_FLANGE / 2;
+    const f = b3EarFaces(n);
+    return [[f[0], f[0] + PLATE_T], [f[1] - PLATE_T, f[1]]];
 }
 
 export function b3CabAxle(n is number) returns Vector
 {
-    return vector(PLATE_T + CAB_AXLE_OUT, b3TreadMidY(n), b3TreadTopZ(n) - CAB_AXLE_DROP);
-}
-
-export function b3OutAxle(n is number) returns Vector
-{
-    return vector(b3RailX0() - OUT_AXLE_IN, b3TreadMidY(n), b3TreadTopZ(n) - OUT_AXLE_DROP);
+    return vector(b3GoingX(n), CAB_AXLE_Y, b3T(n) - CAB_AXLE_DROP);
 }
 
 // ---------------------------------------------------------------------------
@@ -223,41 +242,37 @@ export function b3OutAxle(n is number) returns Vector
 // Each tread turns about its cabinet axle; the outer edge swings up toward the panel.
 export function b3TreadFold(n is number) returns Transform
 {
-    return rotationAround(line(b3CabAxle(n), vector(0, -1, 0)), FOLD_ANGLE);
+    return rotationAround(line(b3CabAxle(n), vector(1, 0, 0)), FOLD_ANGLE);
 }
 
-// The treads and rail form a parallelogram, so the rail and the outer axles
-// translate without turning.
+// The treads and rail form a parallelogram, so the rail, its clip and the
+// outer axles translate without turning.
 export function b3RailFold() returns Transform
 {
-    const v = b3OutAxle(TREAD_TOP) - b3CabAxle(TREAD_TOP);
+    const vy = OUT_AXLE_Y - CAB_AXLE_Y;
+    const vz = CAB_AXLE_DROP - OUT_AXLE_DROP;
     const c = cos(FOLD_ANGLE);
     const s = sin(FOLD_ANGLE);
-    const moved = vector(v[0] * c - v[2] * s, v[1], v[2] * c + v[0] * s);
-    return transform(moved - v);
+    return transform(vector(0 * inch, vy * c - vz * s - vy, vz * c + vy * s - vz));
 }
 
 // ---------------------------------------------------------------------------
-// Sketch planes. Each maps sketch (u, v) to two world axes and extrudes
-// along the third.
+// Sketch planes and prisms
 // ---------------------------------------------------------------------------
-// (u, v) = (Y, Z); extrudes toward +X from x.
-export function b3FrameYZ(x is ValueWithUnits) returns Plane
+// Sketch (u, v) = (y, z), extruded along +x.
+export function b3PlaneYZ(x is ValueWithUnits) returns Plane
 {
     return plane(vector(x, 0 * inch, 0 * inch), vector(1, 0, 0), vector(0, 1, 0));
 }
 
-// (u, v) = (X, Z); extrudes toward -Y from y.
-export function b3FrameXZ(y is ValueWithUnits) returns Plane
+// Sketch (u, v) = (x, z), extruded along -y.
+export function b3PlaneXZ(y is ValueWithUnits) returns Plane
 {
     return plane(vector(0 * inch, y, 0 * inch), vector(0, -1, 0), vector(1, 0, 0));
 }
 
-// ---------------------------------------------------------------------------
-// Geometry helpers
-// ---------------------------------------------------------------------------
 // Closed loop through 2D points. An entry {"mid" : p, "end" : q} draws an arc
-// from the previous point through p to q. The last entry must be a point.
+// from the previous point through p to q. The loop closes with a line.
 export function b3SketchLoop(sketch is Sketch, prefix is string, path is array)
 {
     const first = path[0];
@@ -278,7 +293,7 @@ export function b3SketchLoop(sketch is Sketch, prefix is string, path is array)
     }
 }
 
-// Extrudes a 2D outline by depth. Each hole is {"center" : p, "radius" : r}
+// Extrudes a 2D outline by depth. Each hole is {"center" : p, "dia" : d}
 // or a closed path like the outline.
 export function b3Prism(context is Context, id is Id, frame is Plane, path is array, holes is array, depth is ValueWithUnits)
 {
@@ -290,7 +305,7 @@ export function b3Prism(context is Context, id is Id, frame is Plane, path is ar
         const h = holes[i];
         if (h is map)
         {
-            skCircle(sketch, "hole" ~ toString(i), { "center" : h.center, "radius" : h.radius });
+            skCircle(sketch, "hole" ~ toString(i), { "center" : h.center, "radius" : h.dia / 2 });
         }
         else
         {
@@ -307,25 +322,127 @@ export function b3Prism(context is Context, id is Id, frame is Plane, path is ar
     opDeleteBodies(context, id + "cleanup", { "entities" : qCreatedBy(sketchId, EntityType.BODY) });
 }
 
+// Outline in (y, z), from x0 to x1.
+export function b3PrismYZ(context is Context, id is Id, path is array, holes is array, x0 is ValueWithUnits, x1 is ValueWithUnits)
+{
+    b3Prism(context, id, b3PlaneYZ(x0), path, holes, x1 - x0);
+}
+
+// Outline in (x, z), from y0 to y1.
+export function b3PrismXZ(context is Context, id is Id, path is array, holes is array, y0 is ValueWithUnits, y1 is ValueWithUnits)
+{
+    b3Prism(context, id, b3PlaneXZ(y1), path, holes, y1 - y0);
+}
+
 export function b3Box(context is Context, id is Id, lo is Vector, hi is Vector)
 {
     fCuboid(context, id, { "corner1" : lo, "corner2" : hi });
 }
 
-// Cylinder along Y.
-export function b3CylY(context is Context, id is Id, x is ValueWithUnits, z is ValueWithUnits,
-    y0 is ValueWithUnits, y1 is ValueWithUnits, r is ValueWithUnits)
-{
-    fCylinder(context, id, { "bottomCenter" : vector(x, y0, z), "topCenter" : vector(x, y1, z), "radius" : r });
-}
-
-// Cylinder along X.
+// Cylinder along x.
 export function b3CylX(context is Context, id is Id, y is ValueWithUnits, z is ValueWithUnits,
-    x0 is ValueWithUnits, x1 is ValueWithUnits, r is ValueWithUnits)
+    x0 is ValueWithUnits, x1 is ValueWithUnits, dia is ValueWithUnits)
 {
-    fCylinder(context, id, { "bottomCenter" : vector(x0, y, z), "topCenter" : vector(x1, y, z), "radius" : r });
+    fCylinder(context, id, { "bottomCenter" : vector(x0, y, z), "topCenter" : vector(x1, y, z), "radius" : dia / 2 });
 }
 
+// ---------------------------------------------------------------------------
+// 2D shapes
+// ---------------------------------------------------------------------------
+export function b3Rect(u0 is ValueWithUnits, v0 is ValueWithUnits, u1 is ValueWithUnits, v1 is ValueWithUnits) returns array
+{
+    return [vector(u0, v0), vector(u1, v0), vector(u1, v1), vector(u0, v1)];
+}
+
+export function b3Hole(u is ValueWithUnits, v is ValueWithUnits, dia is ValueWithUnits) returns map
+{
+    return { "center" : vector(u, v), "dia" : dia };
+}
+
+// Strip along the edge p -> q, offset to the left of travel by t.
+export function b3Strip(p is Vector, q is Vector, t is ValueWithUnits) returns array
+{
+    const d = (q - p) / norm(q - p);
+    const left = vector(-d[1], d[0]);
+    return [p, q, q + left * t, p + left * t];
+}
+
+// Obround slot centered on c, l long along u and h tall along v.
+export function b3Slot(c is Vector, l is ValueWithUnits, h is ValueWithUnits) returns array
+{
+    const r = h / 2;
+    const a = l / 2 - r;
+    return [
+            vector(c[0] - a, c[1] + r),
+            { "mid" : vector(c[0] - a - r, c[1]), "end" : vector(c[0] - a, c[1] - r) },
+            vector(c[0] + a, c[1] - r),
+            { "mid" : vector(c[0] + a + r, c[1]), "end" : vector(c[0] + a, c[1] + r) }
+        ];
+}
+
+// Keyhole: KEYHOLE_DIA hole centered (u, vHole), with a KEYHOLE_SLOT_W slot
+// running down to a round end centered at vEnd.
+export function b3Keyhole(u is ValueWithUnits, vHole is ValueWithUnits, vEnd is ValueWithUnits) returns array
+{
+    const big = KEYHOLE_DIA / 2;
+    const h = KEYHOLE_SLOT_W / 2;
+    const meet = vHole - sqrt(big * big - h * h);
+    return [
+            vector(u - h, vEnd),
+            { "mid" : vector(u, vEnd - h), "end" : vector(u + h, vEnd) },
+            vector(u + h, meet),
+            { "mid" : vector(u, vHole + big), "end" : vector(u - h, meet) }
+        ];
+}
+
+// Hook-shaped ear in (y, z). The ear runs from the root face yRoot to yFar,
+// over z zLo to zHi; above that the hook (yHookIn to yFar) rises to a round
+// top of radius EAR_HOOK_R on the axle (axY, axZ). Works either way along y.
+export function b3EarOutline(yRoot is ValueWithUnits, yFar is ValueWithUnits, yHookIn is ValueWithUnits,
+    zLo is ValueWithUnits, zHi is ValueWithUnits, axY is ValueWithUnits, axZ is ValueWithUnits) returns array
+{
+    return [
+            vector(yRoot, zLo),
+            vector(yFar, zLo),
+            vector(yFar, axZ),
+            { "mid" : vector(axY, axZ + EAR_HOOK_R), "end" : vector(yHookIn, axZ) },
+            vector(yHookIn, zHi),
+            vector(yRoot, zHi)
+        ];
+}
+
+// ---------------------------------------------------------------------------
+// Tray (treads and hook-on step): skin plus two lips at the x ends.
+// Holes are in (y, z) and go through both lips. cornerR > 0 rounds each
+// lip's bottom outer corner.
+// ---------------------------------------------------------------------------
+export function b3Tray(context is Context, id is Id, x0 is ValueWithUnits, top is ValueWithUnits, holes is array, cornerR is ValueWithUnits)
+{
+    const y0 = TRAY_Y0;
+    const y1 = TRAY_Y0 + TRAY_W;
+    const x1 = x0 + TRAY_D;
+    const zb = top - LIP;
+    var lip = [vector(y0, top), vector(y1, top), vector(y1, zb), vector(y0, zb)];
+    if (cornerR > 0 * inch)
+    {
+        const k = 1 - sqrt(0.5);
+        lip = [
+                vector(y0, top),
+                vector(y1, top),
+                vector(y1, zb + cornerR),
+                { "mid" : vector(y1 - cornerR * k, zb + cornerR * k), "end" : vector(y1 - cornerR, zb) },
+                vector(y0, zb)
+            ];
+    }
+    b3Box(context, id + "skin", vector(x0, y0, top - SHEET_T), vector(x1, y1, top));
+    b3PrismYZ(context, id + "lipBack", lip, holes, x0, x0 + SHEET_T);
+    b3PrismYZ(context, id + "lipFront", lip, holes, x1 - SHEET_T, x1);
+    b3Union(context, id + "join", b3Solids(id));
+}
+
+// ---------------------------------------------------------------------------
+// Booleans and finishing
+// ---------------------------------------------------------------------------
 export function b3Solids(id is Id) returns Query
 {
     return qBodyType(qCreatedBy(id, EntityType.BODY), BodyType.SOLID);
@@ -339,49 +456,6 @@ export function b3Union(context is Context, id is Id, bodies is Query)
     }
 }
 
-export function b3Subtract(context is Context, id is Id, targets is Query, tools is Query)
-{
-    if (size(evaluateQuery(context, tools)) > 0)
-    {
-        opBoolean(context, id, { "targets" : targets, "tools" : tools, "operationType" : BooleanOperationType.SUBTRACTION });
-    }
-}
-
-// Strip along the edge p -> q, offset to the left of travel by t.
-export function b3Strip(p is Vector, q is Vector, t is ValueWithUnits) returns array
-{
-    const d = (q - p) / norm(q - p);
-    const left = vector(-d[1], d[0]);
-    return [p, q, q + left * t, p + left * t];
-}
-
-// Rounded slot centered on c, w long along u and h tall along v.
-export function b3Slot(c is Vector, w is ValueWithUnits, h is ValueWithUnits) returns array
-{
-    const r = h / 2;
-    const a = w / 2 - r;
-    return [
-            vector(c[0] - a, c[1] + r),
-            { "mid" : vector(c[0] - a - r, c[1]), "end" : vector(c[0] - a, c[1] - r) },
-            vector(c[0] + a, c[1] - r),
-            { "mid" : vector(c[0] + a + r, c[1]), "end" : vector(c[0] + a, c[1] + r) }
-        ];
-}
-
-// Tray with lips bent down at the back (yb) and front, in (Y, Z).
-export function b3TrayOutline(yb is ValueWithUnits, top is ValueWithUnits, lip is ValueWithUnits) returns array
-{
-    const yf = yb + TREAD_GOING;
-    const t = SHEET_T;
-    return [
-            vector(yb, top), vector(yf, top), vector(yf, top - lip), vector(yf - t, top - lip),
-            vector(yf - t, top - t), vector(yb + t, top - t), vector(yb + t, top - lip), vector(yb, top - lip)
-        ];
-}
-
-// ---------------------------------------------------------------------------
-// Part names, materials and colors
-// ---------------------------------------------------------------------------
 export function b3Finish(context is Context, bodies is Query, partName is string, rgb is array)
 {
     setProperty(context, { "entities" : bodies, "propertyType" : PropertyType.NAME, "value" : partName });
@@ -416,11 +490,12 @@ export const b3Reference = defineFeature(function(context is Context, id is Id, 
     }
     {
         const far = 30 * inch;
-        b3Ref(context, id + "floor", vector(-CABINET_WIDTH, -far, -0.5 * inch), vector(far, far, 0 * inch), "REF floor");
-        b3Ref(context, id + "cabinet", vector(-CABINET_WIDTH, 0 * inch, 0 * inch), vector(0 * inch, CABINET_DEPTH, CABINET_TOP_Z), "REF cabinet");
-        b3Ref(context, id + "wall", vector(0 * inch, -1 * inch, 0 * inch), vector(far, 0 * inch, BED_PLATFORM_Z), "REF bed-end wall");
-        b3Ref(context, id + "mattress", vector(-CABINET_WIDTH, -far, BED_PLATFORM_Z), vector(far, 0 * inch, BED_PLATFORM_Z + MATTRESS_THICK), "REF mattress");
-        b3Ref(context, id + "handle", vector(HANDLE_X, 0 * inch, HANDLE_Z - 0.5 * inch), vector(HANDLE_X + 4 * inch, HANDLE_PROJECTION, HANDLE_Z + 0.5 * inch), "REF door handle");
+        const wallX = -WALL_GAP;
+        b3Ref(context, id + "floor", vector(-far, -CABINET_WIDTH, -0.5 * inch), vector(far, far, 0 * inch), "REF floor");
+        b3Ref(context, id + "cabinet", vector(wallX, -CABINET_WIDTH, 0 * inch), vector(wallX + CABINET_DEPTH, 0 * inch, CABINET_TOP_Z), "REF cabinet");
+        b3Ref(context, id + "wall", vector(wallX - 1 * inch, 0 * inch, 0 * inch), vector(wallX, far, BED_PLATFORM_Z), "REF bed-end wall");
+        b3Ref(context, id + "mattress", vector(-far, -CABINET_WIDTH, BED_PLATFORM_Z), vector(wallX, far, BED_PLATFORM_Z + MATTRESS_THICK), "REF mattress");
+        b3Ref(context, id + "handle", vector(wallX, HANDLE_Y, HANDLE_Z - 0.5 * inch), vector(wallX + HANDLE_PROJECTION, HANDLE_Y + 4 * inch, HANDLE_Z + 0.5 * inch), "REF door handle");
     });
 
 function b3Ref(context is Context, id is Id, lo is Vector, hi is Vector, partName is string)
@@ -435,11 +510,10 @@ function b3Ref(context is Context, id is Id, lo is Vector, hi is Vector, partNam
 // B3_Treads.fs
 // ===========================================================================
 /*
- * B3 Treads: the top and middle treads. 1/8" tray with lips bent down at the
- * front and back, and pivot holes through both lips for the cabinet axle and
- * the outer axle. Follows FOLD_ANGLE.
- *
- * Still to add (see the B3 page): corner relief near the outer rail.
+ * B3 Treads (2), 1/8" sheet: 18 x 5 5/8 skin with 2" lips bent down at the
+ * x ends, bushing holes through both lips for the cabinet and outer axles,
+ * and a 1/2" radius on each lip's bottom outer corner to clear the rail.
+ * Follows FOLD_ANGLE.
  */
 annotation { "Feature Type Name" : "B3 Treads" }
 export const b3Treads = defineFeature(function(context is Context, id is Id, definition is map)
@@ -453,20 +527,14 @@ export const b3Treads = defineFeature(function(context is Context, id is Id, def
 
 function b3Tread(context is Context, id is Id, n is number, partName is string)
 {
-    const top = b3TreadTopZ(n);
-    const yb = b3TreadBackY(n);
-    const yf = yb + TREAD_GOING;
-    const over = 0.1 * inch;
+    const top = b3T(n);
+    const holes = [
+            b3Hole(CAB_AXLE_Y, top - CAB_AXLE_DROP, HOLE_DIA),
+            b3Hole(OUT_AXLE_Y, top - OUT_AXLE_DROP, HOLE_DIA)
+        ];
+    b3Tray(context, id, b3GoingX(n) + TRAY_INSET, top, holes, LIP_CORNER_R);
 
-    b3Prism(context, id + "tray", b3FrameYZ(b3TreadX0()), b3TrayOutline(yb, top, TREAD_LIP), [], TREAD_WIDTH);
-
-    const cabAx = b3CabAxle(n);
-    const outAx = b3OutAxle(n);
-    b3CylY(context, id + "cabHole", cabAx[0], cabAx[2], yb - over, yf + over, BUSHING_OD / 2);
-    b3CylY(context, id + "outHole", outAx[0], outAx[2], yb - over, yf + over, BUSHING_OD / 2);
-    b3Subtract(context, id + "holes", b3Solids(id + "tray"), qUnion([b3Solids(id + "cabHole"), b3Solids(id + "outHole")]));
-
-    const body = b3Solids(id + "tray");
+    const body = b3Solids(id);
     opTransform(context, id + "fold", { "bodies" : body, "transform" : b3TreadFold(n) });
     b3Finish(context, body, partName, RGB_ALU);
 }
@@ -475,11 +543,10 @@ function b3Tread(context is Context, id is Id, n is number, partName is string)
 // B3_Brackets.fs
 // ===========================================================================
 /*
- * B3 Cabinet Brackets: one per tread, 3/16" plate. The web screws flat to the
- * panel with a row of M6 holes; a hook-shaped ear bends out at each end to
- * carry the tread's cabinet axle and its level stop pin.
- *
- * Flat in reality, the ears are modeled as sharp 90 degree bends.
+ * B3 Cabinet Brackets (2), 3/16" sheet. The 5 1/8 x 2 web sits flat on the
+ * panel with four M6 holes (countersinks not modeled); a hook-shaped ear is
+ * bent 90 degrees toward the room at each end to carry the tread's cabinet
+ * axle and its stop pin.
  */
 annotation { "Feature Type Name" : "B3 Cabinet Brackets" }
 export const b3CabinetBrackets = defineFeature(function(context is Context, id is Id, definition is map)
@@ -493,42 +560,30 @@ export const b3CabinetBrackets = defineFeature(function(context is Context, id i
 
 function b3Bracket(context is Context, id is Id, n is number, partName is string)
 {
-    const top = b3TreadTopZ(n);
-    const yb = b3TreadBackY(n);
-    const yf = yb + TREAD_GOING;
-    const y0 = yb + EAR_INSET;           // web ends = ears' outer faces
-    const y1 = yf - EAR_INSET;
-    const webTop = top - BRACKET_DROP;
+    const top = b3T(n);
+    const xg = b3GoingX(n);
+    const faces = b3EarFaces(n);
+    const webTop = top - BRACKET_TOP_DROP;
     const webBot = webTop - BRACKET_H;
 
     // Web, flat on the panel, with the screw row.
     var screws = [];
-    for (var k = 0; k < SCREW_COUNT; k += 1)
+    for (var k = 0; k < size(SCREW_X); k += 1)
     {
-        const y = (y0 + y1) / 2 + (k - (SCREW_COUNT - 1) / 2) * SCREW_PITCH;
-        screws = append(screws, { "center" : vector(y, top - SCREW_DROP), "radius" : SCREW_HOLE_DIA / 2 });
+        screws = append(screws, b3Hole(xg + SCREW_X[k], top - SCREW_DROP, SCREW_HOLE_DIA));
     }
-    const web = [vector(y0, webBot), vector(y1, webBot), vector(y1, webTop), vector(y0, webTop)];
-    b3Prism(context, id + "web", b3FrameYZ(0 * inch), web, screws, PLATE_T);
+    b3PrismXZ(context, id + "web", b3Rect(faces[0], webBot, faces[1], webTop), screws, 0 * inch, PLATE_T);
 
-    // Ears, in (X, Z): full height at the web, then a hook over the axle.
-    const ax = PLATE_T + CAB_AXLE_OUT;
-    const az = top - CAB_AXLE_DROP;
-    const r = EAR_HOOK_R;
-    const ear = [
-            vector(0 * inch, webBot),
-            vector(ax + r, webBot),
-            vector(ax + r, az),
-            { "mid" : vector(ax, az + r), "end" : vector(ax - r, az) },
-            vector(ax - r, webTop),
-            vector(0 * inch, webTop)
-        ];
+    // Ears, in (y, z).
+    const axZ = top - CAB_AXLE_DROP;
+    const ear = b3EarOutline(0 * inch, PLATE_T + EAR_W, PLATE_T + HOOK_U0, webBot, webTop, CAB_AXLE_Y, axZ);
     const earHoles = [
-            { "center" : vector(ax, az), "radius" : BUSHING_OD / 2 },
-            { "center" : vector(ax + STOP_PIN_OUT, top - STOP_PIN_DROP), "radius" : STOP_PIN_DIA / 2 }
+            b3Hole(CAB_AXLE_Y, axZ, HOLE_DIA),
+            b3Hole(STOP_PIN_Y, top - STOP_PIN_DROP, STOP_PIN_DIA)
         ];
-    b3Prism(context, id + "earBack", b3FrameXZ(y0 + PLATE_T), ear, earHoles, PLATE_T);
-    b3Prism(context, id + "earFront", b3FrameXZ(y1), ear, earHoles, PLATE_T);
+    const ranges = b3EarRanges(n);
+    b3PrismYZ(context, id + "earBack", ear, earHoles, ranges[0][0], ranges[0][1]);
+    b3PrismYZ(context, id + "earFront", ear, earHoles, ranges[1][0], ranges[1][1]);
 
     b3Union(context, id + "join", b3Solids(id));
     b3Finish(context, b3Solids(id), partName, RGB_ALU_DARK);
@@ -538,15 +593,15 @@ function b3Bracket(context is Context, id is Id, n is number, partName is string
 // B3_OuterRail.fs
 // ===========================================================================
 /*
- * B3 Outer Rail: 3/16" stepped plate with a 3/4" flange turned outward along
- * the bed-side, bottom and front edges (1" along the foot), a hand slot, and
- * two hook-shaped pivot ears per tread bent inward. The front flange carries
- * the holes for the hook-on step's outer studs. Follows FOLD_ANGLE.
+ * B3 Outer Rail, 3/16" sheet: stepped plate with the bed-side edge cut back
+ * to clear the door handle, a 3/4" flange turned outward (+y) along the
+ * bed-side, cut-back, bottom, foot and front edges, a hand slot, the step
+ * clip's rivet holes, and two hook-shaped pivot ears per tread bent toward
+ * the cabinet. The bed-side and front flanges stop short of the ears.
+ * Follows FOLD_ANGLE.
  *
- * The bed-side edge is cut back below the top step so the rail and its
- * flange pass the cab door handle.
- *
- * Bends are modeled sharp; add bend reliefs where the flanges meet.
+ * Not modeled: bend reliefs, the notches left where the ear tabs are cut,
+ * and the latch holes.
  */
 annotation { "Feature Type Name" : "B3 Outer Rail" }
 export const b3OuterRail = defineFeature(function(context is Context, id is Id, definition is map)
@@ -554,80 +609,110 @@ export const b3OuterRail = defineFeature(function(context is Context, id is Id, 
     {
     }
     {
-        const x0 = b3RailX0();
-        const yb = b3TreadBackY(TREAD_TOP);
-        const ym = yb + TREAD_GOING;
-        const yf = ym + TREAD_GOING;
-        const topStep = b3TreadTopZ(TREAD_TOP) - RAIL_STEP_DROP;
-        const midStep = b3TreadTopZ(TREAD_MIDDLE) - RAIL_STEP_DROP;
+        const y0 = RAIL_Y;
+        const y1 = RAIL_Y + PLATE_T;
+        const xm = GOING;
+        const xf = 2 * GOING;
+        const topStep = b3T(TREAD_TOP) - RAIL_STEP_DROP;
+        const midStep = b3T(TREAD_MIDDLE) - RAIL_STEP_DROP;
 
-        // Plate outline in (Y, Z), counterclockwise so the flanges offset inward.
-        const pA = vector(yb, topStep);
-        const pB = vector(yb, topStep - RAIL_BACK_DROP);
-        const pB2 = vector(yb + RAIL_CUTBACK, RAIL_CUTBACK_Z);   // cut back to clear the door handle
-        const pC = vector(yf - RAIL_FOOT_LEN, RAIL_FOOT_Z);
-        const pD = vector(yf, RAIL_FOOT_Z);
-        const pE = vector(yf, midStep);
-        const pF = vector(ym, midStep);
-        const pG = vector(ym, topStep);
-        const slot = b3Slot(vector(yb + HAND_SLOT_IN, HAND_SLOT_Z), HAND_SLOT_W, HAND_SLOT_H);
-        b3Prism(context, id + "plate", b3FrameYZ(x0), [pA, pB, pB2, pC, pD, pE, pF, pG], [slot], PLATE_T);
+        // Plate outline in (x, z), same order as the B3 page.
+        const outline = [
+                vector(0 * inch, topStep),
+                vector(xm, topStep),
+                vector(xm, midStep),
+                vector(xf, midStep),
+                vector(xf, RAIL_FOOT_Z),
+                vector(RAIL_FOOT_X, RAIL_FOOT_Z),
+                vector(RAIL_CUTBACK_X, RAIL_CUTBACK_Z),
+                vector(0 * inch, RAIL_BACK_Z)
+            ];
+        var holes = [b3Slot(vector(HAND_SLOT_X, HAND_SLOT_Z), HAND_SLOT_L, HAND_SLOT_H)];
+        for (var i = 0; i < size(CLIP_RIVET_X); i += 1)
+        {
+            holes = append(holes, b3Hole(CLIP_RIVET_X[i], CLIP_RIVET_Z, RIVET_HOLE_DIA));
+        }
+        b3PrismXZ(context, id + "plate", outline, holes, y0, y1);
 
-        // Flanges, turned outward (+X).
-        b3Prism(context, id + "flangeBack", b3FrameYZ(x0), b3Strip(pA, pB, PLATE_T), [], PLATE_T + RAIL_FLANGE);
-        b3Prism(context, id + "flangeCutback", b3FrameYZ(x0), b3Strip(pB, pB2, PLATE_T), [], PLATE_T + RAIL_FLANGE);
-        b3Prism(context, id + "flangeBottom", b3FrameYZ(x0), b3Strip(pB2, pC, PLATE_T), [], PLATE_T + RAIL_FLANGE);
-        b3Prism(context, id + "flangeFoot", b3FrameYZ(x0), b3Strip(pC, pD, PLATE_T), [], PLATE_T + RAIL_FOOT_FLANGE);
-        b3Prism(context, id + "flangeFront", b3FrameYZ(x0), b3Strip(pD, pE, PLATE_T), [], PLATE_T + RAIL_FLANGE);
+        // Flanges, each a strip PLATE_T wide inside its edge, turned outward.
+        const fy1 = y1 + RAIL_FLANGE;
+        const pBack = vector(0 * inch, RAIL_BACK_Z);
+        const pCut = vector(RAIL_CUTBACK_X, RAIL_CUTBACK_Z);
+        const pFoot = vector(RAIL_FOOT_X, RAIL_FOOT_Z);
+        const pFront = vector(xf, RAIL_FOOT_Z);
+        b3PrismXZ(context, id + "flangeBack", b3Strip(vector(0 * inch, RAIL_BACK_FLANGE_TOP), pBack, PLATE_T), [], y0, fy1);
+        b3PrismXZ(context, id + "flangeCutback", b3Strip(pBack, pCut, PLATE_T), [], y0, fy1);
+        b3PrismXZ(context, id + "flangeBottom", b3Strip(pCut, pFoot, PLATE_T), [], y0, fy1);
+        b3PrismXZ(context, id + "flangeFoot", b3Strip(pFoot, pFront, PLATE_T), [], y0, fy1);
+        b3PrismXZ(context, id + "flangeFront", b3Strip(pFront, vector(xf, RAIL_FRONT_FLANGE_TOP), PLATE_T), [], y0, fy1);
 
         // Pivot ears for both treads.
         b3RailEars(context, id + "earsTop", TREAD_TOP);
         b3RailEars(context, id + "earsMiddle", TREAD_MIDDLE);
 
         b3Union(context, id + "join", b3Solids(id));
-
-        // Holes for the hook-on step's outer studs, through the front flange.
-        b3CylY(context, id + "stud1", b3OutStudX(), STUD_Z1, yf - PLATE_T - 0.1 * inch, yf + 0.1 * inch, STUD_HOLE_DIA / 2);
-        b3CylY(context, id + "stud2", b3OutStudX(), STUD_Z2, yf - PLATE_T - 0.1 * inch, yf + 0.1 * inch, STUD_HOLE_DIA / 2);
-        const studs = qUnion([b3Solids(id + "stud1"), b3Solids(id + "stud2")]);
-        b3Subtract(context, id + "studHoles", qSubtraction(b3Solids(id), studs), studs);
         const rail = b3Solids(id);
-
         opTransform(context, id + "fold", { "bodies" : rail, "transform" : b3RailFold() });
         b3Finish(context, rail, "Outer rail", RGB_ALU);
     });
 
-// Two hook-shaped ears at tread n, bent inward from the rail, in (X, Z).
+// Two hook-shaped ears at tread n, bent toward the cabinet, in (y, z).
 function b3RailEars(context is Context, id is Id, n is number)
 {
-    const top = b3TreadTopZ(n);
-    const yb = b3TreadBackY(n);
-    const yf = yb + TREAD_GOING;
-    const xr = b3RailX0() + PLATE_T;
-    const outAx = b3OutAxle(n);
-    const ax = outAx[0];
-    const az = outAx[2];
-    const r = EAR_HOOK_R;
-    const ear = [
-            vector(xr, top - RAIL_EAR_BOTTOM_DROP),
-            vector(ax - r, top - RAIL_EAR_BOTTOM_DROP),
-            vector(ax - r, az),
-            { "mid" : vector(ax, az + r), "end" : vector(ax + r, az) },
-            vector(ax + r, top - RAIL_NOTCH_DROP),
-            vector(xr, top - RAIL_NOTCH_DROP)
-        ];
-    const holes = [{ "center" : vector(ax, az), "radius" : BUSHING_OD / 2 }];
-    b3Prism(context, id + "back", b3FrameXZ(yb + EAR_INSET + PLATE_T), ear, holes, PLATE_T);
-    b3Prism(context, id + "front", b3FrameXZ(yf - EAR_INSET), ear, holes, PLATE_T);
+    const top = b3T(n);
+    const axZ = top - OUT_AXLE_DROP;
+    const ear = b3EarOutline(RAIL_Y + PLATE_T, RAIL_Y - EAR_W, RAIL_Y - HOOK_U0,
+        top - RAIL_EAR_ROOT_LO, top - RAIL_EAR_ROOT_HI, OUT_AXLE_Y, axZ);
+    const holes = [b3Hole(OUT_AXLE_Y, axZ, HOLE_DIA)];
+    const ranges = b3EarRanges(n);
+    b3PrismYZ(context, id + "back", ear, holes, ranges[0][0], ranges[0][1]);
+    b3PrismYZ(context, id + "front", ear, holes, ranges[1][0], ranges[1][1]);
 }
+
+// ===========================================================================
+// B3_StepClip.fs
+// ===========================================================================
+/*
+ * B3 Step Clip, 1/8" sheet: small angle riveted inside the outer rail. Its
+ * keyhole takes the hook pin on the back end of the hook-on step's outer
+ * leg axle. Moves with the rail, so it follows FOLD_ANGLE.
+ */
+annotation { "Feature Type Name" : "B3 Step Clip" }
+export const b3StepClip = defineFeature(function(context is Context, id is Id, definition is map)
+    precondition
+    {
+    }
+    {
+        const x1 = 2 * GOING;
+        const z0 = CLIP_Z0;
+        const z1 = CLIP_Z0 + CLIP_H;
+
+        // Rail leg, against the rail's inner face, with the rivet holes.
+        var rivets = [];
+        for (var i = 0; i < size(CLIP_RIVET_X); i += 1)
+        {
+            rivets = append(rivets, b3Hole(CLIP_RIVET_X[i], CLIP_RIVET_Z, RIVET_HOLE_DIA));
+        }
+        b3PrismXZ(context, id + "railLeg", b3Rect(CLIP_X0, z0, x1, z1), rivets, RAIL_Y - SHEET_T, RAIL_Y);
+
+        // Keyhole leg, outer face flush with x = 12.
+        b3PrismYZ(context, id + "keyLeg", b3Rect(CLIP_KEY_LEG_Y0, z0, RAIL_Y, z1),
+            [b3Keyhole(CLIP_KEYHOLE_Y, CLIP_KEYHOLE_Z, CLIP_KEYHOLE_END_Z)], x1 - SHEET_T, x1);
+
+        b3Union(context, id + "join", b3Solids(id));
+        const clip = b3Solids(id);
+        opTransform(context, id + "fold", { "bodies" : clip, "transform" : b3RailFold() });
+        b3Finish(context, clip, "Step clip", RGB_ALU_DARK);
+    });
 
 // ===========================================================================
 // B3_PivotHardware.fs
 // ===========================================================================
 /*
- * B3 Pivot Hardware: the four 5/16" stainless axles and the four 3/16" level
- * stop pins, for checking fit. Bushings and washers aren't modeled. The
- * outer axles follow FOLD_ANGLE.
+ * B3 Pivot Hardware: the four 5/16" tread axles, the two hook-on step axles
+ * (their back ends are the hook pins) and the four 3/16" stop pins, for
+ * checking fit. Bushings, washers and E-clips aren't modeled. The outer
+ * tread axles follow FOLD_ANGLE.
  */
 annotation { "Feature Type Name" : "B3 Pivot Hardware" }
 export const b3PivotHardware = defineFeature(function(context is Context, id is Id, definition is map)
@@ -637,28 +722,31 @@ export const b3PivotHardware = defineFeature(function(context is Context, id is 
     {
         b3TreadHardware(context, id + "top", TREAD_TOP, "top");
         b3TreadHardware(context, id + "middle", TREAD_MIDDLE, "middle");
+
+        b3CylX(context, id + "stepCab", STEP_CAB_AXLE_Y, STEP_CAB_AXLE_Z, STEP_AXLE_X0, STEP_AXLE_X1, AXLE_DIA);
+        b3FinishSteel(context, b3Solids(id + "stepCab"), "Axle, step, cabinet side");
+        b3CylX(context, id + "stepOut", STEP_OUT_AXLE_Y, STEP_OUT_AXLE_Z, STEP_AXLE_X0, STEP_AXLE_X1, AXLE_DIA);
+        b3FinishSteel(context, b3Solids(id + "stepOut"), "Axle, step, outer");
     });
 
 function b3TreadHardware(context is Context, id is Id, n is number, label is string)
 {
-    const yb = b3TreadBackY(n);
-    const yf = yb + TREAD_GOING;
-    const ym = b3TreadMidY(n);
-    const cabAx = b3CabAxle(n);
-    const outAx = b3OutAxle(n);
+    const top = b3T(n);
+    const x0 = b3GoingX(n) + TREAD_AXLE_X0;
+    const x1 = x0 + TREAD_AXLE_LEN;
 
-    b3CylY(context, id + "cabAxle", cabAx[0], cabAx[2], ym - AXLE_LEN / 2, ym + AXLE_LEN / 2, AXLE_DIA / 2);
+    b3CylX(context, id + "cabAxle", CAB_AXLE_Y, top - CAB_AXLE_DROP, x0, x1, AXLE_DIA);
     b3FinishSteel(context, b3Solids(id + "cabAxle"), "Axle, cabinet, " ~ label);
 
-    b3CylY(context, id + "outAxle", outAx[0], outAx[2], ym - AXLE_LEN / 2, ym + AXLE_LEN / 2, AXLE_DIA / 2);
+    b3CylX(context, id + "outAxle", OUT_AXLE_Y, top - OUT_AXLE_DROP, x0, x1, AXLE_DIA);
     opTransform(context, id + "fold", { "bodies" : b3Solids(id + "outAxle"), "transform" : b3RailFold() });
     b3FinishSteel(context, b3Solids(id + "outAxle"), "Axle, outer, " ~ label);
 
-    // Stop pins: from the lip's outer face through the bracket ear.
-    const px = cabAx[0] + STOP_PIN_OUT;
-    const pz = b3TreadTopZ(n) - STOP_PIN_DROP;
-    b3CylY(context, id + "pinBack", px, pz, yb, yb + EAR_INSET + PLATE_T, STOP_PIN_DIA / 2);
-    b3CylY(context, id + "pinFront", px, pz, yf - EAR_INSET - PLATE_T, yf, STOP_PIN_DIA / 2);
+    // Stop pins: flush with each bracket ear's inside face, sticking out under the lip.
+    const ranges = b3EarRanges(n);
+    const pz = top - STOP_PIN_DROP;
+    b3CylX(context, id + "pinBack", STOP_PIN_Y, pz, ranges[0][0] - STOP_PIN_OUT, ranges[0][1], STOP_PIN_DIA);
+    b3CylX(context, id + "pinFront", STOP_PIN_Y, pz, ranges[1][0], ranges[1][1] + STOP_PIN_OUT, STOP_PIN_DIA);
     b3FinishSteel(context, b3Solids(id + "pinBack"), "Stop pin, back, " ~ label);
     b3FinishSteel(context, b3Solids(id + "pinFront"), "Stop pin, front, " ~ label);
 }
@@ -667,10 +755,11 @@ function b3TreadHardware(context is Context, id is Id, n is number, label is str
 // B3_FrontAngle.fs
 // ===========================================================================
 /*
- * B3 Front Angle: 1/8" angle screwed to the cabinet's front post. The leg on
- * the panel takes the M6 screws and stops short of the middle bracket; the
- * outward leg sits flush with the front edge, carries the hook-on step's
- * cabinet-side studs and runs up to the travel-latch keeper.
+ * B3 Front Angle, 1/8" sheet, on the cabinet's front post. The panel leg
+ * takes three screws into the post and stops at 16 1/2" to clear the middle
+ * bracket. The outward leg is flush with the front edge and carries the
+ * keyhole for the hook-on step's cabinet-side pin. Not modeled: the keeper
+ * holes (drill to suit the latch) and the bend relief.
  */
 annotation { "Feature Type Name" : "B3 Front Angle" }
 export const b3FrontAngle = defineFeature(function(context is Context, id is Id, definition is map)
@@ -678,26 +767,17 @@ export const b3FrontAngle = defineFeature(function(context is Context, id is Id,
     {
     }
     {
-        const yf = b3StairFrontY();
-        const over = 0.1 * inch;
-
-        b3Box(context, id + "panelLeg", vector(0 * inch, yf - FA_PANEL_LEG, FA_BOTTOM_Z), vector(SHEET_T, yf, FA_PANEL_LEG_TOP));
-        b3Box(context, id + "outLeg", vector(0 * inch, yf - SHEET_T, FA_BOTTOM_Z), vector(FA_OUT_LEG, yf, FA_TOP_Z));
-        b3Union(context, id + "join", b3Solids(id));
-
-        // M6 screws into the front post.
+        var screws = [];
         for (var i = 0; i < size(FA_SCREW_Z); i += 1)
         {
-            b3CylX(context, id + ("screw" ~ toString(i)), yf - FA_SCREW_INSET, FA_SCREW_Z[i], -over, SHEET_T + over, SCREW_HOLE_DIA / 2);
+            screws = append(screws, b3Hole(FA_SCREW_X, FA_SCREW_Z[i], FA_SCREW_HOLE_DIA));
         }
-        // Hook-on step studs and the latch keeper, through the outward leg.
-        b3CylY(context, id + "stud1", CAB_STUD_X, STUD_Z1, yf - SHEET_T - over, yf + over, STUD_HOLE_DIA / 2);
-        b3CylY(context, id + "stud2", CAB_STUD_X, STUD_Z2, yf - SHEET_T - over, yf + over, STUD_HOLE_DIA / 2);
-        b3CylY(context, id + "keeper", CAB_STUD_X, KEEPER_Z, yf - SHEET_T - over, yf + over, STUD_HOLE_DIA / 2);
+        b3PrismXZ(context, id + "panelLeg", b3Rect(FA_PANEL_LEG_X0, FA_BOTTOM_Z, FA_X1, FA_PANEL_LEG_TOP), screws, 0 * inch, SHEET_T);
 
-        const fa = qUnion([b3Solids(id + "panelLeg"), b3Solids(id + "outLeg")]);
-        const cutters = qSubtraction(b3Solids(id), fa);
-        b3Subtract(context, id + "holes", fa, cutters);
+        b3PrismYZ(context, id + "outLeg", b3Rect(0 * inch, FA_BOTTOM_Z, FA_OUT_LEG, FA_TOP_Z),
+            [b3Keyhole(FA_KEYHOLE_Y, FA_KEYHOLE_Z, FA_KEYHOLE_END_Z)], FA_X1 - SHEET_T, FA_X1);
+
+        b3Union(context, id + "join", b3Solids(id));
         b3Finish(context, b3Solids(id), "Front angle", RGB_ALU_DARK);
     });
 
@@ -705,8 +785,9 @@ export const b3FrontAngle = defineFeature(function(context is Context, id is Id,
 // B3_StepLedge.fs
 // ===========================================================================
 /*
- * B3 Step Ledge: short 1/8" angle on the panel just above the floor at the
- * bed end. The folded hook-on step stands on end on its shelf.
+ * B3 Step Ledge, 1/8" sheet: 6" angle on the panel at the bed end. The
+ * folded hook-on step stands on end on its 2 1/2" shelf. Two #8 screws
+ * through the back leg (countersinks not modeled).
  */
 annotation { "Feature Type Name" : "B3 Step Ledge" }
 export const b3StepLedge = defineFeature(function(context is Context, id is Id, definition is map)
@@ -714,21 +795,17 @@ export const b3StepLedge = defineFeature(function(context is Context, id is Id, 
     {
     }
     {
-        const y0 = STAIR_Y0;
-        const y1 = STAIR_Y0 + LEDGE_LEN;
-        const over = 0.1 * inch;
+        const top = LEDGE_TOP_Z;
+        b3Box(context, id + "shelf", vector(0 * inch, 0 * inch, top - SHEET_T), vector(LEDGE_LEN, LEDGE_SHELF, top));
 
-        b3Box(context, id + "shelf", vector(0 * inch, y0, LEDGE_Z), vector(LEDGE_SHELF, y1, LEDGE_Z + SHEET_T));
-        b3Box(context, id + "leg", vector(0 * inch, y0, LEDGE_Z), vector(SHEET_T, y1, LEDGE_Z + LEDGE_LEG_H));
+        var screws = [];
+        for (var i = 0; i < size(LEDGE_SCREW_X); i += 1)
+        {
+            screws = append(screws, b3Hole(LEDGE_SCREW_X[i], LEDGE_SCREW_Z, LEDGE_SCREW_DIA));
+        }
+        b3PrismXZ(context, id + "leg", b3Rect(0 * inch, top - LEDGE_LEG_H, LEDGE_LEN, top), screws, 0 * inch, SHEET_T);
+
         b3Union(context, id + "join", b3Solids(id));
-
-        // Two screws into the Plyboo.
-        const zs = LEDGE_Z + (SHEET_T + LEDGE_LEG_H) / 2;
-        b3CylX(context, id + "screw1", y0 + 1.5 * inch, zs, -over, SHEET_T + over, (5 / 32) * inch / 2);
-        b3CylX(context, id + "screw2", y1 - 1.5 * inch, zs, -over, SHEET_T + over, (5 / 32) * inch / 2);
-
-        const ledge = qUnion([b3Solids(id + "shelf"), b3Solids(id + "leg")]);
-        b3Subtract(context, id + "holes", ledge, qSubtraction(b3Solids(id), ledge));
         b3Finish(context, b3Solids(id), "Step ledge", RGB_ALU_DARK);
     });
 
@@ -736,15 +813,12 @@ export const b3StepLedge = defineFeature(function(context is Context, id is Id, 
 // B3_HookOnStep.fs
 // ===========================================================================
 /*
- * B3 Hook-on Step (provisional): the bottom step, hooked onto the stair in
- * front of the cabinet. A 1/8" tray like the treads, plus two folding legs.
- * Each leg turns on an axle through the tray lips, and its back flange has
- * keyholes (modeled as round holes) that hang on studs: the cabinet-side leg
- * on the front angle, the outer leg on the outer rail's front flange.
- *
- * The B3 page doesn't detail this part yet, so the leg shapes here are a
- * starting point to adjust. Not modeled yet: the leg hinge ears and their
- * axles (STEP_LEG_PIVOT_DROP is reserved for them).
+ * B3 Hook-on Step: a 1/8" tray like the treads (no corner relief) and two
+ * 3/16" legs. Each leg is a web with a hook-topped ear bent inboard at each
+ * end; the ears turn on an axle through the tray lips. The axle's back end
+ * is a pin that drops into a keyhole: the front angle for the cabinet-side
+ * leg, the step clip for the outer leg. Built open; the legs fold flat in
+ * two layers inside the lips. Not modeled: the rubber boots.
  */
 annotation { "Feature Type Name" : "B3 Hook-on Step" }
 export const b3HookOnStep = defineFeature(function(context is Context, id is Id, definition is map)
@@ -752,48 +826,47 @@ export const b3HookOnStep = defineFeature(function(context is Context, id is Id,
     {
     }
     {
-        const top = b3TreadTopZ(HOOK_STEP);
-        const yb = b3TreadBackY(HOOK_STEP);
-        const yf = yb + TREAD_GOING;
-        const x0 = b3TreadX0();
-        const x1 = x0 + STEP_WIDTH;
-        const t = SHEET_T;
-        const over = 0.1 * inch;
-
-        // Tray.
-        b3Prism(context, id + "tray", b3FrameYZ(x0), b3TrayOutline(yb, top, STEP_LIP), [], STEP_WIDTH);
-
-        // Legs: plate in (Y, Z) between the lips, reaching back under the
-        // back lip to a flange that sits flat against the studs.
-        const gap = (1 / 16) * inch;
-        const flangeTop = top - STEP_LIP - 0.25 * inch;
-        const leg = [
-                vector(yb, STEP_LEG_BOTTOM_Z),
-                vector(yf - t - gap, STEP_LEG_BOTTOM_Z),
-                vector(yf - t - gap, top - t - 0.25 * inch),
-                vector(yb + t + gap, top - t - 0.25 * inch),
-                vector(yb + t + gap, flangeTop),
-                vector(yb, flangeTop)
+        const top = b3T(HOOK_STEP);
+        const holes = [
+                b3Hole(STEP_CAB_AXLE_Y, STEP_CAB_AXLE_Z, HOLE_DIA),
+                b3Hole(STEP_OUT_AXLE_Y, STEP_OUT_AXLE_Z, HOLE_DIA)
             ];
-
-        // Cabinet-side leg: plate flush with the tray's end, flange turned inward.
-        b3Prism(context, id + "cabLeg" + "plate", b3FrameYZ(x0), leg, [], t);
-        b3Box(context, id + "cabLeg" + "flange", vector(x0, yb, STEP_LEG_BOTTOM_Z), vector(CAB_STUD_X + 0.375 * inch, yb + t, flangeTop));
-        // Outer leg: plate flush with the tray's end, flange turned outward to the rail's studs.
-        b3Prism(context, id + "outLeg" + "plate", b3FrameYZ(x1 - t), leg, [], t);
-        b3Box(context, id + "outLeg" + "flange", vector(x1 - t, yb, STEP_LEG_BOTTOM_Z), vector(b3OutStudX() + 0.375 * inch, yb + t, flangeTop));
-        b3Union(context, id + "cabLeg" + "join", b3Solids(id + "cabLeg"));
-        b3Union(context, id + "outLeg" + "join", b3Solids(id + "outLeg"));
-
-        // Keyholes, round for now.
-        b3CylY(context, id + "cut" + "cab1", CAB_STUD_X, STUD_Z1, yb - over, yb + t + over, STUD_HOLE_DIA / 2);
-        b3CylY(context, id + "cut" + "cab2", CAB_STUD_X, STUD_Z2, yb - over, yb + t + over, STUD_HOLE_DIA / 2);
-        b3CylY(context, id + "cut" + "out1", b3OutStudX(), STUD_Z1, yb - over, yb + t + over, STUD_HOLE_DIA / 2);
-        b3CylY(context, id + "cut" + "out2", b3OutStudX(), STUD_Z2, yb - over, yb + t + over, STUD_HOLE_DIA / 2);
-        const cutters = b3Solids(id + "cut");
-        b3Subtract(context, id + "holes", qUnion([b3Solids(id + "cabLeg"), b3Solids(id + "outLeg")]), cutters);
-
+        b3Tray(context, id + "tray", b3GoingX(HOOK_STEP) + TRAY_INSET, top, holes, 0 * inch);
         b3Finish(context, b3Solids(id + "tray"), "Hook-on step tray", RGB_STEP);
-        b3Finish(context, b3Solids(id + "cabLeg"), "Hook-on step leg, cabinet side", RGB_STEP);
-        b3Finish(context, b3Solids(id + "outLeg"), "Hook-on step leg, outer", RGB_STEP);
+
+        // Cabinet-side leg: web y 3/8 to 9/16, ears reach toward +y.
+        const cabIn = STEP_LEG_CAB_Y0 + PLATE_T;
+        b3StepLeg(context, id + "cabLeg", STEP_LEG_CAB_Y0, cabIn, cabIn + STEP_EAR_W,
+            STEP_CAB_AXLE_Y - EAR_HOOK_R, STEP_CAB_AXLE_Y, STEP_CAB_AXLE_Z, "Hook-on step leg, cabinet side");
+
+        // Outer leg: web y 18 3/16 to 18 3/8, ears reach toward -y.
+        const outIn = STEP_LEG_OUT_Y1 - PLATE_T;
+        b3StepLeg(context, id + "outLeg", STEP_LEG_OUT_Y1, outIn, outIn - STEP_EAR_W,
+            STEP_OUT_AXLE_Y + EAR_HOOK_R, STEP_OUT_AXLE_Y, STEP_OUT_AXLE_Z, "Hook-on step leg, outer");
     });
+
+// One leg. yOut and yIn are the web's faces; the ear runs from the web to
+// yFar below the axle, and its round top ends at yArc on the web side.
+function b3StepLeg(context is Context, id is Id, yOut is ValueWithUnits, yIn is ValueWithUnits, yFar is ValueWithUnits,
+    yArc is ValueWithUnits, axY is ValueWithUnits, axZ is ValueWithUnits, partName is string)
+{
+    const faces = b3EarFaces(HOOK_STEP);
+    const ylo = min(yOut, yIn);
+    const yhi = max(yOut, yIn);
+    b3PrismXZ(context, id + "web", b3Rect(faces[0], STEP_LEG_BOTTOM_Z, faces[1], STEP_LEG_TOP_Z), [], ylo, yhi);
+
+    const ear = [
+            vector(yOut, axZ - STEP_EAR_DROP),
+            vector(yFar, axZ - STEP_EAR_DROP),
+            vector(yFar, axZ),
+            { "mid" : vector(axY, axZ + EAR_HOOK_R), "end" : vector(yArc, axZ) },
+            vector(yOut, axZ)
+        ];
+    const holes = [b3Hole(axY, axZ, HOLE_DIA)];
+    const ranges = b3EarRanges(HOOK_STEP);
+    b3PrismYZ(context, id + "earBack", ear, holes, ranges[0][0], ranges[0][1]);
+    b3PrismYZ(context, id + "earFront", ear, holes, ranges[1][0], ranges[1][1]);
+
+    b3Union(context, id + "join", b3Solids(id));
+    b3Finish(context, b3Solids(id), partName, RGB_STEP);
+}

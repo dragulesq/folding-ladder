@@ -7,11 +7,10 @@ import(path : "onshape/std/common.fs", version : "2641.0");
 // </B3-IMPORT>
 
 /*
- * B3 Cabinet Brackets: one per tread, 3/16" plate. The web screws flat to the
- * panel with a row of M6 holes; a hook-shaped ear bends out at each end to
- * carry the tread's cabinet axle and its level stop pin.
- *
- * Flat in reality, the ears are modeled as sharp 90 degree bends.
+ * B3 Cabinet Brackets (2), 3/16" sheet. The 5 1/8 x 2 web sits flat on the
+ * panel with four M6 holes (countersinks not modeled); a hook-shaped ear is
+ * bent 90 degrees toward the room at each end to carry the tread's cabinet
+ * axle and its stop pin.
  */
 annotation { "Feature Type Name" : "B3 Cabinet Brackets" }
 export const b3CabinetBrackets = defineFeature(function(context is Context, id is Id, definition is map)
@@ -25,42 +24,30 @@ export const b3CabinetBrackets = defineFeature(function(context is Context, id i
 
 function b3Bracket(context is Context, id is Id, n is number, partName is string)
 {
-    const top = b3TreadTopZ(n);
-    const yb = b3TreadBackY(n);
-    const yf = yb + TREAD_GOING;
-    const y0 = yb + EAR_INSET;           // web ends = ears' outer faces
-    const y1 = yf - EAR_INSET;
-    const webTop = top - BRACKET_DROP;
+    const top = b3T(n);
+    const xg = b3GoingX(n);
+    const faces = b3EarFaces(n);
+    const webTop = top - BRACKET_TOP_DROP;
     const webBot = webTop - BRACKET_H;
 
     // Web, flat on the panel, with the screw row.
     var screws = [];
-    for (var k = 0; k < SCREW_COUNT; k += 1)
+    for (var k = 0; k < size(SCREW_X); k += 1)
     {
-        const y = (y0 + y1) / 2 + (k - (SCREW_COUNT - 1) / 2) * SCREW_PITCH;
-        screws = append(screws, { "center" : vector(y, top - SCREW_DROP), "radius" : SCREW_HOLE_DIA / 2 });
+        screws = append(screws, b3Hole(xg + SCREW_X[k], top - SCREW_DROP, SCREW_HOLE_DIA));
     }
-    const web = [vector(y0, webBot), vector(y1, webBot), vector(y1, webTop), vector(y0, webTop)];
-    b3Prism(context, id + "web", b3FrameYZ(0 * inch), web, screws, PLATE_T);
+    b3PrismXZ(context, id + "web", b3Rect(faces[0], webBot, faces[1], webTop), screws, 0 * inch, PLATE_T);
 
-    // Ears, in (X, Z): full height at the web, then a hook over the axle.
-    const ax = PLATE_T + CAB_AXLE_OUT;
-    const az = top - CAB_AXLE_DROP;
-    const r = EAR_HOOK_R;
-    const ear = [
-            vector(0 * inch, webBot),
-            vector(ax + r, webBot),
-            vector(ax + r, az),
-            { "mid" : vector(ax, az + r), "end" : vector(ax - r, az) },
-            vector(ax - r, webTop),
-            vector(0 * inch, webTop)
-        ];
+    // Ears, in (y, z).
+    const axZ = top - CAB_AXLE_DROP;
+    const ear = b3EarOutline(0 * inch, PLATE_T + EAR_W, PLATE_T + HOOK_U0, webBot, webTop, CAB_AXLE_Y, axZ);
     const earHoles = [
-            { "center" : vector(ax, az), "radius" : BUSHING_OD / 2 },
-            { "center" : vector(ax + STOP_PIN_OUT, top - STOP_PIN_DROP), "radius" : STOP_PIN_DIA / 2 }
+            b3Hole(CAB_AXLE_Y, axZ, HOLE_DIA),
+            b3Hole(STOP_PIN_Y, top - STOP_PIN_DROP, STOP_PIN_DIA)
         ];
-    b3Prism(context, id + "earBack", b3FrameXZ(y0 + PLATE_T), ear, earHoles, PLATE_T);
-    b3Prism(context, id + "earFront", b3FrameXZ(y1), ear, earHoles, PLATE_T);
+    const ranges = b3EarRanges(n);
+    b3PrismYZ(context, id + "earBack", ear, earHoles, ranges[0][0], ranges[0][1]);
+    b3PrismYZ(context, id + "earFront", ear, earHoles, ranges[1][0], ranges[1][1]);
 
     b3Union(context, id + "join", b3Solids(id));
     b3Finish(context, b3Solids(id), partName, RGB_ALU_DARK);

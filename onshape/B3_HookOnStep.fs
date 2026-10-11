@@ -7,15 +7,12 @@ import(path : "onshape/std/common.fs", version : "2641.0");
 // </B3-IMPORT>
 
 /*
- * B3 Hook-on Step (provisional): the bottom step, hooked onto the stair in
- * front of the cabinet. A 1/8" tray like the treads, plus two folding legs.
- * Each leg turns on an axle through the tray lips, and its back flange has
- * keyholes (modeled as round holes) that hang on studs: the cabinet-side leg
- * on the front angle, the outer leg on the outer rail's front flange.
- *
- * The B3 page doesn't detail this part yet, so the leg shapes here are a
- * starting point to adjust. Not modeled yet: the leg hinge ears and their
- * axles (STEP_LEG_PIVOT_DROP is reserved for them).
+ * B3 Hook-on Step: a 1/8" tray like the treads (no corner relief) and two
+ * 3/16" legs. Each leg is a web with a hook-topped ear bent inboard at each
+ * end; the ears turn on an axle through the tray lips. The axle's back end
+ * is a pin that drops into a keyhole: the front angle for the cabinet-side
+ * leg, the step clip for the outer leg. Built open; the legs fold flat in
+ * two layers inside the lips. Not modeled: the rubber boots.
  */
 annotation { "Feature Type Name" : "B3 Hook-on Step" }
 export const b3HookOnStep = defineFeature(function(context is Context, id is Id, definition is map)
@@ -23,48 +20,47 @@ export const b3HookOnStep = defineFeature(function(context is Context, id is Id,
     {
     }
     {
-        const top = b3TreadTopZ(HOOK_STEP);
-        const yb = b3TreadBackY(HOOK_STEP);
-        const yf = yb + TREAD_GOING;
-        const x0 = b3TreadX0();
-        const x1 = x0 + STEP_WIDTH;
-        const t = SHEET_T;
-        const over = 0.1 * inch;
-
-        // Tray.
-        b3Prism(context, id + "tray", b3FrameYZ(x0), b3TrayOutline(yb, top, STEP_LIP), [], STEP_WIDTH);
-
-        // Legs: plate in (Y, Z) between the lips, reaching back under the
-        // back lip to a flange that sits flat against the studs.
-        const gap = (1 / 16) * inch;
-        const flangeTop = top - STEP_LIP - 0.25 * inch;
-        const leg = [
-                vector(yb, STEP_LEG_BOTTOM_Z),
-                vector(yf - t - gap, STEP_LEG_BOTTOM_Z),
-                vector(yf - t - gap, top - t - 0.25 * inch),
-                vector(yb + t + gap, top - t - 0.25 * inch),
-                vector(yb + t + gap, flangeTop),
-                vector(yb, flangeTop)
+        const top = b3T(HOOK_STEP);
+        const holes = [
+                b3Hole(STEP_CAB_AXLE_Y, STEP_CAB_AXLE_Z, HOLE_DIA),
+                b3Hole(STEP_OUT_AXLE_Y, STEP_OUT_AXLE_Z, HOLE_DIA)
             ];
-
-        // Cabinet-side leg: plate flush with the tray's end, flange turned inward.
-        b3Prism(context, id + "cabLeg" + "plate", b3FrameYZ(x0), leg, [], t);
-        b3Box(context, id + "cabLeg" + "flange", vector(x0, yb, STEP_LEG_BOTTOM_Z), vector(CAB_STUD_X + 0.375 * inch, yb + t, flangeTop));
-        // Outer leg: plate flush with the tray's end, flange turned outward to the rail's studs.
-        b3Prism(context, id + "outLeg" + "plate", b3FrameYZ(x1 - t), leg, [], t);
-        b3Box(context, id + "outLeg" + "flange", vector(x1 - t, yb, STEP_LEG_BOTTOM_Z), vector(b3OutStudX() + 0.375 * inch, yb + t, flangeTop));
-        b3Union(context, id + "cabLeg" + "join", b3Solids(id + "cabLeg"));
-        b3Union(context, id + "outLeg" + "join", b3Solids(id + "outLeg"));
-
-        // Keyholes, round for now.
-        b3CylY(context, id + "cut" + "cab1", CAB_STUD_X, STUD_Z1, yb - over, yb + t + over, STUD_HOLE_DIA / 2);
-        b3CylY(context, id + "cut" + "cab2", CAB_STUD_X, STUD_Z2, yb - over, yb + t + over, STUD_HOLE_DIA / 2);
-        b3CylY(context, id + "cut" + "out1", b3OutStudX(), STUD_Z1, yb - over, yb + t + over, STUD_HOLE_DIA / 2);
-        b3CylY(context, id + "cut" + "out2", b3OutStudX(), STUD_Z2, yb - over, yb + t + over, STUD_HOLE_DIA / 2);
-        const cutters = b3Solids(id + "cut");
-        b3Subtract(context, id + "holes", qUnion([b3Solids(id + "cabLeg"), b3Solids(id + "outLeg")]), cutters);
-
+        b3Tray(context, id + "tray", b3GoingX(HOOK_STEP) + TRAY_INSET, top, holes, 0 * inch);
         b3Finish(context, b3Solids(id + "tray"), "Hook-on step tray", RGB_STEP);
-        b3Finish(context, b3Solids(id + "cabLeg"), "Hook-on step leg, cabinet side", RGB_STEP);
-        b3Finish(context, b3Solids(id + "outLeg"), "Hook-on step leg, outer", RGB_STEP);
+
+        // Cabinet-side leg: web y 3/8 to 9/16, ears reach toward +y.
+        const cabIn = STEP_LEG_CAB_Y0 + PLATE_T;
+        b3StepLeg(context, id + "cabLeg", STEP_LEG_CAB_Y0, cabIn, cabIn + STEP_EAR_W,
+            STEP_CAB_AXLE_Y - EAR_HOOK_R, STEP_CAB_AXLE_Y, STEP_CAB_AXLE_Z, "Hook-on step leg, cabinet side");
+
+        // Outer leg: web y 18 3/16 to 18 3/8, ears reach toward -y.
+        const outIn = STEP_LEG_OUT_Y1 - PLATE_T;
+        b3StepLeg(context, id + "outLeg", STEP_LEG_OUT_Y1, outIn, outIn - STEP_EAR_W,
+            STEP_OUT_AXLE_Y + EAR_HOOK_R, STEP_OUT_AXLE_Y, STEP_OUT_AXLE_Z, "Hook-on step leg, outer");
     });
+
+// One leg. yOut and yIn are the web's faces; the ear runs from the web to
+// yFar below the axle, and its round top ends at yArc on the web side.
+function b3StepLeg(context is Context, id is Id, yOut is ValueWithUnits, yIn is ValueWithUnits, yFar is ValueWithUnits,
+    yArc is ValueWithUnits, axY is ValueWithUnits, axZ is ValueWithUnits, partName is string)
+{
+    const faces = b3EarFaces(HOOK_STEP);
+    const ylo = min(yOut, yIn);
+    const yhi = max(yOut, yIn);
+    b3PrismXZ(context, id + "web", b3Rect(faces[0], STEP_LEG_BOTTOM_Z, faces[1], STEP_LEG_TOP_Z), [], ylo, yhi);
+
+    const ear = [
+            vector(yOut, axZ - STEP_EAR_DROP),
+            vector(yFar, axZ - STEP_EAR_DROP),
+            vector(yFar, axZ),
+            { "mid" : vector(axY, axZ + EAR_HOOK_R), "end" : vector(yArc, axZ) },
+            vector(yOut, axZ)
+        ];
+    const holes = [b3Hole(axY, axZ, HOLE_DIA)];
+    const ranges = b3EarRanges(HOOK_STEP);
+    b3PrismYZ(context, id + "earBack", ear, holes, ranges[0][0], ranges[0][1]);
+    b3PrismYZ(context, id + "earFront", ear, holes, ranges[1][0], ranges[1][1]);
+
+    b3Union(context, id + "join", b3Solids(id));
+    b3Finish(context, b3Solids(id), partName, RGB_STEP);
+}

@@ -7,15 +7,15 @@ import(path : "onshape/std/common.fs", version : "2641.0");
 // </B3-IMPORT>
 
 /*
- * B3 Outer Rail: 3/16" stepped plate with a 3/4" flange turned outward along
- * the bed-side, bottom and front edges (1" along the foot), a hand slot, and
- * two hook-shaped pivot ears per tread bent inward. The front flange carries
- * the holes for the hook-on step's outer studs. Follows FOLD_ANGLE.
+ * B3 Outer Rail, 3/16" sheet: stepped plate with the bed-side edge cut back
+ * to clear the door handle, a 3/4" flange turned outward (+y) along the
+ * bed-side, cut-back, bottom, foot and front edges, a hand slot, the step
+ * clip's rivet holes, and two hook-shaped pivot ears per tread bent toward
+ * the cabinet. The bed-side and front flanges stop short of the ears.
+ * Follows FOLD_ANGLE.
  *
- * The bed-side edge is cut back below the top step so the rail and its
- * flange pass the cab door handle.
- *
- * Bends are modeled sharp; add bend reliefs where the flanges meet.
+ * Not modeled: bend reliefs, the notches left where the ear tabs are cut,
+ * and the latch holes.
  */
 annotation { "Feature Type Name" : "B3 Outer Rail" }
 export const b3OuterRail = defineFeature(function(context is Context, id is Id, definition is map)
@@ -23,69 +23,62 @@ export const b3OuterRail = defineFeature(function(context is Context, id is Id, 
     {
     }
     {
-        const x0 = b3RailX0();
-        const yb = b3TreadBackY(TREAD_TOP);
-        const ym = yb + TREAD_GOING;
-        const yf = ym + TREAD_GOING;
-        const topStep = b3TreadTopZ(TREAD_TOP) - RAIL_STEP_DROP;
-        const midStep = b3TreadTopZ(TREAD_MIDDLE) - RAIL_STEP_DROP;
+        const y0 = RAIL_Y;
+        const y1 = RAIL_Y + PLATE_T;
+        const xm = GOING;
+        const xf = 2 * GOING;
+        const topStep = b3T(TREAD_TOP) - RAIL_STEP_DROP;
+        const midStep = b3T(TREAD_MIDDLE) - RAIL_STEP_DROP;
 
-        // Plate outline in (Y, Z), counterclockwise so the flanges offset inward.
-        const pA = vector(yb, topStep);
-        const pB = vector(yb, topStep - RAIL_BACK_DROP);
-        const pB2 = vector(yb + RAIL_CUTBACK, RAIL_CUTBACK_Z);   // cut back to clear the door handle
-        const pC = vector(yf - RAIL_FOOT_LEN, RAIL_FOOT_Z);
-        const pD = vector(yf, RAIL_FOOT_Z);
-        const pE = vector(yf, midStep);
-        const pF = vector(ym, midStep);
-        const pG = vector(ym, topStep);
-        const slot = b3Slot(vector(yb + HAND_SLOT_IN, HAND_SLOT_Z), HAND_SLOT_W, HAND_SLOT_H);
-        b3Prism(context, id + "plate", b3FrameYZ(x0), [pA, pB, pB2, pC, pD, pE, pF, pG], [slot], PLATE_T);
+        // Plate outline in (x, z), same order as the B3 page.
+        const outline = [
+                vector(0 * inch, topStep),
+                vector(xm, topStep),
+                vector(xm, midStep),
+                vector(xf, midStep),
+                vector(xf, RAIL_FOOT_Z),
+                vector(RAIL_FOOT_X, RAIL_FOOT_Z),
+                vector(RAIL_CUTBACK_X, RAIL_CUTBACK_Z),
+                vector(0 * inch, RAIL_BACK_Z)
+            ];
+        var holes = [b3Slot(vector(HAND_SLOT_X, HAND_SLOT_Z), HAND_SLOT_L, HAND_SLOT_H)];
+        for (var i = 0; i < size(CLIP_RIVET_X); i += 1)
+        {
+            holes = append(holes, b3Hole(CLIP_RIVET_X[i], CLIP_RIVET_Z, RIVET_HOLE_DIA));
+        }
+        b3PrismXZ(context, id + "plate", outline, holes, y0, y1);
 
-        // Flanges, turned outward (+X).
-        b3Prism(context, id + "flangeBack", b3FrameYZ(x0), b3Strip(pA, pB, PLATE_T), [], PLATE_T + RAIL_FLANGE);
-        b3Prism(context, id + "flangeCutback", b3FrameYZ(x0), b3Strip(pB, pB2, PLATE_T), [], PLATE_T + RAIL_FLANGE);
-        b3Prism(context, id + "flangeBottom", b3FrameYZ(x0), b3Strip(pB2, pC, PLATE_T), [], PLATE_T + RAIL_FLANGE);
-        b3Prism(context, id + "flangeFoot", b3FrameYZ(x0), b3Strip(pC, pD, PLATE_T), [], PLATE_T + RAIL_FOOT_FLANGE);
-        b3Prism(context, id + "flangeFront", b3FrameYZ(x0), b3Strip(pD, pE, PLATE_T), [], PLATE_T + RAIL_FLANGE);
+        // Flanges, each a strip PLATE_T wide inside its edge, turned outward.
+        const fy1 = y1 + RAIL_FLANGE;
+        const pBack = vector(0 * inch, RAIL_BACK_Z);
+        const pCut = vector(RAIL_CUTBACK_X, RAIL_CUTBACK_Z);
+        const pFoot = vector(RAIL_FOOT_X, RAIL_FOOT_Z);
+        const pFront = vector(xf, RAIL_FOOT_Z);
+        b3PrismXZ(context, id + "flangeBack", b3Strip(vector(0 * inch, RAIL_BACK_FLANGE_TOP), pBack, PLATE_T), [], y0, fy1);
+        b3PrismXZ(context, id + "flangeCutback", b3Strip(pBack, pCut, PLATE_T), [], y0, fy1);
+        b3PrismXZ(context, id + "flangeBottom", b3Strip(pCut, pFoot, PLATE_T), [], y0, fy1);
+        b3PrismXZ(context, id + "flangeFoot", b3Strip(pFoot, pFront, PLATE_T), [], y0, fy1);
+        b3PrismXZ(context, id + "flangeFront", b3Strip(pFront, vector(xf, RAIL_FRONT_FLANGE_TOP), PLATE_T), [], y0, fy1);
 
         // Pivot ears for both treads.
         b3RailEars(context, id + "earsTop", TREAD_TOP);
         b3RailEars(context, id + "earsMiddle", TREAD_MIDDLE);
 
         b3Union(context, id + "join", b3Solids(id));
-
-        // Holes for the hook-on step's outer studs, through the front flange.
-        b3CylY(context, id + "stud1", b3OutStudX(), STUD_Z1, yf - PLATE_T - 0.1 * inch, yf + 0.1 * inch, STUD_HOLE_DIA / 2);
-        b3CylY(context, id + "stud2", b3OutStudX(), STUD_Z2, yf - PLATE_T - 0.1 * inch, yf + 0.1 * inch, STUD_HOLE_DIA / 2);
-        const studs = qUnion([b3Solids(id + "stud1"), b3Solids(id + "stud2")]);
-        b3Subtract(context, id + "studHoles", qSubtraction(b3Solids(id), studs), studs);
         const rail = b3Solids(id);
-
         opTransform(context, id + "fold", { "bodies" : rail, "transform" : b3RailFold() });
         b3Finish(context, rail, "Outer rail", RGB_ALU);
     });
 
-// Two hook-shaped ears at tread n, bent inward from the rail, in (X, Z).
+// Two hook-shaped ears at tread n, bent toward the cabinet, in (y, z).
 function b3RailEars(context is Context, id is Id, n is number)
 {
-    const top = b3TreadTopZ(n);
-    const yb = b3TreadBackY(n);
-    const yf = yb + TREAD_GOING;
-    const xr = b3RailX0() + PLATE_T;
-    const outAx = b3OutAxle(n);
-    const ax = outAx[0];
-    const az = outAx[2];
-    const r = EAR_HOOK_R;
-    const ear = [
-            vector(xr, top - RAIL_EAR_BOTTOM_DROP),
-            vector(ax - r, top - RAIL_EAR_BOTTOM_DROP),
-            vector(ax - r, az),
-            { "mid" : vector(ax, az + r), "end" : vector(ax + r, az) },
-            vector(ax + r, top - RAIL_NOTCH_DROP),
-            vector(xr, top - RAIL_NOTCH_DROP)
-        ];
-    const holes = [{ "center" : vector(ax, az), "radius" : BUSHING_OD / 2 }];
-    b3Prism(context, id + "back", b3FrameXZ(yb + EAR_INSET + PLATE_T), ear, holes, PLATE_T);
-    b3Prism(context, id + "front", b3FrameXZ(yf - EAR_INSET), ear, holes, PLATE_T);
+    const top = b3T(n);
+    const axZ = top - OUT_AXLE_DROP;
+    const ear = b3EarOutline(RAIL_Y + PLATE_T, RAIL_Y - EAR_W, RAIL_Y - HOOK_U0,
+        top - RAIL_EAR_ROOT_LO, top - RAIL_EAR_ROOT_HI, OUT_AXLE_Y, axZ);
+    const holes = [b3Hole(OUT_AXLE_Y, axZ, HOLE_DIA)];
+    const ranges = b3EarRanges(n);
+    b3PrismYZ(context, id + "back", ear, holes, ranges[0][0], ranges[0][1]);
+    b3PrismYZ(context, id + "front", ear, holes, ranges[1][0], ranges[1][1]);
 }
