@@ -36,6 +36,18 @@ FeatureScript for Onshape that builds design **B3** of the folding camper bed st
 
 When you paste an updated file from the repo later, keep the import line Onshape made and paste the rest below it.
 
+## Checking the code
+
+`tools/fs_lint.py` checks the files offline: brackets balance, `B3_AllInOne.fs` is up to date, and, given a copy of the FeatureScript standard library at the version the files import, every function, constant and enum value they use exists.
+
+```
+git clone --filter=blob:none https://github.com/javawizard/onshape-std-library-mirror std
+git -C std checkout "$(git -C std log --format=%h --grep='^Version 2641.0$')"
+python3 tools/fs_lint.py std
+```
+
+`tools/onshape_check.py` runs the lint, then loads `B3_AllInOne.fs` into a test Onshape document through the API, adds every feature to a Part Studio and reports what rebuilds. It needs `ONSHAPE_ACCESS_KEY`, `ONSHAPE_SECRET_KEY` and `ONSHAPE_DOC_URL` (a workspace URL of a document used only for testing), and touches only the `B3 test` tabs it creates there. API calls are limited, so it reuses those tabs between runs: the first run costs about 14 calls and each rerun 4.
+
 ## Changing dimensions
 
 Edit `B3 Parameters` (or the parameters section at the top of the all-in-one file) and commit. The Part Studio rebuilds to match. The names and values follow the "Part definitions" section of the Bed Stair B3 page, and each is commented with what it measures.

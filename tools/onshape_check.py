@@ -1,0 +1,218 @@
+#!/usr/bin/env python3
+"""Load onshape/B3_AllInOne.fs into an Onshape test document and check that every feature rebuilds.
+
+Runs tools/fs_lint.py first and stops if it finds a problem, so no API calls
+are spent on code that can't compile. Then it uploads the file to the Feature
+Studio "B3 test AllInOne", reads back the features it defines, and puts each
+one in the Part Studio "B3 test Part Studio". It reports each feature's
+status, its error text if it failed, and the parts it built.
+
+The Onshape plan allows a limited number of API calls a year, so this keeps
+them few: a first run costs about 14 calls, a rerun after a fix costs 4.
+Element and feature ids are kept in a state file between runs, and every call
+is appended to a log next to it.
+
+Usage:
+  python3 tools/onshape_check.py [--fold DEG] [--std STD_DIR] [--state FILE]
+
+Needs ONSHAPE_ACCESS_KEY, ONSHAPE_SECRET_KEY and ONSHAPE_DOC_URL (a workspace
+URL of the test document). Only touches the two "B3 test" elements in that
+document. --fold uploads the file with FOLD_ANGLE set to DEG.
+"""
+from datetime import datetime, timezone
+from pathlib import Path
+import argparse
+import json
+import os
+import re
+import subprocess
+import sys
+
+import requests
+
+ROOT = Path(__file__).resolve().parent.parent
+FS_FILE = ROOT / "onshape" / "B3_AllInOne.fs"
+BASE = "https://cad.onshape.com/api/v10"
+STUDIO_NAME = "B3 test AllInOne"
+PART_STUDIO_NAME = "B3 test Part Studio"
+FEATURES = ["b3Reference", "b3Treads", "b3CabinetBrackets", "b3OuterRail", "b3StepClip",
+            "b3PivotHardware", "b3FrontAngle", "b3StepLedge", "b3HookOnStep"]
+SHARED_STATE = Path("/mnt/project-files/onshape/state.json")
+
+
+class Api:
+    def __init__(self, url, log_path):
+        m = re.search(r"/documents/(\w+)/w/(\w+)", url)
+        if not m:
+            sys.exit(f"ONSHAPE_DOC_URL is not a workspace URL: {url}")
+        self.dw = f"/d/{m.group(1)}/w/{m.group(2)}"
+        self.log_path = log_path
+        self.calls = 0
+        self.s = requests.Session()
+        self.s.auth = (os.environ["ONSHAPE_ACCESS_KEY"], os.environ["ONSHAPE_SECRET_KEY"])
+        self.s.headers.update({"Accept": "application/json", "Content-Type": "application/json"})
+
+    def __call__(self, method, path, body=None):
+        r = self.s.request(method, BASE + path, json=body, timeout=180)
+        self.calls += 1
+        with open(self.log_path, "a") as log:
+            log.write(f"{datetime.now(timezone.utc).isoformat(timespec='seconds')} {method} {path} {r.status_code}\n")
+        if not r.ok:
+            raise RuntimeError(f"{method} {path} -> {r.status_code}: {r.text[:3000]}")
+        return r.json() if r.text else {}
+
+
+def fs_value(v):
+    """Decode a BTFSValue from the evaluate endpoint into plain Python."""
+    if isinstance(v, list):
+        return [fs_value(x) for x in v]
+    if not isinstance(v, dict):
+        return v
+    inner = v.get("value", v.get("message"))
+    if isinstance(inner, list) and inner and isinstance(inner[0], dict) and "key" in inner[0]:
+        return {str(fs_value(e["key"])): fs_value(e["value"]) for e in inner}
+    if "typeTag" in v and "value" not in v:
+        return None
+    return fs_value(inner)
+
+
+def notices(resp):
+    out = []
+    for n in resp.get("notices") or []:
+        msg = n.get("message")
+        msg = msg.get("message") if isinstance(msg, dict) else msg
+        out.append(f"{n.get('level', '')}: {msg}")
+    return out
+
+
+def with_fold(text, fold):
+    if fold is None:
+        return text
+    text, n = re.subn(r"export const FOLD_ANGLE = .*?;", f"export const FOLD_ANGLE = {fold:g} * degree;", text)
+    assert n == 1
+    return text
+
+
+def main():
+    ap = argparse.ArgumentParser()
+    ap.add_argument("--fold", type=float, help="upload with FOLD_ANGLE set to this many degrees")
+    ap.add_argument("--std", help="std library checkout for the offline lint")
+    ap.add_argument("--state", help="state file (default: the project's shared folder if present)")
+    args = ap.parse_args()
+
+    lint = [sys.executable, str(ROOT / "tools" / "fs_lint.py")] + ([args.std] if args.std else [])
+    if subprocess.run(lint).returncode:
+        sys.exit("Lint failed; fix that first, no API calls made.")
+
+    url = os.environ.get("ONSHAPE_DOC_URL")
+    if not url:
+        sys.exit("Set ONSHAPE_DOC_URL to the test document's workspace URL.")
+    state_path = Path(args.state) if args.state else (
+        SHARED_STATE if SHARED_STATE.parent.parent.exists() else ROOT / ".onshape_state.json")
+    state_path.parent.mkdir(parents=True, exist_ok=True)
+    state = json.loads(state_path.read_text()) if state_path.exists() else {}
+    if state.get("doc") not in (None, url):
+        state = {}
+    state["doc"] = url
+    api = Api(url, state_path.with_name("api_calls.log"))
+
+    def save():
+        state_path.write_text(json.dumps(state, indent=1))
+
+    try:
+        bad = run(api, state, save, with_fold(FS_FILE.read_text(), args.fold))
+    finally:
+        save()
+        total = sum(1 for _ in open(api.log_path)) if api.log_path.exists() else api.calls
+        print(f"API calls this run: {api.calls}; logged in total: {total} ({api.log_path})")
+    sys.exit(1 if bad else 0)
+
+
+def run(api, state, save, contents):
+    # Feature Studio: create once, then overwrite its contents.
+    if "studio" not in state:
+        e = api("POST", f"/featurestudios{api.dw}", {"name": STUDIO_NAME})
+        state["studio"], state["studio_mv"] = e["id"], e.get("microversionId")
+        save()
+    body = {"contents": contents, "rejectMicroversionSkew": False}
+    if state.get("studio_mv"):
+        body["sourceMicroversion"] = state["studio_mv"]
+    up = api("POST", f"/featurestudios{api.dw}/e/{state['studio']}", body)
+    state["studio_mv"] = up.get("sourceMicroversion") or state.get("studio_mv")
+    save()
+    for line in notices(up):
+        print("studio notice", line)
+
+    specs = api("GET", f"/featurestudios{api.dw}/e/{state['studio']}/featurespecs")
+    found = {s["featureType"]: s for s in specs.get("featureSpecs", [])}
+    extra = {k: v for k, v in specs.items() if k not in ("featureSpecs",)}
+    print(f"studio compiled: {len(found)} feature(s): {', '.join(found) or '(none)'}")
+    missing = [t for t in FEATURES if t not in found]
+    if missing:
+        print(f"MISSING FEATURES {missing}; specs response other fields: {json.dumps(extra)[:3000]}")
+        return len(missing)
+
+    # Part Studio: add the features once, later just point them at the new studio version.
+    if "part_studio" not in state:
+        e = api("POST", f"/partstudios{api.dw}", {"name": PART_STUDIO_NAME})
+        state["part_studio"], state["features"] = e["id"], {}
+        save()
+    ps = f"/partstudios{api.dw}/e/{state['part_studio']}"
+    statuses = {}
+    have = state.get("features", {})
+    if all(t in have for t in FEATURES):
+        feats = [{"btType": "BTMFeature-134", "featureId": have[t], "featureType": t,
+                  "name": found[t].get("featureTypeName") or t, "namespace": found[t]["namespace"],
+                  "parameters": []} for t in FEATURES]
+        r = api("POST", f"{ps}/features/updates", {"features": feats})
+        for t in FEATURES:
+            statuses[t] = (r.get("featureStates", {}).get(have[t]) or {}).get("featureStatus", "?")
+    else:
+        for t in FEATURES:
+            if t in have:
+                continue
+            feat = {"btType": "BTMFeature-134", "featureType": t, "name": found[t].get("featureTypeName") or t,
+                    "namespace": found[t]["namespace"], "parameters": []}
+            r = api("POST", f"{ps}/features", {"feature": feat})
+            have[t] = r["feature"]["featureId"]
+            state["features"] = have
+            save()
+            statuses[t] = (r.get("featureState") or {}).get("featureStatus", "?")
+
+    # One evaluate call: each feature's error text and the parts in the studio.
+    ids = ", ".join(f'"{t}" : "{have[t]}"' for t in FEATURES)
+    script = """function(context is Context, queries is map)
+{
+    const ids = { %s };
+    var errors = {};
+    for (var t, fid in ids)
+    {
+        const e = getFeatureError(context, makeId(fid));
+        if (e != undefined)
+            errors[t] = toString(e);
+    }
+    var parts = [];
+    for (var b in evaluateQuery(context, qAllModifiableSolidBodies()))
+        parts = append(parts, getProperty(context, { "entity" : b, "propertyType" : PropertyType.NAME }));
+    return { "errors" : errors, "parts" : parts };
+}""" % ids
+    ev = api("POST", f"{ps}/featurescript", {"script": script, "queries": []})
+    for line in notices(ev):
+        print("evaluate notice", line)
+    if ev.get("console"):
+        print("console:", ev["console"][:3000])
+    res = fs_value(ev.get("result")) or {}
+    errors = res.get("errors") or {}
+    bad = 0
+    for t in FEATURES:
+        ok = statuses.get(t) == "OK" and t not in errors
+        bad += not ok
+        print(f"  {t}: {statuses.get(t)}" + (f"  {errors[t]}" if t in errors else ""))
+    parts = res.get("parts") or []
+    print(f"parts ({len(parts)}): {', '.join(map(str, parts))}")
+    print("ALL OK" if not bad else f"{bad} feature(s) failed")
+    return bad
+
+
+if __name__ == "__main__":
+    main()
