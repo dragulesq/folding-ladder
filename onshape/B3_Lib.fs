@@ -103,18 +103,26 @@ export function b3BracketJoint(n is number) returns map
     return b3PanelJoint(b3EarFaces(n)[0], b3T(n) - BRACKET_TOP_DROP - BRACKET_H);
 }
 
+// A joint on a part turned half a turn about the vertical axis through the
+// middle of going n and halfway between the cabinet and outer axle lines,
+// then raised by dz. The cabinet side's y then lands on the outer side's.
+export function b3TurnInGoing(n is number, joint is map, dz is ValueWithUnits) returns map
+{
+    const xg = b3GoingX(n);
+    const p = joint.origin;
+    const z = joint.zAxis;
+    const x = joint.xAxis;
+    return b3Joint(vector(2 * xg + GOING - p[0], OUT_AXLE_Y + CAB_AXLE_Y - p[1], p[2] + dz),
+        vector(-z[0], -z[1], z[2]), vector(-x[0], -x[1], x[2]));
+}
+
 // Tread n's rail bracket is the same part as its cabinet bracket, turned
 // half a turn about a vertical axis and lowered so its axle hole lands on the
 // outer axle line. This moves a joint on the cabinet bracket to the same spot
 // on the rail bracket.
 export function b3OnRail(n is number, joint is map) returns map
 {
-    const xg = b3GoingX(n);
-    const p = joint.origin;
-    const z = joint.zAxis;
-    const x = joint.xAxis;
-    return b3Joint(vector(2 * xg + GOING - p[0], OUT_AXLE_Y + CAB_AXLE_Y - p[1], p[2] + CAB_AXLE_DROP - OUT_AXLE_DROP),
-        vector(-z[0], -z[1], z[2]), vector(-x[0], -x[1], x[2]));
+    return b3TurnInGoing(n, joint, CAB_AXLE_DROP - OUT_AXLE_DROP);
 }
 
 // Bracket n's web on the rail's inner face.
@@ -171,14 +179,25 @@ export function b3StepClipJoint() returns map
     return b3Joint(vector(CLIP_X0, RAIL_Y, CLIP_Z0), vector(0, -1, 0), vector(1, 0, 0));
 }
 
-export function b3StepCabAxleJoint() returns map
+// Step clip screw k: under its head on the clip's inside face, z out of the clip.
+export function b3ClipScrewJoint(k is number) returns map
 {
-    return b3AxleJoint(STEP_AXLE_X0, STEP_CAB_AXLE_Y, STEP_CAB_AXLE_Z);
+    return b3Joint(vector(CLIP_SCREW_X[k], RAIL_Y - SHEET_T, CLIP_SCREW_Z), vector(0, -1, 0), vector(1, 0, 0));
 }
 
-export function b3StepOutAxleJoint() returns map
+// Its nyloc nut on the rail's outer face.
+export function b3ClipNutJoint(k is number) returns map
 {
-    return b3AxleJoint(STEP_AXLE_X0, STEP_OUT_AXLE_Y, STEP_OUT_AXLE_Z);
+    return b3Joint(vector(CLIP_SCREW_X[k], RAIL_Y + PLATE_T, CLIP_SCREW_Z), vector(0, 1, 0), vector(1, 0, 0));
+}
+
+// The step axle on the hook-on step's cabinet-side pivot line, at its back
+// end, which runs out through the front angle's keyhole as the hook pin. The
+// step's tray is the tread part, so its pivots are b3CabAxleJoint(HOOK_STEP)
+// and b3OutAxleJoint(HOOK_STEP).
+export function b3StepCabAxleJoint() returns map
+{
+    return b3AxleJoint(STEP_AXLE_X0, CAB_AXLE_Y, b3T(HOOK_STEP) - CAB_AXLE_DROP);
 }
 
 // A mate connector named mcName on the part partName (the bodies in owner),
@@ -357,14 +376,6 @@ export function b3Hole(u is ValueWithUnits, v is ValueWithUnits, dia is ValueWit
     return { "center" : vector(u, v), "dia" : dia };
 }
 
-// Strip along the edge p -> q, offset to the left of travel by t.
-export function b3Strip(p is Vector, q is Vector, t is ValueWithUnits) returns array
-{
-    const d = (q - p) / norm(q - p);
-    const left = vector(-d[1], d[0]);
-    return [p, q, q + left * t, p + left * t];
-}
-
 // Obround slot centered on c, l long along u and h tall along v.
 export function b3Slot(c is Vector, l is ValueWithUnits, h is ValueWithUnits) returns array
 {
@@ -411,6 +422,20 @@ export function b3EarOutline(yRoot is ValueWithUnits, yFar is ValueWithUnits, yH
             ]);
 }
 
+// Flange bent off the plate along the edge p -> q (in x, z, plate on the left
+// of travel), PLATE_T thick inward from the edge, from y0 out to yTip. Its free
+// corners at p and q are rounded to rP and rQ.
+export function b3Flange(context is Context, id is Id, p is Vector, q is Vector, y0 is ValueWithUnits, yTip is ValueWithUnits,
+    rP is ValueWithUnits, rQ is ValueWithUnits)
+{
+    const d = (q - p) / norm(q - p);
+    const len = norm(q - p);
+    // Sketch (u, v) = (distance along the edge from p, -y), extruded into the plate.
+    const edgePlane = plane(b3V(vector(p[0], 0 * inch, p[1])), vector(-d[1], 0, d[0]), vector(d[0], 0, d[1]));
+    const outline = b3Rounded(b3Rect(0 * inch, -yTip, len, -y0), [rP, rQ, 0, 0]);
+    b3Prism(context, id, edgePlane, outline, [], PLATE_T);
+}
+
 // ---------------------------------------------------------------------------
 // Tray (treads and hook-on step): skin plus two lips bent down at the x ends,
 // as a sheet-metal part. Holes are in (y, z) and go through both lips. Both
@@ -433,18 +458,42 @@ export function b3Tray(context is Context, id is Id, x0 is ValueWithUnits, top i
                 vector((x0 + x1) / 2, ym, top),
                 vector(x0, ym, top - LIP / 2),
                 vector(x1, ym, top - LIP / 2)
-            ], SHEET_T, BEND_R_LIP, K_SHEET);
+            ], SHEET_T, BEND_R_SHEET, K_SHEET);
 }
 
 // ---------------------------------------------------------------------------
 // Sheet metal
 // ---------------------------------------------------------------------------
+// On the flat pattern of a 90 degree bend of thickness t, inside radius r and
+// K-factor k: how far the bend line (the middle of the bend) sits inside the
+// wall's outside face as modeled.
+export function b3BendLine(t is ValueWithUnits, r is ValueWithUnits, k is number) returns ValueWithUnits
+{
+    return r + t - (PI / 4) * (r + k * t);
+}
+
+// How far inside the outside face a bend relief has to reach: SendCutSend's
+// r + t + RELIEF_EXTRA past the bend line.
+export function b3ReliefDepth(t is ValueWithUnits, r is ValueWithUnits, k is number) returns ValueWithUnits
+{
+    return b3BendLine(t, r, k) + r + t + RELIEF_EXTRA;
+}
+
+// How far inside the outside face a bare edge past a relief sits, so that the
+// bend line runs clear of it.
+export function b3BareInset(t is ValueWithUnits, r is ValueWithUnits, k is number) returns ValueWithUnits
+{
+    return b3BendLine(t, r, k) + RELIEF_CLEAR;
+}
+
 // Turns body, a solid modeled to the outside of its bends with sharp bends,
 // into an Onshape sheet-metal part. outside lists a point (page coordinates)
 // inside each outside face: the base wall first, then each wall bent off it.
 // The edges between the base and the others become bends of inside radius r;
-// any edge between two of the others becomes a rip with a corner relief. The
-// thickness t goes inward, so the outside faces stay put.
+// any edge between two of the others becomes a rip with a round corner relief
+// of SendCutSend's size. The thickness t goes inward, so the outside faces
+// stay put. Bend reliefs are cut in the model; if Onshape adds one of its own,
+// it is as deep as SendCutSend's.
 export function b3SheetMetal(context is Context, id is Id, body is Query, outside is array,
     t is ValueWithUnits, r is ValueWithUnits, k is number)
 {
@@ -474,26 +523,43 @@ export function b3SheetMetal(context is Context, id is Id, body is Query, outsid
                 "radius" : r,
                 "kFactor" : k,
                 "oppositeDirection" : true,
-                "defaultCornerStyle" : SMCornerStrategyType.ROUND,
-                "defaultCornerReliefScale" : CORNER_RELIEF_SCALE,
+                "defaultCornerStyle" : SMCornerStrategyType.SIZED_ROUND,
+                "defaultRoundReliefDiameter" : 2 * (r + t + RELIEF_EXTRA),
                 "defaultBendReliefStyle" : SMBendStrategyType.RECTANGLE,
-                "defaultBendReliefDepthScale" : 1 + RELIEF_EXTRA / r,
+                "defaultBendReliefDepthScale" : b3OnshapeReliefScale(t, r, k),
                 "defaultBendReliefScale" : RELIEF_W_SCALE
             });
 }
 
-// Bend relief where a bend stops at p, short of the edge it runs along: a
-// notch in the wall that carries on, RELIEF_W_SCALE * t wide along the edge
-// (direction along, away from the bend) and r + t + RELIEF_EXTRA deep
-// (direction inward, into the wall). A 2D outline for b3Prism*.
-export function b3ReliefPath(p is Vector, along is Vector, inward is Vector, t is ValueWithUnits, r is ValueWithUnits) returns array
+// Onshape's rectangular bend relief at depth scale 1 reaches half the bend
+// allowance plus half the relief width past the bend line, and each step of
+// the scale above 1 adds r. This is the scale that reaches r + t + RELIEF_EXTRA.
+function b3OnshapeReliefScale(t is ValueWithUnits, r is ValueWithUnits, k is number) returns number
+{
+    const base = (PI / 4) * (r + k * t) + RELIEF_W_SCALE * t / 2;
+    return min(5, 1 + max(0 * inch, r + t + RELIEF_EXTRA - base) / r);
+}
+
+// Bend relief where a bend stops at p, short of the end of the edge it runs
+// along: a slot in the wall that carries on, RELIEF_W_SCALE * t wide along the
+// edge (direction along, away from the bend) and b3ReliefDepth deep (direction
+// inward, into the wall). Past the slot, the bare edge is cut back to
+// b3BareInset for bareLength from p, so the bend line runs clear of it. A 2D
+// outline to cut with b3Prism*.
+export function b3ReliefPath(p is Vector, along is Vector, inward is Vector, t is ValueWithUnits, r is ValueWithUnits, k is number,
+    bareLength is ValueWithUnits) returns array
 {
     const a = along / norm(along);
     const n = inward / norm(inward);
     const w = RELIEF_W_SCALE * t;
-    const d = r + t + RELIEF_EXTRA;
+    const d = b3ReliefDepth(t, r, k);
+    const e = b3BareInset(t, r, k);
     const out = n * (-0.05 * inch);
-    return [p + out, p + a * w + out, p + a * w + n * d, p + n * d];
+    if (bareLength <= w)
+    {
+        return [p + out, p + a * w + out, p + a * w + n * d, p + n * d];
+    }
+    return [p + out, p + a * bareLength + out, p + a * bareLength + n * e, p + a * w + n * e, p + a * w + n * d, p + n * d];
 }
 
 export function b3Subtract(context is Context, id is Id, targets is Query, tools is Query)
