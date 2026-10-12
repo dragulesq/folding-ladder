@@ -17,10 +17,8 @@ import(path : "onshape/std/common.fs", version : "2641.0");
  * the assembly places the rest.
  *
  * Sizes are to the outside of bends. Every bent part is an Onshape
- * sheet-metal part with the bend radii and K-factors below, so its flat
- * pattern is ready to export for SendCutSend. Their own 5052 values for .125"
- * and .187" are still to come; when they are in, change BEND_R_* and K_*
- * and everything rebuilds to match.
+ * sheet-metal part with SendCutSend's bend radius and K-factor for 5052 in
+ * its thickness, so its flat pattern is ready to export for them.
  */
 
 // ---------------------------------------------------------------------------
@@ -44,20 +42,27 @@ export const GOING = 6 * inch;                     // top tread x 0-6, middle 6-
 export const SHEET_T = (1 / 8) * inch;             // treads, step tray, front angle, step clip, ledge
 export const PLATE_T = (3 / 16) * inch;            // outer rail, brackets, step legs
 
-// Bends. SendCutSend sets the bend radius and K-factor for each thickness;
-// until their .125" and .187" values are in, these are the B3 page's
-// placeholders (K 0.42 is their value for .250").
-export const BEND_R_SHEET = (1 / 8) * inch;        // inside bend radius on 1/8" sheet
-export const BEND_R_LIP = (3 / 16) * inch;         // tread and step lips, on 1/8" sheet
-export const BEND_R_PLATE = (3 / 16) * inch;       // inside bend radius on 3/16" sheet
-export const K_SHEET = 0.42;                       // K-factor on 1/8" sheet
-export const K_PLATE = 0.42;                       // K-factor on 3/16" sheet
+// Bends: SendCutSend's bending specs for 5052. They set one bend radius and
+// K-factor per thickness and don't do custom radii, so the tread and step lips
+// bend at the 1/8" sheet's radius too. Their bend deduction at 90 degrees
+// (0.216" and 0.356") checks against these.
+export const BEND_R_SHEET = 0.125 * inch;          // inside bend radius on .125" sheet
+export const BEND_R_PLATE = 0.250 * inch;          // inside bend radius on .187" sheet
+export const K_SHEET = 0.44;                       // K-factor on .125" sheet
+export const K_PLATE = 0.43;                       // K-factor on .187" sheet
+export const DIE_W_SHEET = 0.630 * inch;           // their die width for .125"
+export const DIE_W_PLATE = 0.984 * inch;           // their die width for .187"
+// Keep cut features at least half the die width from a bend line (0.315" on
+// .125", 0.492" on .187"), measured on the flat pattern.
 // Bend reliefs, where a bend stops short of an edge: SendCutSend wants them at
 // least half the thickness wide and the bend radius plus the thickness plus
-// 0.020" deep. These are cut a full thickness wide.
+// 0.020" deep, measured on the flat pattern from the bend line (0.270" on
+// .125", 0.457" on .187"). These are cut a full thickness wide. Past a relief,
+// the bare edge sits RELIEF_CLEAR inside the bend line so no material lies on
+// it. Where two flanges meet, the round corner relief has the same radius.
 export const RELIEF_W_SCALE = 1;                   // relief width / thickness (their minimum is 0.5)
 export const RELIEF_EXTRA = 0.020 * inch;          // relief depth beyond radius + thickness
-export const CORNER_RELIEF_SCALE = 1.5;            // Onshape's round corner relief where two flanges meet
+export const RELIEF_CLEAR = (1 / 16) * inch;       // bare edge past a relief, inside the bend line
 
 // Corner radii (outside corners keep hands and shins from catching).
 export const R_OUTSIDE_LARGE = 0.5 * inch;         // rail, trays' lips, ledge shelf, front angle's top outer corner
@@ -114,7 +119,9 @@ export const STOP_PIN_DROP = (67 / 32) * inch;     // T - 2 3/32
 export const STOP_PIN_DIA = (3 / 16) * inch;
 export const STOP_PIN_OUT = (5 / 16) * inch;       // sticks out under the lip; flush on the ear's inside
 export const EAR_CORNER_R = R_OUTSIDE_SMALL;       // each ear's bottom outer corner
-export const EAR_NOTCH_R = R_INSIDE_MIN;           // the hook notch
+// The hook starts 1/16" past the end of the ear's 1/4" bend, so the notch's
+// inside corner can only take a 1/32" radius and still stay clear of the bend.
+export const EAR_NOTCH_R = (1 / 32) * inch;        // the hook notch
 // Rail bracket screws: M6 x 16 flat head (ISO 10642) from the ear side, DIN 985 nyloc nut outside the rail.
 export const FH_DIA = 6 * millimeter;
 export const FH_LEN = 16 * millimeter;             // overall, head included
@@ -136,17 +143,19 @@ export const RAIL_LINE_X = 3 * inch;               // the long lower edge runs f
 export const RAIL_LINE_Z = 20 * inch;
 export const RAIL_FOOT_X = 8.25 * inch;            // foot runs x 8 1/4 to 12
 export const RAIL_FOOT_Z = 0.5 * inch;
-export const RAIL_CORNER_R = R_OUTSIDE_LARGE;      // outside corners (0, 28 3/4), (6, 28 3/4), (12, 18 1/2), (0, 23 1/2)
+export const RAIL_CORNER_R = R_OUTSIDE_LARGE;      // outside corner (6, 28 3/4); the others are flange ends
 export const RAIL_NOTCH_IN_R = 0.5 * inch;         // the notch's inside corner (2 1/2, 23 1/2)
 export const RAIL_NOTCH_R = 1 * inch;              // where the notch meets the long edge
 export const RAIL_STEP_R = 0.25 * inch;            // inside corner at (6, 18 1/2)
 export const RAIL_FLANGE = 1 * inch;               // outward, beyond the plate (out to y 19 7/8)
-export const RAIL_FLANGE_STOP = 0.5 * inch;        // flanges stop this far short of a rounded corner
+export const RAIL_FLANGE_STOP = 0.5 * inch;        // the long flange stops this far short of the notch corner
+export const RAIL_FLANGE_TIP_R = R_OUTSIDE_LARGE;  // every flange's free corners
 export const HAND_SLOT_X = 3 * inch;
 export const HAND_SLOT_Z = 25 * inch;
 export const HAND_SLOT_L = 4 * inch;               // along x
 export const HAND_SLOT_H = 1.25 * inch;
-export const CLIP_RIVET_X = [(83 / 8) * inch, 11.25 * inch];   // 10 3/8 and 11 1/4
+// 11 1/8 rather than the page's 11 1/4 keeps the hole half a die width from the front flange's bend.
+export const CLIP_RIVET_X = [(83 / 8) * inch, (89 / 8) * inch];   // 10 3/8 and 11 1/8
 export const CLIP_RIVET_Z = 9.5 * inch;
 export const RIVET_HOLE_DIA = 0.196 * inch;        // #9 drill
 
@@ -194,7 +203,7 @@ export const LEDGE_SHELF = 2.5 * inch;             // along y
 export const LEDGE_TOP_Z = (9 / 8) * inch;
 export const LEDGE_LEG_H = 1 * inch;
 export const LEDGE_SCREW_X = [1.5 * inch, 4.5 * inch];
-export const LEDGE_SCREW_Z = (5 / 8) * inch;
+export const LEDGE_SCREW_Z = 0.5 * inch;           // 1/2 rather than the page's 5/8 keeps the countersinks half a die width from the bend
 export const LEDGE_SCREW_DIA = 0.177 * inch;       // #8 clearance (countersink not modeled)
 export const LEDGE_SHELF_R = R_OUTSIDE_LARGE;      // the shelf's front corners, at ankle height
 export const LEDGE_LEG_R = R_OUTSIDE_SMALL;        // the back leg's bottom corners
@@ -211,7 +220,7 @@ export const STEP_LEG_OUT_Y1 = (147 / 8) * inch;   // 18 3/8, outer leg web, out
 export const STEP_LEG_BOTTOM_Z = (3 / 8) * inch;
 export const STEP_LEG_TOP_Z = (81 / 8) * inch;     // 10 1/8, stops against the skin's underside
 export const STEP_EAR_W = (17 / 16) * inch;        // ear reach from the web's inner face
-export const STEP_EAR_DROP = 1 * inch;             // ear's straight part, from axle z - 1 to axle z; its bend covers only this root
-export const LEG_CORNER_R = R_OUTSIDE_SMALL;       // the web's four corners
+export const STEP_EAR_DROP = 1 * inch;             // ear's bend starts 1" below the axle and runs up to the web's top edge
+export const LEG_CORNER_R = R_OUTSIDE_SMALL;       // the web's bottom corners and the ears' bottom outer corners
 export const STEP_AXLE_X0 = 11.87 * inch;          // back end is the hook pin, through the keyhole
 export const STEP_AXLE_X1 = 17.86 * inch;          // 152.1 mm (5.99) long

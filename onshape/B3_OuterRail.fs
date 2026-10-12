@@ -12,9 +12,12 @@ import(path : "onshape/std/common.fs", version : "2641.0");
  * outward (+y) along the bed-side edge, the long lower edge, the foot and the
  * front edge, a hand slot, the step clip's rivet holes, and two rows of M6
  * holes for the rail brackets (the bracket part, turned to face the cabinet).
- * Flanges stop 1/2" short of rounded corners, with a bend relief cut at each
- * end per SendCutSend's rule; where two flanges meet at the foot, Onshape
- * cuts a corner relief. The notch's short edges and the step tops are bare.
+ * The bed-side and front flanges run the full length of their edges, so their
+ * bends need no relief. The long flange stops 1/2" short of the notch corner,
+ * with a bend relief there and the bare edge past it cut back inside the bend
+ * line. Where two flanges meet at the foot, Onshape cuts a round corner
+ * relief. Every flange's free corners are rounded. The notch's short edges and
+ * the step tops are bare.
  *
  * Not modeled: the latch holes and the foot pad.
  */
@@ -38,7 +41,8 @@ export const b3OuterRail = defineFeature(function(context is Context, id is Id, 
         const slope = (RAIL_LINE_Z - RAIL_FOOT_Z) / (RAIL_LINE_X - RAIL_FOOT_X);
         const notchLow = vector(RAIL_NOTCH_X, RAIL_FOOT_Z + (RAIL_NOTCH_X - RAIL_FOOT_X) * slope);
 
-        // Plate outline in (x, z), same order as the B3 page, with its corners rounded.
+        // Plate outline in (x, z), same order as the B3 page, with its outside
+        // corners rounded except where a flange's bend ends.
         const corners = [
                 vector(0 * inch, topStep),
                 vector(xm, topStep),
@@ -50,7 +54,7 @@ export const b3OuterRail = defineFeature(function(context is Context, id is Id, 
                 vector(RAIL_NOTCH_X, RAIL_BACK_Z),
                 vector(0 * inch, RAIL_BACK_Z)
             ];
-        const radii = [RAIL_CORNER_R, RAIL_CORNER_R, RAIL_STEP_R, RAIL_CORNER_R, 0, 0, RAIL_NOTCH_R, RAIL_NOTCH_IN_R, RAIL_CORNER_R];
+        const radii = [0, RAIL_CORNER_R, RAIL_STEP_R, 0, 0, 0, RAIL_NOTCH_R, RAIL_NOTCH_IN_R, 0];
         var holes = [b3Slot(vector(HAND_SLOT_X, HAND_SLOT_Z), HAND_SLOT_L, HAND_SLOT_H)];
         for (var i = 0; i < size(CLIP_RIVET_X); i += 1)
         {
@@ -66,40 +70,36 @@ export const b3OuterRail = defineFeature(function(context is Context, id is Id, 
         }
         b3PrismXZ(context, id + "plate", b3Rounded(corners, radii), holes, y0, y1);
 
-        // Flanges, each a strip PLATE_T wide inside its edge (listed so the plate is on
-        // the left), turned outward. They stop RAIL_FLANGE_STOP short of each rounded corner.
+        // Flanges along their edges (listed so the plate is on the left), turned
+        // outward, with their free corners rounded. The bed-side and front ones run
+        // from corner to corner; the long one stops RAIL_FLANGE_STOP short of the
+        // notch corner.
         const longDir = (foot - notchLow) / norm(foot - notchLow);
         const longTop = notchLow + longDir * RAIL_FLANGE_STOP;
         const flanges = [
-                [vector(0 * inch, topStep - RAIL_FLANGE_STOP), vector(0 * inch, RAIL_BACK_Z + RAIL_FLANGE_STOP)],
+                [vector(0 * inch, topStep), vector(0 * inch, RAIL_BACK_Z)],
                 [longTop, foot],
                 [foot, vector(xf, RAIL_FOOT_Z)],
-                [vector(xf, RAIL_FOOT_Z), vector(xf, midStep - RAIL_FLANGE_STOP)]
+                [vector(xf, RAIL_FOOT_Z), vector(xf, midStep)]
             ];
         var outside = [vector(xm + GOING / 2, y0, CLIP_RIVET_Z + 2.5 * inch)];
         for (var i = 0; i < size(flanges); i += 1)
         {
             const f = flanges[i];
-            b3PrismXZ(context, id + ("flange" ~ i), b3Strip(f[0], f[1], PLATE_T), [], y0, fy1);
+            b3Flange(context, id + ("flange" ~ i), f[0], f[1], y0, fy1, RAIL_FLANGE_TIP_R, RAIL_FLANGE_TIP_R);
             const mid = (f[0] + f[1]) / 2;
             outside = append(outside, vector(mid[0], (y1 + fy1) / 2, mid[1]));
         }
         b3Union(context, id + "join", b3Solids(id));
 
-        // Bend reliefs at the flange ends that stop short of a corner, cut into the plate.
-        const reliefs = [
-                [vector(0 * inch, topStep - RAIL_FLANGE_STOP), vector(0, 1), vector(1, 0)],
-                [vector(0 * inch, RAIL_BACK_Z + RAIL_FLANGE_STOP), vector(0, -1), vector(1, 0)],
-                [longTop, -longDir, vector(-longDir[1], longDir[0])],
-                [vector(xf, midStep - RAIL_FLANGE_STOP), vector(0, 1), vector(-1, 0)]
-            ];
-        for (var i = 0; i < size(reliefs); i += 1)
-        {
-            const r = reliefs[i];
-            b3PrismXZ(context, id + "relief" + ("r" ~ i), b3ReliefPath(r[0], r[1], r[2], PLATE_T, BEND_R_PLATE), [],
-                y0 - 0.05 * inch, y1 + 0.05 * inch);
-        }
-        b3Subtract(context, id + "cutReliefs", qSubtraction(b3Solids(id), b3Solids(id + "relief")), b3Solids(id + "relief"));
+        // Bend relief where the long flange stops, cut into the plate. Past it, the
+        // edge is cut back inside the bend line until it runs into the notch's edge.
+        const inward = vector(-longDir[1], longDir[0]);
+        const bareInset = b3BareInset(PLATE_T, BEND_R_PLATE, K_PLATE);
+        const bareLength = (RAIL_NOTCH_X - longTop[0] - inward[0] * bareInset) / (-longDir[0]) + 0.1 * inch;
+        b3PrismXZ(context, id + "relief", b3ReliefPath(longTop, -longDir, inward, PLATE_T, BEND_R_PLATE, K_PLATE, bareLength), [],
+            y0 - 0.05 * inch, y1 + 0.05 * inch);
+        b3Subtract(context, id + "cutRelief", qSubtraction(b3Solids(id), b3Solids(id + "relief")), b3Solids(id + "relief"));
 
         b3SheetMetal(context, id + "sm", b3Solids(id), outside, PLATE_T, BEND_R_PLATE, K_PLATE);
 

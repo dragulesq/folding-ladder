@@ -84,11 +84,12 @@ To fold the stair, drag the top tread up toward the cabinet: the treads, the rai
 
 The bent parts are Onshape sheet-metal parts: the tread, the hook-on step tray and the step clip, front angle and step ledge on 1/8" sheet; the bracket, the outer rail and the two step legs on 3/16". Each is modeled to the outside of its bends, then converted with the thickness going inward, so the outside sizes match the B3 page.
 
-- **Bends** use `BEND_R_SHEET` (1/8"), `BEND_R_LIP` (3/16" on the tread and step lips) and `BEND_R_PLATE` (3/16"), with K-factors `K_SHEET` and `K_PLATE` (0.42). These are the page's placeholders until SendCutSend's own 5052 values for .125" and .187" are in; change them in the parameters and every flat pattern updates.
-- **Reliefs** are cut where a bend stops short of an edge, per SendCutSend's rule (at least half the thickness wide, the bend radius plus the thickness plus 0.020" deep; these are a full thickness wide): at every rail flange end, where the front angle's panel leg stops, and at both ends of each step leg's ear root. Where two rail flanges meet at the foot, Onshape cuts a round corner relief. The tread and step lips and the bracket ears bend along their whole edge, so they need none.
+- **Bends** use SendCutSend's bending specs for 5052: `BEND_R_SHEET` 0.125" with `K_SHEET` 0.44 on .125" sheet, `BEND_R_PLATE` 0.250" with `K_PLATE` 0.43 on .187". They don't do custom radii, so the tread and step lips bend at 0.125" too. Their bend deductions (0.216" and 0.356") match.
+- **Reliefs** follow SendCutSend's rule: at least half the thickness wide (these are a full thickness) and reaching the bend radius plus the thickness plus 0.020" past the bend line on the flat pattern (0.270" on .125", 0.457" on .187"). Past a relief, the bare edge sits 1/16" inside the bend line, so no material lies on the bend line where the flange stops. There are three places: where the rail's long flange stops short of the handle notch, below each step leg's ear, and where the front angle's panel leg stops, which is a step in the outward leg. Where two rail flanges meet at the foot, Onshape cuts a round corner relief of the same radius. Every other bend runs to an edge at both ends, so it needs none: the tread and step lips, the bracket ears, the step leg ears at the top, the step clip, the ledge, and the rail's bed-side and front flanges.
+- **Cut features** sit at least half SendCutSend's die width from a bend line (0.315" on .125", 0.492" on .187"), except the bushing holes (see Limitations).
 - **Export:** open the flat view with the sheet-metal table button in the Part Studio, or right-click the part in the parts list and export its flat pattern as DXF for SendCutSend.
 
-Estimated flat sizes with the placeholder values: tread and step tray about 18 x 9 1/8, bracket about 7 1/4 x 3 7/16, outer rail about 13 3/4 x 29 1/8, all within SendCutSend's 44 x 30.
+Estimated flat sizes: tread and step tray about 18 x 9 3/16, bracket about 7 3/16 x 3 7/16, outer rail about 13 11/16 x 29 1/16, all within SendCutSend's 44 x 30.
 
 ## Checking the code
 
@@ -122,5 +123,6 @@ The page's y runs along Onshape's -Y so that the model isn't mirrored: facing th
 
 ## Limitations
 
-- **Not modeled:** countersinks (the bracket's screw holes and the step ledge's are plain holes, so in the assembly each flat-head screw's head overlaps the rail bracket's web), the rail's latch holes and foot pad, the front angle's keeper holes, bushings, thrust and wave washers, and rubber parts. Each axle screw therefore sits about 1.2 mm off its lip, where the bushing flange goes.
-- **Step leg ears** keep a sharp inside corner where the hook meets the root: a radius there would run into the bend, and the relief beside it does that job.
+- **Not modeled:** countersinks, which are picked in SendCutSend's configurator when ordering (the bracket's screw holes and the step ledge's are plain holes, so in the assembly each flat-head screw's head overlaps the rail bracket's web), the rail's latch holes and foot pad, the front angle's keeper holes, bushings, thrust and wave washers, and rubber parts. Each axle screw therefore sits about 1.2 mm off its lip, where the bushing flange goes.
+- **Bushing holes** are modeled at their finished 14 mm. The page cuts them as 3/8" pilots, then reams them after bending, because most of them sit closer to a bend than SendCutSend's die-width rule allows; a flat pattern exported from the model has the finished size.
+- **Where the model differs from the page** to meet SendCutSend's rules: the rail's bed-side and front flanges run the full length of their edges instead of stopping 1/2" short of the corners; the step leg ears' bends run up to the web's top edge, and the legs are 4 5/8 wide below the ears; the bracket's hook notch has a 1/32" radius instead of 1/8"; the step clip's outer rivet hole is at x 11 1/8 instead of 11 1/4; the step ledge's screws are at z 1/2 instead of 5/8.

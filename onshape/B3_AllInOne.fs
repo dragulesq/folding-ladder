@@ -24,10 +24,8 @@ import(path : "onshape/std/sheetMetalStart.fs", version : "2641.0");
  * the assembly places the rest.
  *
  * Sizes are to the outside of bends. Every bent part is an Onshape
- * sheet-metal part with the bend radii and K-factors below, so its flat
- * pattern is ready to export for SendCutSend. Their own 5052 values for .125"
- * and .187" are still to come; when they are in, change BEND_R_* and K_*
- * and everything rebuilds to match.
+ * sheet-metal part with SendCutSend's bend radius and K-factor for 5052 in
+ * its thickness, so its flat pattern is ready to export for them.
  */
 
 // ---------------------------------------------------------------------------
@@ -51,20 +49,27 @@ export const GOING = 6 * inch;                     // top tread x 0-6, middle 6-
 export const SHEET_T = (1 / 8) * inch;             // treads, step tray, front angle, step clip, ledge
 export const PLATE_T = (3 / 16) * inch;            // outer rail, brackets, step legs
 
-// Bends. SendCutSend sets the bend radius and K-factor for each thickness;
-// until their .125" and .187" values are in, these are the B3 page's
-// placeholders (K 0.42 is their value for .250").
-export const BEND_R_SHEET = (1 / 8) * inch;        // inside bend radius on 1/8" sheet
-export const BEND_R_LIP = (3 / 16) * inch;         // tread and step lips, on 1/8" sheet
-export const BEND_R_PLATE = (3 / 16) * inch;       // inside bend radius on 3/16" sheet
-export const K_SHEET = 0.42;                       // K-factor on 1/8" sheet
-export const K_PLATE = 0.42;                       // K-factor on 3/16" sheet
+// Bends: SendCutSend's bending specs for 5052. They set one bend radius and
+// K-factor per thickness and don't do custom radii, so the tread and step lips
+// bend at the 1/8" sheet's radius too. Their bend deduction at 90 degrees
+// (0.216" and 0.356") checks against these.
+export const BEND_R_SHEET = 0.125 * inch;          // inside bend radius on .125" sheet
+export const BEND_R_PLATE = 0.250 * inch;          // inside bend radius on .187" sheet
+export const K_SHEET = 0.44;                       // K-factor on .125" sheet
+export const K_PLATE = 0.43;                       // K-factor on .187" sheet
+export const DIE_W_SHEET = 0.630 * inch;           // their die width for .125"
+export const DIE_W_PLATE = 0.984 * inch;           // their die width for .187"
+// Keep cut features at least half the die width from a bend line (0.315" on
+// .125", 0.492" on .187"), measured on the flat pattern.
 // Bend reliefs, where a bend stops short of an edge: SendCutSend wants them at
 // least half the thickness wide and the bend radius plus the thickness plus
-// 0.020" deep. These are cut a full thickness wide.
+// 0.020" deep, measured on the flat pattern from the bend line (0.270" on
+// .125", 0.457" on .187"). These are cut a full thickness wide. Past a relief,
+// the bare edge sits RELIEF_CLEAR inside the bend line so no material lies on
+// it. Where two flanges meet, the round corner relief has the same radius.
 export const RELIEF_W_SCALE = 1;                   // relief width / thickness (their minimum is 0.5)
 export const RELIEF_EXTRA = 0.020 * inch;          // relief depth beyond radius + thickness
-export const CORNER_RELIEF_SCALE = 1.5;            // Onshape's round corner relief where two flanges meet
+export const RELIEF_CLEAR = (1 / 16) * inch;       // bare edge past a relief, inside the bend line
 
 // Corner radii (outside corners keep hands and shins from catching).
 export const R_OUTSIDE_LARGE = 0.5 * inch;         // rail, trays' lips, ledge shelf, front angle's top outer corner
@@ -121,7 +126,9 @@ export const STOP_PIN_DROP = (67 / 32) * inch;     // T - 2 3/32
 export const STOP_PIN_DIA = (3 / 16) * inch;
 export const STOP_PIN_OUT = (5 / 16) * inch;       // sticks out under the lip; flush on the ear's inside
 export const EAR_CORNER_R = R_OUTSIDE_SMALL;       // each ear's bottom outer corner
-export const EAR_NOTCH_R = R_INSIDE_MIN;           // the hook notch
+// The hook starts 1/16" past the end of the ear's 1/4" bend, so the notch's
+// inside corner can only take a 1/32" radius and still stay clear of the bend.
+export const EAR_NOTCH_R = (1 / 32) * inch;        // the hook notch
 // Rail bracket screws: M6 x 16 flat head (ISO 10642) from the ear side, DIN 985 nyloc nut outside the rail.
 export const FH_DIA = 6 * millimeter;
 export const FH_LEN = 16 * millimeter;             // overall, head included
@@ -143,17 +150,19 @@ export const RAIL_LINE_X = 3 * inch;               // the long lower edge runs f
 export const RAIL_LINE_Z = 20 * inch;
 export const RAIL_FOOT_X = 8.25 * inch;            // foot runs x 8 1/4 to 12
 export const RAIL_FOOT_Z = 0.5 * inch;
-export const RAIL_CORNER_R = R_OUTSIDE_LARGE;      // outside corners (0, 28 3/4), (6, 28 3/4), (12, 18 1/2), (0, 23 1/2)
+export const RAIL_CORNER_R = R_OUTSIDE_LARGE;      // outside corner (6, 28 3/4); the others are flange ends
 export const RAIL_NOTCH_IN_R = 0.5 * inch;         // the notch's inside corner (2 1/2, 23 1/2)
 export const RAIL_NOTCH_R = 1 * inch;              // where the notch meets the long edge
 export const RAIL_STEP_R = 0.25 * inch;            // inside corner at (6, 18 1/2)
 export const RAIL_FLANGE = 1 * inch;               // outward, beyond the plate (out to y 19 7/8)
-export const RAIL_FLANGE_STOP = 0.5 * inch;        // flanges stop this far short of a rounded corner
+export const RAIL_FLANGE_STOP = 0.5 * inch;        // the long flange stops this far short of the notch corner
+export const RAIL_FLANGE_TIP_R = R_OUTSIDE_LARGE;  // every flange's free corners
 export const HAND_SLOT_X = 3 * inch;
 export const HAND_SLOT_Z = 25 * inch;
 export const HAND_SLOT_L = 4 * inch;               // along x
 export const HAND_SLOT_H = 1.25 * inch;
-export const CLIP_RIVET_X = [(83 / 8) * inch, 11.25 * inch];   // 10 3/8 and 11 1/4
+// 11 1/8 rather than the page's 11 1/4 keeps the hole half a die width from the front flange's bend.
+export const CLIP_RIVET_X = [(83 / 8) * inch, (89 / 8) * inch];   // 10 3/8 and 11 1/8
 export const CLIP_RIVET_Z = 9.5 * inch;
 export const RIVET_HOLE_DIA = 0.196 * inch;        // #9 drill
 
@@ -201,7 +210,7 @@ export const LEDGE_SHELF = 2.5 * inch;             // along y
 export const LEDGE_TOP_Z = (9 / 8) * inch;
 export const LEDGE_LEG_H = 1 * inch;
 export const LEDGE_SCREW_X = [1.5 * inch, 4.5 * inch];
-export const LEDGE_SCREW_Z = (5 / 8) * inch;
+export const LEDGE_SCREW_Z = 0.5 * inch;           // 1/2 rather than the page's 5/8 keeps the countersinks half a die width from the bend
 export const LEDGE_SCREW_DIA = 0.177 * inch;       // #8 clearance (countersink not modeled)
 export const LEDGE_SHELF_R = R_OUTSIDE_LARGE;      // the shelf's front corners, at ankle height
 export const LEDGE_LEG_R = R_OUTSIDE_SMALL;        // the back leg's bottom corners
@@ -218,8 +227,8 @@ export const STEP_LEG_OUT_Y1 = (147 / 8) * inch;   // 18 3/8, outer leg web, out
 export const STEP_LEG_BOTTOM_Z = (3 / 8) * inch;
 export const STEP_LEG_TOP_Z = (81 / 8) * inch;     // 10 1/8, stops against the skin's underside
 export const STEP_EAR_W = (17 / 16) * inch;        // ear reach from the web's inner face
-export const STEP_EAR_DROP = 1 * inch;             // ear's straight part, from axle z - 1 to axle z; its bend covers only this root
-export const LEG_CORNER_R = R_OUTSIDE_SMALL;       // the web's four corners
+export const STEP_EAR_DROP = 1 * inch;             // ear's bend starts 1" below the axle and runs up to the web's top edge
+export const LEG_CORNER_R = R_OUTSIDE_SMALL;       // the web's bottom corners and the ears' bottom outer corners
 export const STEP_AXLE_X0 = 11.87 * inch;          // back end is the hook pin, through the keyhole
 export const STEP_AXLE_X1 = 17.86 * inch;          // 152.1 mm (5.99) long
 
@@ -576,14 +585,6 @@ export function b3Hole(u is ValueWithUnits, v is ValueWithUnits, dia is ValueWit
     return { "center" : vector(u, v), "dia" : dia };
 }
 
-// Strip along the edge p -> q, offset to the left of travel by t.
-export function b3Strip(p is Vector, q is Vector, t is ValueWithUnits) returns array
-{
-    const d = (q - p) / norm(q - p);
-    const left = vector(-d[1], d[0]);
-    return [p, q, q + left * t, p + left * t];
-}
-
 // Obround slot centered on c, l long along u and h tall along v.
 export function b3Slot(c is Vector, l is ValueWithUnits, h is ValueWithUnits) returns array
 {
@@ -630,6 +631,20 @@ export function b3EarOutline(yRoot is ValueWithUnits, yFar is ValueWithUnits, yH
             ]);
 }
 
+// Flange bent off the plate along the edge p -> q (in x, z, plate on the left
+// of travel), PLATE_T thick inward from the edge, from y0 out to yTip. Its free
+// corners at p and q are rounded to rP and rQ.
+export function b3Flange(context is Context, id is Id, p is Vector, q is Vector, y0 is ValueWithUnits, yTip is ValueWithUnits,
+    rP is ValueWithUnits, rQ is ValueWithUnits)
+{
+    const d = (q - p) / norm(q - p);
+    const len = norm(q - p);
+    // Sketch (u, v) = (distance along the edge from p, -y), extruded into the plate.
+    const edgePlane = plane(b3V(vector(p[0], 0 * inch, p[1])), vector(-d[1], 0, d[0]), vector(d[0], 0, d[1]));
+    const outline = b3Rounded(b3Rect(0 * inch, -yTip, len, -y0), [rP, rQ, 0, 0]);
+    b3Prism(context, id, edgePlane, outline, [], PLATE_T);
+}
+
 // ---------------------------------------------------------------------------
 // Tray (treads and hook-on step): skin plus two lips bent down at the x ends,
 // as a sheet-metal part. Holes are in (y, z) and go through both lips. Both
@@ -652,18 +667,42 @@ export function b3Tray(context is Context, id is Id, x0 is ValueWithUnits, top i
                 vector((x0 + x1) / 2, ym, top),
                 vector(x0, ym, top - LIP / 2),
                 vector(x1, ym, top - LIP / 2)
-            ], SHEET_T, BEND_R_LIP, K_SHEET);
+            ], SHEET_T, BEND_R_SHEET, K_SHEET);
 }
 
 // ---------------------------------------------------------------------------
 // Sheet metal
 // ---------------------------------------------------------------------------
+// On the flat pattern of a 90 degree bend of thickness t, inside radius r and
+// K-factor k: how far the bend line (the middle of the bend) sits inside the
+// wall's outside face as modeled.
+export function b3BendLine(t is ValueWithUnits, r is ValueWithUnits, k is number) returns ValueWithUnits
+{
+    return r + t - (PI / 4) * (r + k * t);
+}
+
+// How far inside the outside face a bend relief has to reach: SendCutSend's
+// r + t + RELIEF_EXTRA past the bend line.
+export function b3ReliefDepth(t is ValueWithUnits, r is ValueWithUnits, k is number) returns ValueWithUnits
+{
+    return b3BendLine(t, r, k) + r + t + RELIEF_EXTRA;
+}
+
+// How far inside the outside face a bare edge past a relief sits, so that the
+// bend line runs clear of it.
+export function b3BareInset(t is ValueWithUnits, r is ValueWithUnits, k is number) returns ValueWithUnits
+{
+    return b3BendLine(t, r, k) + RELIEF_CLEAR;
+}
+
 // Turns body, a solid modeled to the outside of its bends with sharp bends,
 // into an Onshape sheet-metal part. outside lists a point (page coordinates)
 // inside each outside face: the base wall first, then each wall bent off it.
 // The edges between the base and the others become bends of inside radius r;
-// any edge between two of the others becomes a rip with a corner relief. The
-// thickness t goes inward, so the outside faces stay put.
+// any edge between two of the others becomes a rip with a round corner relief
+// of SendCutSend's size. The thickness t goes inward, so the outside faces
+// stay put. Bend reliefs are cut in the model; if Onshape adds one of its own,
+// it is as deep as SendCutSend's.
 export function b3SheetMetal(context is Context, id is Id, body is Query, outside is array,
     t is ValueWithUnits, r is ValueWithUnits, k is number)
 {
@@ -693,26 +732,43 @@ export function b3SheetMetal(context is Context, id is Id, body is Query, outsid
                 "radius" : r,
                 "kFactor" : k,
                 "oppositeDirection" : true,
-                "defaultCornerStyle" : SMCornerStrategyType.ROUND,
-                "defaultCornerReliefScale" : CORNER_RELIEF_SCALE,
+                "defaultCornerStyle" : SMCornerStrategyType.SIZED_ROUND,
+                "defaultRoundReliefDiameter" : 2 * (r + t + RELIEF_EXTRA),
                 "defaultBendReliefStyle" : SMBendStrategyType.RECTANGLE,
-                "defaultBendReliefDepthScale" : 1 + RELIEF_EXTRA / r,
+                "defaultBendReliefDepthScale" : b3OnshapeReliefScale(t, r, k),
                 "defaultBendReliefScale" : RELIEF_W_SCALE
             });
 }
 
-// Bend relief where a bend stops at p, short of the edge it runs along: a
-// notch in the wall that carries on, RELIEF_W_SCALE * t wide along the edge
-// (direction along, away from the bend) and r + t + RELIEF_EXTRA deep
-// (direction inward, into the wall). A 2D outline for b3Prism*.
-export function b3ReliefPath(p is Vector, along is Vector, inward is Vector, t is ValueWithUnits, r is ValueWithUnits) returns array
+// Onshape's rectangular bend relief at depth scale 1 reaches half the bend
+// allowance plus half the relief width past the bend line, and each step of
+// the scale above 1 adds r. This is the scale that reaches r + t + RELIEF_EXTRA.
+function b3OnshapeReliefScale(t is ValueWithUnits, r is ValueWithUnits, k is number) returns number
+{
+    const base = (PI / 4) * (r + k * t) + RELIEF_W_SCALE * t / 2;
+    return min(5, 1 + max(0 * inch, r + t + RELIEF_EXTRA - base) / r);
+}
+
+// Bend relief where a bend stops at p, short of the end of the edge it runs
+// along: a slot in the wall that carries on, RELIEF_W_SCALE * t wide along the
+// edge (direction along, away from the bend) and b3ReliefDepth deep (direction
+// inward, into the wall). Past the slot, the bare edge is cut back to
+// b3BareInset for bareLength from p, so the bend line runs clear of it. A 2D
+// outline to cut with b3Prism*.
+export function b3ReliefPath(p is Vector, along is Vector, inward is Vector, t is ValueWithUnits, r is ValueWithUnits, k is number,
+    bareLength is ValueWithUnits) returns array
 {
     const a = along / norm(along);
     const n = inward / norm(inward);
     const w = RELIEF_W_SCALE * t;
-    const d = r + t + RELIEF_EXTRA;
+    const d = b3ReliefDepth(t, r, k);
+    const e = b3BareInset(t, r, k);
     const out = n * (-0.05 * inch);
-    return [p + out, p + a * w + out, p + a * w + n * d, p + n * d];
+    if (bareLength <= w)
+    {
+        return [p + out, p + a * w + out, p + a * w + n * d, p + n * d];
+    }
+    return [p + out, p + a * bareLength + out, p + a * bareLength + n * e, p + a * w + n * e, p + a * w + n * d, p + n * d];
 }
 
 export function b3Subtract(context is Context, id is Id, targets is Query, tools is Query)
@@ -910,9 +966,12 @@ export const b3CabinetBrackets = defineFeature(function(context is Context, id i
  * outward (+y) along the bed-side edge, the long lower edge, the foot and the
  * front edge, a hand slot, the step clip's rivet holes, and two rows of M6
  * holes for the rail brackets (the bracket part, turned to face the cabinet).
- * Flanges stop 1/2" short of rounded corners, with a bend relief cut at each
- * end per SendCutSend's rule; where two flanges meet at the foot, Onshape
- * cuts a corner relief. The notch's short edges and the step tops are bare.
+ * The bed-side and front flanges run the full length of their edges, so their
+ * bends need no relief. The long flange stops 1/2" short of the notch corner,
+ * with a bend relief there and the bare edge past it cut back inside the bend
+ * line. Where two flanges meet at the foot, Onshape cuts a round corner
+ * relief. Every flange's free corners are rounded. The notch's short edges and
+ * the step tops are bare.
  *
  * Not modeled: the latch holes and the foot pad.
  */
@@ -936,7 +995,8 @@ export const b3OuterRail = defineFeature(function(context is Context, id is Id, 
         const slope = (RAIL_LINE_Z - RAIL_FOOT_Z) / (RAIL_LINE_X - RAIL_FOOT_X);
         const notchLow = vector(RAIL_NOTCH_X, RAIL_FOOT_Z + (RAIL_NOTCH_X - RAIL_FOOT_X) * slope);
 
-        // Plate outline in (x, z), same order as the B3 page, with its corners rounded.
+        // Plate outline in (x, z), same order as the B3 page, with its outside
+        // corners rounded except where a flange's bend ends.
         const corners = [
                 vector(0 * inch, topStep),
                 vector(xm, topStep),
@@ -948,7 +1008,7 @@ export const b3OuterRail = defineFeature(function(context is Context, id is Id, 
                 vector(RAIL_NOTCH_X, RAIL_BACK_Z),
                 vector(0 * inch, RAIL_BACK_Z)
             ];
-        const radii = [RAIL_CORNER_R, RAIL_CORNER_R, RAIL_STEP_R, RAIL_CORNER_R, 0, 0, RAIL_NOTCH_R, RAIL_NOTCH_IN_R, RAIL_CORNER_R];
+        const radii = [0, RAIL_CORNER_R, RAIL_STEP_R, 0, 0, 0, RAIL_NOTCH_R, RAIL_NOTCH_IN_R, 0];
         var holes = [b3Slot(vector(HAND_SLOT_X, HAND_SLOT_Z), HAND_SLOT_L, HAND_SLOT_H)];
         for (var i = 0; i < size(CLIP_RIVET_X); i += 1)
         {
@@ -964,40 +1024,36 @@ export const b3OuterRail = defineFeature(function(context is Context, id is Id, 
         }
         b3PrismXZ(context, id + "plate", b3Rounded(corners, radii), holes, y0, y1);
 
-        // Flanges, each a strip PLATE_T wide inside its edge (listed so the plate is on
-        // the left), turned outward. They stop RAIL_FLANGE_STOP short of each rounded corner.
+        // Flanges along their edges (listed so the plate is on the left), turned
+        // outward, with their free corners rounded. The bed-side and front ones run
+        // from corner to corner; the long one stops RAIL_FLANGE_STOP short of the
+        // notch corner.
         const longDir = (foot - notchLow) / norm(foot - notchLow);
         const longTop = notchLow + longDir * RAIL_FLANGE_STOP;
         const flanges = [
-                [vector(0 * inch, topStep - RAIL_FLANGE_STOP), vector(0 * inch, RAIL_BACK_Z + RAIL_FLANGE_STOP)],
+                [vector(0 * inch, topStep), vector(0 * inch, RAIL_BACK_Z)],
                 [longTop, foot],
                 [foot, vector(xf, RAIL_FOOT_Z)],
-                [vector(xf, RAIL_FOOT_Z), vector(xf, midStep - RAIL_FLANGE_STOP)]
+                [vector(xf, RAIL_FOOT_Z), vector(xf, midStep)]
             ];
         var outside = [vector(xm + GOING / 2, y0, CLIP_RIVET_Z + 2.5 * inch)];
         for (var i = 0; i < size(flanges); i += 1)
         {
             const f = flanges[i];
-            b3PrismXZ(context, id + ("flange" ~ i), b3Strip(f[0], f[1], PLATE_T), [], y0, fy1);
+            b3Flange(context, id + ("flange" ~ i), f[0], f[1], y0, fy1, RAIL_FLANGE_TIP_R, RAIL_FLANGE_TIP_R);
             const mid = (f[0] + f[1]) / 2;
             outside = append(outside, vector(mid[0], (y1 + fy1) / 2, mid[1]));
         }
         b3Union(context, id + "join", b3Solids(id));
 
-        // Bend reliefs at the flange ends that stop short of a corner, cut into the plate.
-        const reliefs = [
-                [vector(0 * inch, topStep - RAIL_FLANGE_STOP), vector(0, 1), vector(1, 0)],
-                [vector(0 * inch, RAIL_BACK_Z + RAIL_FLANGE_STOP), vector(0, -1), vector(1, 0)],
-                [longTop, -longDir, vector(-longDir[1], longDir[0])],
-                [vector(xf, midStep - RAIL_FLANGE_STOP), vector(0, 1), vector(-1, 0)]
-            ];
-        for (var i = 0; i < size(reliefs); i += 1)
-        {
-            const r = reliefs[i];
-            b3PrismXZ(context, id + "relief" + ("r" ~ i), b3ReliefPath(r[0], r[1], r[2], PLATE_T, BEND_R_PLATE), [],
-                y0 - 0.05 * inch, y1 + 0.05 * inch);
-        }
-        b3Subtract(context, id + "cutReliefs", qSubtraction(b3Solids(id), b3Solids(id + "relief")), b3Solids(id + "relief"));
+        // Bend relief where the long flange stops, cut into the plate. Past it, the
+        // edge is cut back inside the bend line until it runs into the notch's edge.
+        const inward = vector(-longDir[1], longDir[0]);
+        const bareInset = b3BareInset(PLATE_T, BEND_R_PLATE, K_PLATE);
+        const bareLength = (RAIL_NOTCH_X - longTop[0] - inward[0] * bareInset) / (-longDir[0]) + 0.1 * inch;
+        b3PrismXZ(context, id + "relief", b3ReliefPath(longTop, -longDir, inward, PLATE_T, BEND_R_PLATE, K_PLATE, bareLength), [],
+            y0 - 0.05 * inch, y1 + 0.05 * inch);
+        b3Subtract(context, id + "cutRelief", qSubtraction(b3Solids(id), b3Solids(id + "relief")), b3Solids(id + "relief"));
 
         b3SheetMetal(context, id + "sm", b3Solids(id), outside, PLATE_T, BEND_R_PLATE, K_PLATE);
 
@@ -1155,11 +1211,12 @@ function b3Axle(context is Context, id is Id, tip is map, len is ValueWithUnits,
 /*
  * B3 Front Angle, 1/8" sheet-metal part, on the cabinet's front post. The
  * panel leg takes three screws into the post and stops at 16 1/2" to clear
- * the middle bracket, with a bend relief cut into the outward leg there. The
- * outward leg is flush with the front edge and carries the keyhole for the
- * hook-on step's cabinet-side pin. Corners are rounded 1/4", and 1/2" on the
- * outward leg's top outer corner, which faces the entry. Not modeled: the
- * keeper holes (drill to suit the latch).
+ * the middle bracket. Above that the outward leg's inner edge steps back by a
+ * full relief depth, which is the bend's relief and keeps the bend line clear
+ * of the bare edge. The outward leg is flush with the front edge and carries
+ * the keyhole for the hook-on step's cabinet-side pin. Corners are rounded
+ * 1/4", and 1/2" on the outward leg's top outer corner, which faces the entry.
+ * Not modeled: the keeper holes (drill to suit the latch).
  */
 annotation { "Feature Type Name" : "B3 Front Angle" }
 export const b3FrontAngle = defineFeature(function(context is Context, id is Id, definition is map)
@@ -1176,14 +1233,19 @@ export const b3FrontAngle = defineFeature(function(context is Context, id is Id,
         b3PrismXZ(context, id + "panelLeg", b3Rounded(b3Rect(FA_PANEL_LEG_X0, FA_BOTTOM_Z, FA_X1, FA_PANEL_LEG_TOP), [r, 0, 0, r]),
             screws, 0 * inch, SHEET_T);
 
-        b3PrismYZ(context, id + "outLeg", b3Rounded(b3Rect(0 * inch, FA_BOTTOM_Z, FA_OUT_LEG, FA_TOP_Z), [0, r, FA_ENTRY_R, r]),
+        // Outward leg in (y, z), stepped back above the panel leg's top.
+        const stepBack = b3ReliefDepth(SHEET_T, BEND_R_SHEET, K_SHEET);
+        const outLeg = [
+                vector(0 * inch, FA_BOTTOM_Z),
+                vector(FA_OUT_LEG, FA_BOTTOM_Z),
+                vector(FA_OUT_LEG, FA_TOP_Z),
+                vector(stepBack, FA_TOP_Z),
+                vector(stepBack, FA_PANEL_LEG_TOP),
+                vector(0 * inch, FA_PANEL_LEG_TOP)
+            ];
+        b3PrismYZ(context, id + "outLeg", b3Rounded(outLeg, [0, r, FA_ENTRY_R, r, 0, 0]),
             [b3Keyhole(FA_KEYHOLE_Y, FA_KEYHOLE_Z, FA_KEYHOLE_END_Z)], FA_X1 - SHEET_T, FA_X1);
         b3Union(context, id + "join", b3Solids(id));
-
-        // Bend relief where the panel leg stops, cut into the outward leg.
-        b3PrismYZ(context, id + "relief", b3ReliefPath(vector(0 * inch, FA_PANEL_LEG_TOP), vector(0, 1), vector(1, 0), SHEET_T, BEND_R_SHEET),
-            [], FA_X1 - SHEET_T - 0.05 * inch, FA_X1 + 0.05 * inch);
-        b3Subtract(context, id + "cutRelief", qSubtraction(b3Solids(id), b3Solids(id + "relief")), b3Solids(id + "relief"));
 
         // Sheet metal: the panel leg's face on the panel, then the outward leg's outer face.
         b3SheetMetal(context, id + "sm", b3Solids(id), [
@@ -1243,13 +1305,15 @@ export const b3StepLedge = defineFeature(function(context is Context, id is Id, 
 // ===========================================================================
 /*
  * B3 Hook-on Step: a 1/8" sheet-metal tray like the treads and two 3/16"
- * sheet-metal legs. Each leg is a web with a hook-topped ear bent inboard at
- * each end; the ears turn on an axle through the tray lips. An ear's bend
- * covers only its 1" root, so a relief is cut into the web at both ends of
- * it. The axle's back end is a pin that drops into a keyhole: the front
- * angle for the cabinet-side leg, the step clip for the outer leg. Built
- * open; the legs fold flat in two layers inside the lips. Not modeled: the
- * rubber boots.
+ * sheet-metal legs. Each leg is a web with an ear bent inboard at each end;
+ * the ears turn on an axle through the tray lips. An ear's bend runs from 1"
+ * below its axle hole up to the web's top edge, so the hole sits in the ear
+ * with the bend beside it, and the ear's top runs straight from the web's top
+ * edge onto the round over the hole. Below the ear, a bend relief is cut into
+ * the web and the web's edge is cut back inside the bend line. The axle's back
+ * end is a pin that drops into a keyhole: the front angle for the
+ * cabinet-side leg, the step clip for the outer leg. Built open; the legs fold
+ * flat in two layers inside the lips. Not modeled: the rubber boots.
  */
 annotation { "Feature Type Name" : "B3 Hook-on Step" }
 export const b3HookOnStep = defineFeature(function(context is Context, id is Id, definition is map)
@@ -1272,56 +1336,74 @@ export const b3HookOnStep = defineFeature(function(context is Context, id is Id,
         // Cabinet-side leg: web y 3/8 to 9/16, ears reach toward +y.
         const cabIn = STEP_LEG_CAB_Y0 + PLATE_T;
         b3StepLeg(context, id + "cabLeg", STEP_LEG_CAB_Y0, cabIn, cabIn + STEP_EAR_W,
-            STEP_CAB_AXLE_Y - EAR_HOOK_R, b3StepCabAxleJoint(), "Hook-on step leg, cabinet side");
+            b3StepCabAxleJoint(), "Hook-on step leg, cabinet side");
 
         // Outer leg: web y 18 3/16 to 18 3/8, ears reach toward -y.
         const outIn = STEP_LEG_OUT_Y1 - PLATE_T;
         b3StepLeg(context, id + "outLeg", STEP_LEG_OUT_Y1, outIn, outIn - STEP_EAR_W,
-            STEP_OUT_AXLE_Y + EAR_HOOK_R, b3StepOutAxleJoint(), "Hook-on step leg, outer");
+            b3StepOutAxleJoint(), "Hook-on step leg, outer");
     });
 
 // One leg. yOut and yIn are the web's faces; the ear runs from the web to
-// yFar below the axle, and its round top ends at yArc on the web side.
+// yFar below the axle.
 function b3StepLeg(context is Context, id is Id, yOut is ValueWithUnits, yIn is ValueWithUnits, yFar is ValueWithUnits,
-    yArc is ValueWithUnits, axle is map, partName is string)
+    axle is map, partName is string)
 {
     const axY = axle.origin[1];
     const axZ = axle.origin[2];
     const faces = b3EarFaces(HOOK_STEP);
     const ylo = min(yOut, yIn);
     const yhi = max(yOut, yIn);
-    const r = LEG_CORNER_R;
-    const web = b3Rounded(b3Rect(faces[0], STEP_LEG_BOTTOM_Z, faces[1], STEP_LEG_TOP_Z), [r, r, r, r]);
-    b3PrismXZ(context, id + "web", web, [], ylo, yhi);
-
+    const top = STEP_LEG_TOP_Z;
     const earLo = axZ - STEP_EAR_DROP;
-    const ear = [
-            vector(yOut, earLo),
-            vector(yFar, earLo),
-            vector(yFar, axZ),
-            { "mid" : vector(axY, axZ + EAR_HOOK_R), "end" : vector(yArc, axZ) },
-            vector(yOut, axZ)
+
+    // Web in (x, z). At each end the ear's bend runs from earLo up to the top
+    // edge. Below it, a bend relief, then the edge cut back inside the bend line.
+    const x0 = faces[0];
+    const x1 = faces[1];
+    const d = b3ReliefDepth(PLATE_T, BEND_R_PLATE, K_PLATE);
+    const e = b3BareInset(PLATE_T, BEND_R_PLATE, K_PLATE);
+    const zr = earLo - RELIEF_W_SCALE * PLATE_T;
+    const r = LEG_CORNER_R;
+    const web = [
+            vector(x0 + e, STEP_LEG_BOTTOM_Z),
+            vector(x1 - e, STEP_LEG_BOTTOM_Z),
+            vector(x1 - e, zr),
+            vector(x1 - d, zr),
+            vector(x1 - d, earLo),
+            vector(x1, earLo),
+            vector(x1, top),
+            vector(x0, top),
+            vector(x0, earLo),
+            vector(x0 + d, earLo),
+            vector(x0 + d, zr),
+            vector(x0 + e, zr)
         ];
+    b3PrismXZ(context, id + "web", b3Rounded(web, [r, r, r, 0, 0, 0, 0, 0, 0, 0, 0, r]), [], ylo, yhi);
+
+    // Ear in (y, z): full width from earLo up to the axle, a round of EAR_HOOK_R
+    // on the hole, then a straight edge from the round's top side to the web's
+    // top edge, touching the round.
+    const c = vector(axY, axZ);
+    const corner = vector(yOut, top);
+    const toCorner = corner - c;
+    const reach = acos(EAR_HOOK_R / norm(toCorner));
+    const toCornerAngle = atan2(toCorner[1], toCorner[0]);
+    const t1 = c + vector(cos(toCornerAngle - reach), sin(toCornerAngle - reach)) * EAR_HOOK_R;
+    const t2 = c + vector(cos(toCornerAngle + reach), sin(toCornerAngle + reach)) * EAR_HOOK_R;
+    const touch = t1[1] > t2[1] ? t1 : t2;
+    const farAngle = yFar > axY ? 0 * degree : 180 * degree;
+    const midAngle = (farAngle + atan2(touch[1] - axZ, touch[0] - axY)) / 2;
+    const ear = concatenateArrays([
+                [vector(yOut, earLo)],
+                b3Corner(vector(yOut, earLo), vector(yFar, earLo), vector(yFar, axZ), r),
+                [vector(yFar, axZ), { "mid" : c + vector(cos(midAngle), sin(midAngle)) * EAR_HOOK_R, "end" : touch }, corner]
+            ]);
     const holes = [b3Hole(axY, axZ, HOLE_DIA)];
     const ranges = b3EarRanges(HOOK_STEP);
     b3PrismYZ(context, id + "earBack", ear, holes, ranges[0][0], ranges[0][1]);
     b3PrismYZ(context, id + "earFront", ear, holes, ranges[1][0], ranges[1][1]);
     b3Union(context, id + "join", b3Solids(id));
-
-    // Bend reliefs at both ends of each ear's root, cut into the web.
-    const reliefs = [
-            [vector(faces[0], earLo), vector(0, -1), vector(1, 0)],
-            [vector(faces[0], axZ), vector(0, 1), vector(1, 0)],
-            [vector(faces[1], earLo), vector(0, -1), vector(-1, 0)],
-            [vector(faces[1], axZ), vector(0, 1), vector(-1, 0)]
-        ];
-    for (var i = 0; i < size(reliefs); i += 1)
-    {
-        const rl = reliefs[i];
-        b3PrismXZ(context, id + "relief" + ("r" ~ i), b3ReliefPath(rl[0], rl[1], rl[2], PLATE_T, BEND_R_PLATE), [],
-            ylo - 0.05 * inch, yhi + 0.05 * inch);
-    }
-    b3Subtract(context, id + "cutReliefs", qSubtraction(b3Solids(id), b3Solids(id + "relief")), b3Solids(id + "relief"));
 
     // Sheet metal: the web's outer face, then each ear's outer face.
     const earY = (yOut + yFar) / 2;
