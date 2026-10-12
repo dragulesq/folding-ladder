@@ -7,12 +7,19 @@ import(path : "onshape/std/common.fs", version : "2641.0");
 // </B3-IMPORT>
 
 /*
- * B3 Pivot Hardware: the four tread axles and the two hook-on step axles
- * (their back ends are the hook pins), all 12 mm aluminum tube with a 5 mm
- * bore, each end capped by an M6 fender washer and button-head screw, plus
- * the four 3/16" stop pins, for checking fit and folded clearances.
- * Bushings, thrust washers and wave washers aren't modeled. The outer tread
- * axles and their screws follow FOLD_ANGLE.
+ * B3 Pivot Hardware, one of each part, for checking fit and folded
+ * clearances in the assembly:
+ *   Tread axle (4 used) and step axle (2 used; the back end is the hook
+ *   pin), 12 mm aluminum tube with a 5 mm bore tapped M6 at both ends.
+ *   M6 fender washer and M6 button-head screw (12 each, one on each axle end).
+ *   Stop pin (4 used), 3/16" pin through each cabinet bracket ear.
+ *   M6 x 16 flat-head screw and M6 nyloc nut (8 each), bolting the two rail
+ *   brackets inside the outer rail.
+ * Each is built where its first use sits: the top tread's cabinet axle, the
+ * step's cabinet-side axle, the washer and screw on the top tread's cabinet
+ * axle at the bed end, the top cabinet bracket's back stop pin, and the
+ * first screw of the top rail bracket with its nut.
+ * Bushings, thrust washers and wave washers aren't modeled.
  */
 annotation { "Feature Type Name" : "B3 Pivot Hardware" }
 export const b3PivotHardware = defineFeature(function(context is Context, id is Id, definition is map)
@@ -20,51 +27,70 @@ export const b3PivotHardware = defineFeature(function(context is Context, id is 
     {
     }
     {
-        b3TreadHardware(context, id + "top", TREAD_TOP, "top");
-        b3TreadHardware(context, id + "middle", TREAD_MIDDLE, "middle");
+        const tread = b3CabAxleJoint(TREAD_TOP);
+        b3Axle(context, id + "treadAxle", tread, TREAD_AXLE_LEN, "Tread axle");
+        b3Axle(context, id + "stepAxle", b3StepCabAxleJoint(), STEP_AXLE_X1 - STEP_AXLE_X0, "Step axle");
 
-        b3Axle(context, id + "stepCab", STEP_CAB_AXLE_Y, STEP_CAB_AXLE_Z, STEP_AXLE_X0, STEP_AXLE_X1, "step, cabinet side");
-        b3Axle(context, id + "stepOut", STEP_OUT_AXLE_Y, STEP_OUT_AXLE_Z, STEP_AXLE_X0, STEP_AXLE_X1, "step, outer");
+        // Washer and screw head, stacked out from the axle's bed-end tip.
+        const p = tread.origin;
+        const x0 = p[0];
+        const w = x0 - END_WASHER_T;
+        b3CylX(context, id + "washer", p[1], p[2], w, x0, END_WASHER_DIA);
+        const washer = b3Solids(id + "washer");
+        b3FinishSteel(context, washer, "M6 fender washer");
+        b3Mc(context, id + "mcWasherAxle", washer, "M6 fender washer", "Axle", tread);
+        const under = b3AxleJoint(w, p[1], p[2]);
+        b3Mc(context, id + "mcWasherScrew", washer, "M6 fender washer", "Screw", under);
+
+        b3CylX(context, id + "screw", p[1], p[2], w - END_HEAD_H, w, END_HEAD_DIA);
+        const screw = b3Solids(id + "screw");
+        b3FinishSteel(context, screw, "M6 button-head screw");
+        b3Mc(context, id + "mcScrew", screw, "M6 button-head screw", "Washer", under);
+
+        // Stop pin: flush with the bracket ear's inside face, sticking out under the lip.
+        const pin = b3StopPinJoint(TREAD_TOP, false);
+        const q = pin.origin;
+        b3CylX(context, id + "pin", q[1], q[2], q[0] - PLATE_T - STOP_PIN_OUT, q[0], STOP_PIN_DIA);
+        b3FinishSteel(context, b3Solids(id + "pin"), "Stop pin");
+        b3Mc(context, id + "mcPin", b3Solids(id + "pin"), "Stop pin", "Bracket", pin);
+
+        // Flat-head screw: 90 degree head flush with the bracket web's ear side, shank through the rail.
+        const head = b3OnRail(TREAD_TOP, b3BracketScrewJoint(TREAD_TOP, 0));
+        const s0 = head.origin;
+        const along = head.zAxis;
+        const headH = (FH_HEAD_DIA - FH_DIA) / 2;
+        fCone(context, id + "fh" + "head", { "bottomCenter" : b3V(s0), "topCenter" : b3V(s0 + along * headH),
+                    "bottomRadius" : FH_HEAD_DIA / 2, "topRadius" : FH_DIA / 2 });
+        fCylinder(context, id + "fh" + "shank", { "bottomCenter" : b3V(s0 + along * headH), "topCenter" : b3V(s0 + along * FH_LEN),
+                    "radius" : FH_DIA / 2 });
+        b3Union(context, id + "fh" + "join", b3Solids(id + "fh"));
+        const fh = b3Solids(id + "fh");
+        b3FinishSteel(context, fh, "M6 flat-head screw");
+        b3Mc(context, id + "mcFh", fh, "M6 flat-head screw", "Head", head);
+
+        // Nyloc nut on the rail's outer face, a hex prism around the screw.
+        const nutJoint = b3RailNutJoint(TREAD_TOP, 0);
+        const c = nutJoint.origin;
+        var hex = [];
+        for (var i = 0; i < 6; i += 1)
+        {
+            const a = (30 + 60 * i) * degree;
+            hex = append(hex, vector(c[0] + NUT_AF / sqrt(3) * cos(a), c[2] + NUT_AF / sqrt(3) * sin(a)));
+        }
+        b3PrismXZ(context, id + "nut", hex, [b3Hole(c[0], c[2], FH_DIA)], c[1], c[1] + NUT_H);
+        b3FinishSteel(context, b3Solids(id + "nut"), "M6 nyloc nut");
+        b3Mc(context, id + "mcNut", b3Solids(id + "nut"), "M6 nyloc nut", "Rail", nutJoint);
     });
 
-function b3TreadHardware(context is Context, id is Id, n is number, label is string)
+// A tube axle of length len from the joint at its bed-end tip, with a mate
+// connector on each tip pointing out of the tube.
+function b3Axle(context is Context, id is Id, tip is map, len is ValueWithUnits, partName is string)
 {
-    const top = b3T(n);
-    const x0 = b3GoingX(n) + TREAD_AXLE_X0;
-    const x1 = x0 + TREAD_AXLE_LEN;
-
-    b3Axle(context, id + "cabAxle", CAB_AXLE_Y, top - CAB_AXLE_DROP, x0, x1, "cabinet, " ~ label);
-
-    b3Axle(context, id + "outAxle", OUT_AXLE_Y, top - OUT_AXLE_DROP, x0, x1, "outer, " ~ label);
-    opTransform(context, id + "fold", { "bodies" : b3Solids(id + "outAxle"), "transform" : b3RailFold() });
-
-    // Stop pins: flush with each bracket ear's inside face, sticking out under the lip.
-    const ranges = b3EarRanges(n);
-    const pz = top - STOP_PIN_DROP;
-    b3CylX(context, id + "pinBack", STOP_PIN_Y, pz, ranges[0][0] - STOP_PIN_OUT, ranges[0][1], STOP_PIN_DIA);
-    b3CylX(context, id + "pinFront", STOP_PIN_Y, pz, ranges[1][0], ranges[1][1] + STOP_PIN_OUT, STOP_PIN_DIA);
-    b3FinishSteel(context, b3Solids(id + "pinBack"), "Stop pin, back, " ~ label);
-    b3FinishSteel(context, b3Solids(id + "pinFront"), "Stop pin, front, " ~ label);
-}
-
-// One axle from x0 to x1: the tube, then a fender washer and button head on each end.
-function b3Axle(context is Context, id is Id, y is ValueWithUnits, z is ValueWithUnits,
-    x0 is ValueWithUnits, x1 is ValueWithUnits, label is string)
-{
-    b3TubeX(context, id + "tube", y, z, x0, x1, AXLE_DIA, AXLE_BORE);
-    b3FinishTube(context, b3Solids(id + "tube"), "Axle, " ~ label);
-    b3AxleEnd(context, id + "back", y, z, x0, -1, "Axle screw, " ~ label ~ ", back");
-    b3AxleEnd(context, id + "front", y, z, x1, 1, "Axle screw, " ~ label ~ ", front");
-}
-
-// Fender washer and button head as one part, stacked outward from the tube end at x
-// (dir -1 toward the bed end, 1 toward the front).
-function b3AxleEnd(context is Context, id is Id, y is ValueWithUnits, z is ValueWithUnits, x is ValueWithUnits,
-    dir is number, partName is string)
-{
-    const w = x + dir * END_WASHER_T;
-    b3CylX(context, id + "washer", y, z, x, w, END_WASHER_DIA);
-    b3CylX(context, id + "head", y, z, w, w + dir * END_HEAD_H, END_HEAD_DIA);
-    b3Union(context, id + "join", b3Solids(id));
-    b3FinishSteel(context, b3Solids(id), partName);
+    const p = tip.origin;
+    b3TubeX(context, id + "tube", p[1], p[2], p[0], p[0] + len, AXLE_DIA, AXLE_BORE);
+    const tube = b3Solids(id + "tube");
+    b3FinishTube(context, tube, partName);
+    b3Mc(context, id + "mcBack", tube, partName, "Back end", tip);
+    b3Mc(context, id + "mcFront", tube, partName, "Front end",
+        b3Joint(vector(p[0] + len, p[1], p[2]), vector(1, 0, 0), vector(0, 1, 0)));
 }

@@ -25,12 +25,18 @@ ORDER = [
     "B3_HookOnStep.fs",
 ]
 
-HEADER = re.compile(r'^(FeatureScript \d+;|import\(path : "onshape/std/common\.fs".*\);)\s*$')
+HEADER = re.compile(r'^(FeatureScript \d+;|import\(path : "onshape/std/\w+\.fs".*\);)\s*$')
+STD_IMPORT = re.compile(r'^import\(path : "onshape/std/\w+\.fs".*\);\s*$')
 IMPORT_BLOCK = re.compile(r"// <B3-IMPORT>.*?// </B3-IMPORT>\n", re.S)
 
 
 def main():
     first = (SRC / ORDER[0]).read_text().splitlines()[:2]
+    # Standard-library imports from every file go at the top, once each.
+    for name in ORDER:
+        for line in (SRC / name).read_text().splitlines():
+            if STD_IMPORT.match(line) and line not in first:
+                first.append(line)
     parts = [
         "\n".join(first),
         "",
