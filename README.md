@@ -17,7 +17,7 @@ Every bent part is an Onshape sheet-metal part, with the bend radius and K-facto
 | `onshape/B3_Brackets.fs` | B3 Bracket | The bracket with its two bent pivot ears (used four times: two on the cabinet, two bolted inside the rail) |
 | `onshape/B3_OuterRail.fs` | B3 Outer Rail | Stepped rail with flanges, the door handle notch, hand slot and the rail brackets' and step clip's screw holes |
 | `onshape/B3_StepClip.fs` | B3 Step Clip | Clip bolted inside the outer rail with the outer keyhole |
-| `onshape/B3_PivotHardware.fs` | B3 Pivot Hardware | Tread axle (used 4 times) and step axle (2), 12 mm tube; M6 fender washer (12, one per axle end); M6 button-head screw (14: one per axle end, two for the step clip); stop pin (4); M6 x 16 flat-head screw (8, for the rail brackets); M6 nyloc nut (10, for the rail brackets and the step clip) |
+| `onshape/B3_PivotHardware.fs` | B3 Pivot Hardware | Tread axle (used 4 times) and step axle (2), 12 mm tube; M6 fender washer (12, one per axle end); M6 button-head screw (14: one per axle end, two for the step clip); stop pin (4); M6 x 20 flat-head screw (8, for the rail brackets); M6 nyloc nut (10, for the rail brackets and the step clip) |
 | `onshape/B3_FrontAngle.fs` | B3 Front Angle | Angle on the cabinet's front post |
 | `onshape/B3_StepLedge.fs` | B3 Step Ledge | Ledge that holds the folded step |
 | `onshape/B3_HookOnStep.fs` | B3 Hook-on Step Leg | The hook-on step's folding leg (used twice, the outer one turned to face the cabinet) |

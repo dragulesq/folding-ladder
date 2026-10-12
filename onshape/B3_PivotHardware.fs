@@ -14,7 +14,7 @@ import(path : "onshape/std/common.fs", version : "2641.0");
  *   M6 fender washer (12, one on each axle end) and M6 button-head screw (14:
  *   one on each axle end, and two bolting the step clip to the outer rail).
  *   Stop pin (4 used), 3/16" pin through each cabinet bracket ear.
- *   M6 x 16 flat-head screw (8), bolting the two rail brackets inside the
+ *   M6 x 20 flat-head screw (8), bolting the two rail brackets inside the
  *   outer rail, and M6 nyloc nut (10), on the rail's outer face for those and
  *   the step clip's screws.
  * Each is built where its first use sits: the top tread's cabinet axle, the

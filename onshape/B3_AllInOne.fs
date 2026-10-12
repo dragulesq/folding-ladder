@@ -129,9 +129,9 @@ export const EAR_CORNER_R = R_OUTSIDE_SMALL;       // each ear's bottom outer co
 // The hook starts 1/16" past the end of the ear's 1/4" bend, so the notch's
 // inside corner can only take a 1/32" radius and still stay clear of the bend.
 export const EAR_NOTCH_R = (1 / 32) * inch;        // the hook notch
-// Rail bracket screws: M6 x 16 flat head (ISO 10642) from the ear side, DIN 985 nyloc nut outside the rail.
+// Rail bracket screws: M6 x 20 flat head (ISO 10642) from the ear side, DIN 985 nyloc nut outside the rail.
 export const FH_DIA = 6 * millimeter;
-export const FH_LEN = 16 * millimeter;             // overall, head included
+export const FH_LEN = 20 * millimeter;             // overall, head included; comes through the nut by about 4 mm
 export const FH_HEAD_DIA = 12 * millimeter;        // 90 degree head
 export const NUT_AF = 10 * millimeter;
 export const NUT_H = 6 * millimeter;
@@ -914,7 +914,7 @@ export const b3Treads = defineFeature(function(context is Context, id is Id, def
  * degrees off each end to carry a tread axle. Two sit on the cabinet panel,
  * ears toward the room, with a stop pin through each ear. The other two are
  * the same part turned to face the cabinet and bolted inside the outer rail
- * with M6 x 16 flat-head screws and nyloc nuts; their stop-pin holes stay
+ * with M6 x 20 flat-head screws and nyloc nuts; their stop-pin holes stay
  * empty. The ears run the web's full height and the hook starts past the
  * bend, so the bends need no extra reliefs. Built once, where the top
  * tread's cabinet bracket sits.
@@ -1163,7 +1163,7 @@ export const b3StepClip = defineFeature(function(context is Context, id is Id, d
  *   M6 fender washer (12, one on each axle end) and M6 button-head screw (14:
  *   one on each axle end, and two bolting the step clip to the outer rail).
  *   Stop pin (4 used), 3/16" pin through each cabinet bracket ear.
- *   M6 x 16 flat-head screw (8), bolting the two rail brackets inside the
+ *   M6 x 20 flat-head screw (8), bolting the two rail brackets inside the
  *   outer rail, and M6 nyloc nut (10), on the rail's outer face for those and
  *   the step clip's screws.
  * Each is built where its first use sits: the top tread's cabinet axle, the
