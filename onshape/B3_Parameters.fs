@@ -39,12 +39,12 @@ export const HANDLE_PROJECTION = 2 * inch;         // out from the bed-end wall,
 // ---------------------------------------------------------------------------
 export const RISE = 10.25 * inch;                  // tread tops T1, T2, T3 = 1x, 2x, 3x RISE
 export const GOING = 6 * inch;                     // top tread x 0-6, middle 6-12, step 12-18
-export const SHEET_T = (1 / 8) * inch;             // treads, step tray, front angle, step clip, ledge
-export const PLATE_T = (3 / 16) * inch;            // outer rail, brackets, step legs
+export const SHEET_T = (1 / 8) * inch;             // treads, front angle, step clip, ledge, step legs
+export const PLATE_T = (3 / 16) * inch;            // outer rail, brackets
 
 // Bends: SendCutSend's bending specs for 5052. They set one bend radius and
-// K-factor per thickness and don't do custom radii, so the tread and step lips
-// bend at the 1/8" sheet's radius too. Their bend deduction at 90 degrees
+// K-factor per thickness and don't do custom radii, so the tread lips bend at
+// the 1/8" sheet's radius too. Their bend deduction at 90 degrees
 // (0.216" and 0.356") checks against these.
 export const BEND_R_SHEET = 0.125 * inch;          // inside bend radius on .125" sheet
 export const BEND_R_PLATE = 0.250 * inch;          // inside bend radius on .187" sheet
@@ -65,7 +65,7 @@ export const RELIEF_EXTRA = 0.020 * inch;          // relief depth beyond radius
 export const RELIEF_CLEAR = (1 / 16) * inch;       // bare edge past a relief, inside the bend line
 
 // Corner radii (outside corners keep hands and shins from catching).
-export const R_OUTSIDE_LARGE = 0.5 * inch;         // rail, trays' lips, ledge shelf, front angle's top outer corner
+export const R_OUTSIDE_LARGE = 0.5 * inch;         // rail and its flanges, trays' lips, ledge shelf, front angle's top outer corner
 export const R_OUTSIDE_SMALL = 0.25 * inch;        // brackets, front angle, step clip, legs, ledge back leg
 export const R_INSIDE_MIN = (1 / 8) * inch;        // smallest inside corner
 export const ALU_DENSITY = 2.68 * gram / (centimeter ^ 3);   // 5052-H32
@@ -73,14 +73,14 @@ export const STEEL_DENSITY = 8.0 * gram / (centimeter ^ 3);  // 304 stainless
 export const TUBE_DENSITY = 2.70 * gram / (centimeter ^ 3);  // 6061 axle tube
 
 // ---------------------------------------------------------------------------
-// Treads and step tray
+// Treads (three: top, middle, and the hook-on step's tray)
 // ---------------------------------------------------------------------------
 export const TRAY_W = 18 * inch;                   // along y
 export const TRAY_Y0 = (3 / 8) * inch;             // tray's cabinet-side edge
 export const TRAY_D = (45 / 8) * inch;             // 5 5/8 along x
 export const TRAY_INSET = (3 / 16) * inch;         // tray starts this far into its going
 export const LIP = 2 * inch;                       // lips bent down at the x ends
-export const LIP_CORNER_R = R_OUTSIDE_LARGE;       // both bottom corners of each lip (treads and step tray)
+export const LIP_CORNER_R = R_OUTSIDE_LARGE;       // both bottom corners of each lip
 
 // ---------------------------------------------------------------------------
 // Pivots
@@ -143,10 +143,8 @@ export const RAIL_LINE_X = 3 * inch;               // the long lower edge runs f
 export const RAIL_LINE_Z = 20 * inch;
 export const RAIL_FOOT_X = 8.25 * inch;            // foot runs x 8 1/4 to 12
 export const RAIL_FOOT_Z = 0.5 * inch;
-export const RAIL_CORNER_R = R_OUTSIDE_LARGE;      // outside corner (6, 28 3/4); the others are flange ends
 export const RAIL_NOTCH_IN_R = 0.5 * inch;         // the notch's inside corner (2 1/2, 23 1/2)
 export const RAIL_NOTCH_R = 1 * inch;              // where the notch meets the long edge
-export const RAIL_STEP_R = 0.25 * inch;            // inside corner at (6, 18 1/2)
 export const RAIL_FLANGE = 1 * inch;               // outward, beyond the plate (out to y 19 7/8)
 export const RAIL_FLANGE_STOP = 0.5 * inch;        // the long flange stops this far short of the notch corner
 export const RAIL_FLANGE_TIP_R = R_OUTSIDE_LARGE;  // every flange's free corners
@@ -154,10 +152,10 @@ export const HAND_SLOT_X = 3 * inch;
 export const HAND_SLOT_Z = 25 * inch;
 export const HAND_SLOT_L = 4 * inch;               // along x
 export const HAND_SLOT_H = 1.25 * inch;
-// 11 1/8 rather than the page's 11 1/4 keeps the hole half a die width from the front flange's bend.
-export const CLIP_RIVET_X = [(83 / 8) * inch, (89 / 8) * inch];   // 10 3/8 and 11 1/8
-export const CLIP_RIVET_Z = 9.5 * inch;
-export const RIVET_HOLE_DIA = 0.196 * inch;        // #9 drill
+// Step clip screws, M6 (SCREW_HOLE_DIA) through the clip and the rail. 11 1/8 is
+// as close to the front flange as half a die width from its bend allows.
+export const CLIP_SCREW_X = [(83 / 8) * inch, (89 / 8) * inch];   // 10 3/8 and 11 1/8
+export const CLIP_SCREW_Z = 9 * inch;
 
 // ---------------------------------------------------------------------------
 // Keyholes (front angle and step clip)
@@ -177,22 +175,22 @@ export const FA_TOP_Z = 18 * inch;
 export const FA_SCREW_X = (365 / 32) * inch;       // 11 13/32, front post centerline
 export const FA_SCREW_Z = [4.5 * inch, 12.25 * inch, 15.5 * inch];
 export const FA_SCREW_HOLE_DIA = (17 / 64) * inch;
-export const FA_KEYHOLE_Y = (19 / 16) * inch;
-export const FA_KEYHOLE_Z = 10 * inch;             // hole center
-export const FA_KEYHOLE_END_Z = (151 / 16) * inch; // 9 7/16, slot's round end
+export const FA_KEYHOLE_Y = CAB_AXLE_Y;            // 15/16, on the step's cabinet-side pivot line
+export const FA_KEYHOLE_Z = (161 / 16) * inch;     // 10 1/16, hole center
+export const FA_KEYHOLE_END_Z = 9.5 * inch;        // slot's round end, 1/8 below the pin at 9 5/8
 export const FA_CORNER_R = R_OUTSIDE_SMALL;
 export const FA_ENTRY_R = R_OUTSIDE_LARGE;         // outward leg's top outer corner (y 2, z 18), facing the entry
 
 // ---------------------------------------------------------------------------
-// Step clip (riveted inside the outer rail)
+// Step clip (bolted inside the outer rail with M6 button heads and nyloc nuts)
 // ---------------------------------------------------------------------------
 export const CLIP_X0 = (79 / 8) * inch;            // 9 7/8; outer face at x 12
-export const CLIP_Z0 = 8.5 * inch;
-export const CLIP_H = 2 * inch;
+export const CLIP_Z0 = (63 / 8) * inch;            // 7 7/8
+export const CLIP_H = (17 / 8) * inch;             // up to z 10
 export const CLIP_KEY_LEG_Y0 = (131 / 8) * inch;   // 16 3/8
-export const CLIP_KEYHOLE_Y = (281 / 16) * inch;   // 17 9/16
-export const CLIP_KEYHOLE_Z = (155 / 16) * inch;   // 9 11/16
-export const CLIP_KEYHOLE_END_Z = (73 / 8) * inch; // 9 1/8
+export const CLIP_KEYHOLE_Y = OUT_AXLE_Y;          // 17 3/4, on the step's outer pivot line
+export const CLIP_KEYHOLE_Z = (147 / 16) * inch;   // 9 3/16, hole center
+export const CLIP_KEYHOLE_END_Z = (69 / 8) * inch; // 8 5/8, slot's round end, 1/8 below the pin at 8 3/4
 export const CLIP_CORNER_R = R_OUTSIDE_SMALL;      // the free corners of both legs
 
 // ---------------------------------------------------------------------------
@@ -209,18 +207,18 @@ export const LEDGE_SHELF_R = R_OUTSIDE_LARGE;      // the shelf's front corners,
 export const LEDGE_LEG_R = R_OUTSIDE_SMALL;        // the back leg's bottom corners
 
 // ---------------------------------------------------------------------------
-// Hook-on step
+// Hook-on step: its tray is the tread part, at T1 in the step's going, so its
+// pivots sit on the treads' axle lines, at y 15/16, z 9 5/8 and y 17 3/4,
+// z 8 3/4. The two legs are one part. The cabinet-side leg is built; the outer
+// leg is the same part turned half a turn about a vertical axis, which puts
+// its web's outer face at y 18 3/8.
 // ---------------------------------------------------------------------------
-export const STEP_CAB_AXLE_Y = (19 / 16) * inch;
-export const STEP_CAB_AXLE_Z = (153 / 16) * inch;  // 9 9/16
-export const STEP_OUT_AXLE_Y = (281 / 16) * inch;  // 17 9/16
-export const STEP_OUT_AXLE_Z = 9.25 * inch;
-export const STEP_LEG_CAB_Y0 = (3 / 8) * inch;     // cabinet leg web, outer face
-export const STEP_LEG_OUT_Y1 = (147 / 8) * inch;   // 18 3/8, outer leg web, outer face
-export const STEP_LEG_BOTTOM_Z = (3 / 8) * inch;
+export const STEP_LEG_Y0 = (5 / 16) * inch;        // cabinet-side leg's web, outer face
+export const STEP_LEG_BOTTOM_Z = (1 / 8) * inch;   // underside of the foot flange
 export const STEP_LEG_TOP_Z = (81 / 8) * inch;     // 10 1/8, stops against the skin's underside
-export const STEP_EAR_W = (17 / 16) * inch;        // ear reach from the web's inner face
-export const STEP_EAR_DROP = 1 * inch;             // ear's bend starts 1" below the axle and runs up to the web's top edge
-export const LEG_CORNER_R = R_OUTSIDE_SMALL;       // the web's bottom corners and the ears' bottom outer corners
+export const STEP_LEG_FLANGE = (5 / 8) * inch;     // side and foot flanges, out from the web's outer face
+export const STEP_LEG_EAR = (17 / 16) * inch;      // ears, out from the web's outer face
+export const STEP_LEG_EAR_Z = (133 / 16) * inch;   // 8 5/16, where each side flange widens into its ear
+export const STEP_LEG_EAR_R = (3 / 8) * inch;      // the ear's top outer corner
 export const STEP_AXLE_X0 = 11.87 * inch;          // back end is the hook pin, through the keyhole
 export const STEP_AXLE_X1 = 17.86 * inch;          // 152.1 mm (5.99) long

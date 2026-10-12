@@ -47,18 +47,18 @@ AXLES = {  # axle instance -> part
 INSTANCES = {
     # Brackets 1 and 2 on the cabinet (top and middle tread), 3 and 4 on the rail.
     **{f"Bracket {i}": "Bracket" for i in range(1, 5)},
-    "Tread 1": "Tread", "Tread 2": "Tread",
+    # Treads 1 and 2 are the top and middle treads; tread 3 is the hook-on step's tray.
+    "Tread 1": "Tread", "Tread 2": "Tread", "Tread 3": "Tread",
     "Outer rail": "Outer rail", "Step clip": "Step clip",
     "Front angle": "Front angle", "Step ledge": "Step ledge",
-    "Hook-on step tray": "Hook-on step tray",
-    "Hook-on step leg, cabinet side": "Hook-on step leg, cabinet side",
-    "Hook-on step leg, outer": "Hook-on step leg, outer",
+    # Leg 1 on the cabinet side, leg 2 the same part turned to face it.
+    "Hook-on step leg 1": "Hook-on step leg", "Hook-on step leg 2": "Hook-on step leg",
     **AXLES,
     **{f"Stop pin {i}": "Stop pin" for i in range(1, 5)},
     **{f"M6 fender washer {i}": "M6 fender washer" for i in range(1, 13)},
-    **{f"M6 button-head screw {i}": "M6 button-head screw" for i in range(1, 13)},
+    **{f"M6 button-head screw {i}": "M6 button-head screw" for i in range(1, 15)},
     **{f"M6 flat-head screw {i}": "M6 flat-head screw" for i in range(1, 9)},
-    **{f"M6 nyloc nut {i}": "M6 nyloc nut" for i in range(1, 9)},
+    **{f"M6 nyloc nut {i}": "M6 nyloc nut" for i in range(1, 11)},
 }
 
 # Mates between the main parts: (type, (instance, its mate connector), (instance it goes on, that one's
@@ -76,9 +76,9 @@ MATES = [
     ("FASTENED", ("Bracket 4", "Mounting face"), ("Outer rail", "Middle tread bracket")),
     ("REVOLUTE", ("Tread 2", "Outer axle"), ("Bracket 4", "Axle, turned")),
     ("FASTENED", ("Step clip", "Outer rail"), ("Outer rail", "Step clip")),
-    ("FASTENED", ("Hook-on step tray", "Cabinet-side axle"), ("Front angle", "Hook-on step")),
-    ("REVOLUTE", ("Hook-on step leg, cabinet side", "Axle"), ("Hook-on step tray", "Cabinet-side axle")),
-    ("REVOLUTE", ("Hook-on step leg, outer", "Axle"), ("Hook-on step tray", "Outer axle")),
+    ("FASTENED", ("Tread 3", "Cabinet axle"), ("Front angle", "Hook-on step")),
+    ("REVOLUTE", ("Hook-on step leg 1", "Axle"), ("Tread 3", "Cabinet axle")),
+    ("REVOLUTE", ("Hook-on step leg 2", "Axle, turned"), ("Tread 3", "Outer axle")),
 ]
 
 # Hardware fixed to a part: ((instance, mate connector), (part instance, mate connector)), placed the
@@ -92,8 +92,8 @@ HARDWARE = [
     (("Tread axle 2", "Back end"), ("Bracket 2", "Axle")),
     (("Tread axle 3", "Back end"), ("Bracket 3", "Axle, turned")),
     (("Tread axle 4", "Back end"), ("Bracket 4", "Axle, turned")),
-    (("Step axle 1", "Back end"), ("Hook-on step tray", "Cabinet-side axle")),
-    (("Step axle 2", "Back end"), ("Hook-on step tray", "Outer axle")),
+    (("Step axle 1", "Tread"), ("Tread 3", "Cabinet axle")),
+    (("Step axle 2", "Tread"), ("Tread 3", "Outer axle")),
 ]
 # A fender washer and button-head screw on each axle end.
 for i, (axle, end) in enumerate((a, e) for a in AXLES for e in ("Back end", "Front end")):
@@ -109,6 +109,12 @@ for b, row in (("Bracket 3", "top"), ("Bracket 4", "middle")):
             ((f"M6 flat-head screw {i}", "Head"), (b, f"Screw {k}")),
             ((f"M6 nyloc nut {i}", "Rail"), ("Outer rail", f"Nut, {row} {k}")),
         ]
+# Two button-head screws through the step clip, with a nyloc nut on the rail's outer face.
+for k in range(1, 3):
+    HARDWARE += [
+        ((f"M6 button-head screw {12 + k}", "Washer"), ("Step clip", f"Screw {k}")),
+        ((f"M6 nyloc nut {8 + k}", "Rail"), ("Outer rail", f"Nut, clip {k}")),
+    ]
 
 
 def groups():

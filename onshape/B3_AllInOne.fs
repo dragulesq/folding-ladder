@@ -46,12 +46,12 @@ export const HANDLE_PROJECTION = 2 * inch;         // out from the bed-end wall,
 // ---------------------------------------------------------------------------
 export const RISE = 10.25 * inch;                  // tread tops T1, T2, T3 = 1x, 2x, 3x RISE
 export const GOING = 6 * inch;                     // top tread x 0-6, middle 6-12, step 12-18
-export const SHEET_T = (1 / 8) * inch;             // treads, step tray, front angle, step clip, ledge
-export const PLATE_T = (3 / 16) * inch;            // outer rail, brackets, step legs
+export const SHEET_T = (1 / 8) * inch;             // treads, front angle, step clip, ledge, step legs
+export const PLATE_T = (3 / 16) * inch;            // outer rail, brackets
 
 // Bends: SendCutSend's bending specs for 5052. They set one bend radius and
-// K-factor per thickness and don't do custom radii, so the tread and step lips
-// bend at the 1/8" sheet's radius too. Their bend deduction at 90 degrees
+// K-factor per thickness and don't do custom radii, so the tread lips bend at
+// the 1/8" sheet's radius too. Their bend deduction at 90 degrees
 // (0.216" and 0.356") checks against these.
 export const BEND_R_SHEET = 0.125 * inch;          // inside bend radius on .125" sheet
 export const BEND_R_PLATE = 0.250 * inch;          // inside bend radius on .187" sheet
@@ -72,7 +72,7 @@ export const RELIEF_EXTRA = 0.020 * inch;          // relief depth beyond radius
 export const RELIEF_CLEAR = (1 / 16) * inch;       // bare edge past a relief, inside the bend line
 
 // Corner radii (outside corners keep hands and shins from catching).
-export const R_OUTSIDE_LARGE = 0.5 * inch;         // rail, trays' lips, ledge shelf, front angle's top outer corner
+export const R_OUTSIDE_LARGE = 0.5 * inch;         // rail and its flanges, trays' lips, ledge shelf, front angle's top outer corner
 export const R_OUTSIDE_SMALL = 0.25 * inch;        // brackets, front angle, step clip, legs, ledge back leg
 export const R_INSIDE_MIN = (1 / 8) * inch;        // smallest inside corner
 export const ALU_DENSITY = 2.68 * gram / (centimeter ^ 3);   // 5052-H32
@@ -80,14 +80,14 @@ export const STEEL_DENSITY = 8.0 * gram / (centimeter ^ 3);  // 304 stainless
 export const TUBE_DENSITY = 2.70 * gram / (centimeter ^ 3);  // 6061 axle tube
 
 // ---------------------------------------------------------------------------
-// Treads and step tray
+// Treads (three: top, middle, and the hook-on step's tray)
 // ---------------------------------------------------------------------------
 export const TRAY_W = 18 * inch;                   // along y
 export const TRAY_Y0 = (3 / 8) * inch;             // tray's cabinet-side edge
 export const TRAY_D = (45 / 8) * inch;             // 5 5/8 along x
 export const TRAY_INSET = (3 / 16) * inch;         // tray starts this far into its going
 export const LIP = 2 * inch;                       // lips bent down at the x ends
-export const LIP_CORNER_R = R_OUTSIDE_LARGE;       // both bottom corners of each lip (treads and step tray)
+export const LIP_CORNER_R = R_OUTSIDE_LARGE;       // both bottom corners of each lip
 
 // ---------------------------------------------------------------------------
 // Pivots
@@ -150,10 +150,8 @@ export const RAIL_LINE_X = 3 * inch;               // the long lower edge runs f
 export const RAIL_LINE_Z = 20 * inch;
 export const RAIL_FOOT_X = 8.25 * inch;            // foot runs x 8 1/4 to 12
 export const RAIL_FOOT_Z = 0.5 * inch;
-export const RAIL_CORNER_R = R_OUTSIDE_LARGE;      // outside corner (6, 28 3/4); the others are flange ends
 export const RAIL_NOTCH_IN_R = 0.5 * inch;         // the notch's inside corner (2 1/2, 23 1/2)
 export const RAIL_NOTCH_R = 1 * inch;              // where the notch meets the long edge
-export const RAIL_STEP_R = 0.25 * inch;            // inside corner at (6, 18 1/2)
 export const RAIL_FLANGE = 1 * inch;               // outward, beyond the plate (out to y 19 7/8)
 export const RAIL_FLANGE_STOP = 0.5 * inch;        // the long flange stops this far short of the notch corner
 export const RAIL_FLANGE_TIP_R = R_OUTSIDE_LARGE;  // every flange's free corners
@@ -161,10 +159,10 @@ export const HAND_SLOT_X = 3 * inch;
 export const HAND_SLOT_Z = 25 * inch;
 export const HAND_SLOT_L = 4 * inch;               // along x
 export const HAND_SLOT_H = 1.25 * inch;
-// 11 1/8 rather than the page's 11 1/4 keeps the hole half a die width from the front flange's bend.
-export const CLIP_RIVET_X = [(83 / 8) * inch, (89 / 8) * inch];   // 10 3/8 and 11 1/8
-export const CLIP_RIVET_Z = 9.5 * inch;
-export const RIVET_HOLE_DIA = 0.196 * inch;        // #9 drill
+// Step clip screws, M6 (SCREW_HOLE_DIA) through the clip and the rail. 11 1/8 is
+// as close to the front flange as half a die width from its bend allows.
+export const CLIP_SCREW_X = [(83 / 8) * inch, (89 / 8) * inch];   // 10 3/8 and 11 1/8
+export const CLIP_SCREW_Z = 9 * inch;
 
 // ---------------------------------------------------------------------------
 // Keyholes (front angle and step clip)
@@ -184,22 +182,22 @@ export const FA_TOP_Z = 18 * inch;
 export const FA_SCREW_X = (365 / 32) * inch;       // 11 13/32, front post centerline
 export const FA_SCREW_Z = [4.5 * inch, 12.25 * inch, 15.5 * inch];
 export const FA_SCREW_HOLE_DIA = (17 / 64) * inch;
-export const FA_KEYHOLE_Y = (19 / 16) * inch;
-export const FA_KEYHOLE_Z = 10 * inch;             // hole center
-export const FA_KEYHOLE_END_Z = (151 / 16) * inch; // 9 7/16, slot's round end
+export const FA_KEYHOLE_Y = CAB_AXLE_Y;            // 15/16, on the step's cabinet-side pivot line
+export const FA_KEYHOLE_Z = (161 / 16) * inch;     // 10 1/16, hole center
+export const FA_KEYHOLE_END_Z = 9.5 * inch;        // slot's round end, 1/8 below the pin at 9 5/8
 export const FA_CORNER_R = R_OUTSIDE_SMALL;
 export const FA_ENTRY_R = R_OUTSIDE_LARGE;         // outward leg's top outer corner (y 2, z 18), facing the entry
 
 // ---------------------------------------------------------------------------
-// Step clip (riveted inside the outer rail)
+// Step clip (bolted inside the outer rail with M6 button heads and nyloc nuts)
 // ---------------------------------------------------------------------------
 export const CLIP_X0 = (79 / 8) * inch;            // 9 7/8; outer face at x 12
-export const CLIP_Z0 = 8.5 * inch;
-export const CLIP_H = 2 * inch;
+export const CLIP_Z0 = (63 / 8) * inch;            // 7 7/8
+export const CLIP_H = (17 / 8) * inch;             // up to z 10
 export const CLIP_KEY_LEG_Y0 = (131 / 8) * inch;   // 16 3/8
-export const CLIP_KEYHOLE_Y = (281 / 16) * inch;   // 17 9/16
-export const CLIP_KEYHOLE_Z = (155 / 16) * inch;   // 9 11/16
-export const CLIP_KEYHOLE_END_Z = (73 / 8) * inch; // 9 1/8
+export const CLIP_KEYHOLE_Y = OUT_AXLE_Y;          // 17 3/4, on the step's outer pivot line
+export const CLIP_KEYHOLE_Z = (147 / 16) * inch;   // 9 3/16, hole center
+export const CLIP_KEYHOLE_END_Z = (69 / 8) * inch; // 8 5/8, slot's round end, 1/8 below the pin at 8 3/4
 export const CLIP_CORNER_R = R_OUTSIDE_SMALL;      // the free corners of both legs
 
 // ---------------------------------------------------------------------------
@@ -216,19 +214,19 @@ export const LEDGE_SHELF_R = R_OUTSIDE_LARGE;      // the shelf's front corners,
 export const LEDGE_LEG_R = R_OUTSIDE_SMALL;        // the back leg's bottom corners
 
 // ---------------------------------------------------------------------------
-// Hook-on step
+// Hook-on step: its tray is the tread part, at T1 in the step's going, so its
+// pivots sit on the treads' axle lines, at y 15/16, z 9 5/8 and y 17 3/4,
+// z 8 3/4. The two legs are one part. The cabinet-side leg is built; the outer
+// leg is the same part turned half a turn about a vertical axis, which puts
+// its web's outer face at y 18 3/8.
 // ---------------------------------------------------------------------------
-export const STEP_CAB_AXLE_Y = (19 / 16) * inch;
-export const STEP_CAB_AXLE_Z = (153 / 16) * inch;  // 9 9/16
-export const STEP_OUT_AXLE_Y = (281 / 16) * inch;  // 17 9/16
-export const STEP_OUT_AXLE_Z = 9.25 * inch;
-export const STEP_LEG_CAB_Y0 = (3 / 8) * inch;     // cabinet leg web, outer face
-export const STEP_LEG_OUT_Y1 = (147 / 8) * inch;   // 18 3/8, outer leg web, outer face
-export const STEP_LEG_BOTTOM_Z = (3 / 8) * inch;
+export const STEP_LEG_Y0 = (5 / 16) * inch;        // cabinet-side leg's web, outer face
+export const STEP_LEG_BOTTOM_Z = (1 / 8) * inch;   // underside of the foot flange
 export const STEP_LEG_TOP_Z = (81 / 8) * inch;     // 10 1/8, stops against the skin's underside
-export const STEP_EAR_W = (17 / 16) * inch;        // ear reach from the web's inner face
-export const STEP_EAR_DROP = 1 * inch;             // ear's bend starts 1" below the axle and runs up to the web's top edge
-export const LEG_CORNER_R = R_OUTSIDE_SMALL;       // the web's bottom corners and the ears' bottom outer corners
+export const STEP_LEG_FLANGE = (5 / 8) * inch;     // side and foot flanges, out from the web's outer face
+export const STEP_LEG_EAR = (17 / 16) * inch;      // ears, out from the web's outer face
+export const STEP_LEG_EAR_Z = (133 / 16) * inch;   // 8 5/16, where each side flange widens into its ear
+export const STEP_LEG_EAR_R = (3 / 8) * inch;      // the ear's top outer corner
 export const STEP_AXLE_X0 = 11.87 * inch;          // back end is the hook pin, through the keyhole
 export const STEP_AXLE_X1 = 17.86 * inch;          // 152.1 mm (5.99) long
 
@@ -331,18 +329,26 @@ export function b3BracketJoint(n is number) returns map
     return b3PanelJoint(b3EarFaces(n)[0], b3T(n) - BRACKET_TOP_DROP - BRACKET_H);
 }
 
+// A joint on a part turned half a turn about the vertical axis through the
+// middle of going n and halfway between the cabinet and outer axle lines,
+// then raised by dz. The cabinet side's y then lands on the outer side's.
+export function b3TurnInGoing(n is number, joint is map, dz is ValueWithUnits) returns map
+{
+    const xg = b3GoingX(n);
+    const p = joint.origin;
+    const z = joint.zAxis;
+    const x = joint.xAxis;
+    return b3Joint(vector(2 * xg + GOING - p[0], OUT_AXLE_Y + CAB_AXLE_Y - p[1], p[2] + dz),
+        vector(-z[0], -z[1], z[2]), vector(-x[0], -x[1], x[2]));
+}
+
 // Tread n's rail bracket is the same part as its cabinet bracket, turned
 // half a turn about a vertical axis and lowered so its axle hole lands on the
 // outer axle line. This moves a joint on the cabinet bracket to the same spot
 // on the rail bracket.
 export function b3OnRail(n is number, joint is map) returns map
 {
-    const xg = b3GoingX(n);
-    const p = joint.origin;
-    const z = joint.zAxis;
-    const x = joint.xAxis;
-    return b3Joint(vector(2 * xg + GOING - p[0], OUT_AXLE_Y + CAB_AXLE_Y - p[1], p[2] + CAB_AXLE_DROP - OUT_AXLE_DROP),
-        vector(-z[0], -z[1], z[2]), vector(-x[0], -x[1], x[2]));
+    return b3TurnInGoing(n, joint, CAB_AXLE_DROP - OUT_AXLE_DROP);
 }
 
 // Bracket n's web on the rail's inner face.
@@ -399,14 +405,25 @@ export function b3StepClipJoint() returns map
     return b3Joint(vector(CLIP_X0, RAIL_Y, CLIP_Z0), vector(0, -1, 0), vector(1, 0, 0));
 }
 
-export function b3StepCabAxleJoint() returns map
+// Step clip screw k: under its head on the clip's inside face, z out of the clip.
+export function b3ClipScrewJoint(k is number) returns map
 {
-    return b3AxleJoint(STEP_AXLE_X0, STEP_CAB_AXLE_Y, STEP_CAB_AXLE_Z);
+    return b3Joint(vector(CLIP_SCREW_X[k], RAIL_Y - SHEET_T, CLIP_SCREW_Z), vector(0, -1, 0), vector(1, 0, 0));
 }
 
-export function b3StepOutAxleJoint() returns map
+// Its nyloc nut on the rail's outer face.
+export function b3ClipNutJoint(k is number) returns map
 {
-    return b3AxleJoint(STEP_AXLE_X0, STEP_OUT_AXLE_Y, STEP_OUT_AXLE_Z);
+    return b3Joint(vector(CLIP_SCREW_X[k], RAIL_Y + PLATE_T, CLIP_SCREW_Z), vector(0, 1, 0), vector(1, 0, 0));
+}
+
+// The step axle on the hook-on step's cabinet-side pivot line, at its back
+// end, which runs out through the front angle's keyhole as the hook pin. The
+// step's tray is the tread part, so its pivots are b3CabAxleJoint(HOOK_STEP)
+// and b3OutAxleJoint(HOOK_STEP).
+export function b3StepCabAxleJoint() returns map
+{
+    return b3AxleJoint(STEP_AXLE_X0, CAB_AXLE_Y, b3T(HOOK_STEP) - CAB_AXLE_DROP);
 }
 
 // A mate connector named mcName on the part partName (the bodies in owner),
@@ -864,8 +881,9 @@ function b3Ref(context is Context, id is Id, lo is Vector, hi is Vector, partNam
  * axles, and a 1/2" radius on both bottom corners of each lip (at the outer
  * end it keeps the lip clear of the rail bracket's web as it swings). The
  * lips run the skin's full width, so their bends need no reliefs. The stair
- * uses it twice; it is built once, where the top tread sits, and the
- * assembly places both.
+ * uses it three times: the top and middle treads and the hook-on step's tray.
+ * It is built once, where the top tread sits, and the assembly places all
+ * three.
  */
 annotation { "Feature Type Name" : "B3 Tread" }
 export const b3Treads = defineFeature(function(context is Context, id is Id, definition is map)
@@ -963,15 +981,17 @@ export const b3CabinetBrackets = defineFeature(function(context is Context, id i
 /*
  * B3 Outer Rail, 3/16" sheet-metal part: stepped plate with a notch at the
  * bed-side bottom corner to clear the door handle by 1", 1" flanges turned
- * outward (+y) along the bed-side edge, the long lower edge, the foot and the
- * front edge, a hand slot, the step clip's rivet holes, and two rows of M6
- * holes for the rail brackets (the bracket part, turned to face the cabinet).
- * The bed-side and front flanges run the full length of their edges, so their
- * bends need no relief. The long flange stops 1/2" short of the notch corner,
+ * outward (+y) along the bed-side edge, the riser between the steps, the long
+ * lower edge, the foot and the front edge, a hand slot, the step clip's M6
+ * holes, and two rows of M6 holes for the rail brackets (the bracket part,
+ * turned to face the cabinet). The bed-side and front flanges run the full
+ * length of their edges, so their bends need no relief. The riser flange runs
+ * up to the top edge and stops a relief's width above the middle step, with a
+ * bend relief below it. The long flange stops 1/2" short of the notch corner,
  * with a bend relief there and the bare edge past it cut back inside the bend
  * line. Where two flanges meet at the foot, Onshape cuts a round corner
- * relief. Every flange's free corners are rounded. The notch's short edges and
- * the step tops are bare.
+ * relief and the flanges' tips stay square. Every other flange corner is
+ * rounded. The notch's short edges and the step tops are bare.
  *
  * Not modeled: the latch holes and the foot pad.
  */
@@ -995,8 +1015,8 @@ export const b3OuterRail = defineFeature(function(context is Context, id is Id, 
         const slope = (RAIL_LINE_Z - RAIL_FOOT_Z) / (RAIL_LINE_X - RAIL_FOOT_X);
         const notchLow = vector(RAIL_NOTCH_X, RAIL_FOOT_Z + (RAIL_NOTCH_X - RAIL_FOOT_X) * slope);
 
-        // Plate outline in (x, z), same order as the B3 page, with its outside
-        // corners rounded except where a flange's bend ends.
+        // Plate outline in (x, z), same order as the B3 page. The corners where a
+        // flange's bend ends stay sharp; the flanges' free corners are rounded.
         const corners = [
                 vector(0 * inch, topStep),
                 vector(xm, topStep),
@@ -1008,11 +1028,11 @@ export const b3OuterRail = defineFeature(function(context is Context, id is Id, 
                 vector(RAIL_NOTCH_X, RAIL_BACK_Z),
                 vector(0 * inch, RAIL_BACK_Z)
             ];
-        const radii = [0, RAIL_CORNER_R, RAIL_STEP_R, 0, 0, 0, RAIL_NOTCH_R, RAIL_NOTCH_IN_R, 0];
+        const radii = [0, 0, 0, 0, 0, 0, RAIL_NOTCH_R, RAIL_NOTCH_IN_R, 0];
         var holes = [b3Slot(vector(HAND_SLOT_X, HAND_SLOT_Z), HAND_SLOT_L, HAND_SLOT_H)];
-        for (var i = 0; i < size(CLIP_RIVET_X); i += 1)
+        for (var k = 0; k < size(CLIP_SCREW_X); k += 1)
         {
-            holes = append(holes, b3Hole(CLIP_RIVET_X[i], CLIP_RIVET_Z, RIVET_HOLE_DIA));
+            holes = append(holes, b3Hole(CLIP_SCREW_X[k], CLIP_SCREW_Z, SCREW_HOLE_DIA));
         }
         for (var n in [TREAD_TOP, TREAD_MIDDLE])
         {
@@ -1025,35 +1045,45 @@ export const b3OuterRail = defineFeature(function(context is Context, id is Id, 
         b3PrismXZ(context, id + "plate", b3Rounded(corners, radii), holes, y0, y1);
 
         // Flanges along their edges (listed so the plate is on the left), turned
-        // outward, with their free corners rounded. The bed-side and front ones run
-        // from corner to corner; the long one stops RAIL_FLANGE_STOP short of the
-        // notch corner.
+        // outward, each with the radii of its two tip corners. The free corners are
+        // rounded; where two flanges meet at the foot, the tips stay square beside
+        // the corner relief. The bed-side and front ones run from corner to corner;
+        // the riser one from a relief's width above the middle step up to the top
+        // edge; the long one stops RAIL_FLANGE_STOP short of the notch corner.
         const longDir = (foot - notchLow) / norm(foot - notchLow);
         const longTop = notchLow + longDir * RAIL_FLANGE_STOP;
+        const riserBottom = vector(xm, midStep + RELIEF_W_SCALE * PLATE_T);
+        const tip = RAIL_FLANGE_TIP_R;
         const flanges = [
-                [vector(0 * inch, topStep), vector(0 * inch, RAIL_BACK_Z)],
-                [longTop, foot],
-                [foot, vector(xf, RAIL_FOOT_Z)],
-                [vector(xf, RAIL_FOOT_Z), vector(xf, midStep)]
+                [vector(0 * inch, topStep), vector(0 * inch, RAIL_BACK_Z), tip, tip],
+                [riserBottom, vector(xm, topStep), tip, tip],
+                [longTop, foot, tip, 0 * inch],
+                [foot, vector(xf, RAIL_FOOT_Z), 0 * inch, 0 * inch],
+                [vector(xf, RAIL_FOOT_Z), vector(xf, midStep), 0 * inch, tip]
             ];
-        var outside = [vector(xm + GOING / 2, y0, CLIP_RIVET_Z + 2.5 * inch)];
+        var outside = [vector(xm + GOING / 2, y0, CLIP_SCREW_Z + 2.5 * inch)];
         for (var i = 0; i < size(flanges); i += 1)
         {
             const f = flanges[i];
-            b3Flange(context, id + ("flange" ~ i), f[0], f[1], y0, fy1, RAIL_FLANGE_TIP_R, RAIL_FLANGE_TIP_R);
+            b3Flange(context, id + ("flange" ~ i), f[0], f[1], y0, fy1, f[2], f[3]);
             const mid = (f[0] + f[1]) / 2;
             outside = append(outside, vector(mid[0], (y1 + fy1) / 2, mid[1]));
         }
         b3Union(context, id + "join", b3Solids(id));
 
-        // Bend relief where the long flange stops, cut into the plate. Past it, the
-        // edge is cut back inside the bend line until it runs into the notch's edge.
+        // Bend reliefs, cut into the plate. Where the long flange stops, a relief,
+        // then the edge cut back inside the bend line until it runs into the notch's
+        // edge. Below the riser flange, a relief down to the middle step, so the
+        // flange's flat pattern clears the plate below it.
         const inward = vector(-longDir[1], longDir[0]);
         const bareInset = b3BareInset(PLATE_T, BEND_R_PLATE, K_PLATE);
         const bareLength = (RAIL_NOTCH_X - longTop[0] - inward[0] * bareInset) / (-longDir[0]) + 0.1 * inch;
         b3PrismXZ(context, id + "relief", b3ReliefPath(longTop, -longDir, inward, PLATE_T, BEND_R_PLATE, K_PLATE, bareLength), [],
             y0 - 0.05 * inch, y1 + 0.05 * inch);
-        b3Subtract(context, id + "cutRelief", qSubtraction(b3Solids(id), b3Solids(id + "relief")), b3Solids(id + "relief"));
+        b3PrismXZ(context, id + "riserRelief", b3ReliefPath(riserBottom, vector(0, -1), vector(-1, 0), PLATE_T, BEND_R_PLATE, K_PLATE,
+                0 * inch), [], y0 - 0.05 * inch, y1 + 0.05 * inch);
+        const reliefs = qUnion([b3Solids(id + "relief"), b3Solids(id + "riserRelief")]);
+        b3Subtract(context, id + "cutRelief", qSubtraction(b3Solids(id), reliefs), reliefs);
 
         b3SheetMetal(context, id + "sm", b3Solids(id), outside, PLATE_T, BEND_R_PLATE, K_PLATE);
 
@@ -1063,6 +1093,10 @@ export const b3OuterRail = defineFeature(function(context is Context, id is Id, 
         b3Mc(context, id + "mcTop", rail, name, "Top tread bracket", b3RailBracketJoint(TREAD_TOP));
         b3Mc(context, id + "mcMiddle", rail, name, "Middle tread bracket", b3RailBracketJoint(TREAD_MIDDLE));
         b3Mc(context, id + "mcClip", rail, name, "Step clip", b3StepClipJoint());
+        for (var k = 0; k < size(CLIP_SCREW_X); k += 1)
+        {
+            b3Mc(context, id + ("mcNutClip" ~ k), rail, name, "Nut, clip " ~ (k + 1), b3ClipNutJoint(k));
+        }
         for (var k = 0; k < size(SCREW_X); k += 1)
         {
             b3Mc(context, id + ("mcNutTop" ~ k), rail, name, "Nut, top " ~ (k + 1), b3RailNutJoint(TREAD_TOP, k));
@@ -1074,9 +1108,10 @@ export const b3OuterRail = defineFeature(function(context is Context, id is Id, 
 // B3_StepClip.fs
 // ===========================================================================
 /*
- * B3 Step Clip, 1/8" sheet-metal part: small angle riveted inside the outer
- * rail. Its keyhole takes the hook pin on the back end of the hook-on step's
- * outer leg axle. The free corners of both legs are rounded.
+ * B3 Step Clip, 1/8" sheet-metal part: small angle bolted inside the outer
+ * rail with two M6 button-head screws and nyloc nuts. Its keyhole takes the
+ * hook pin on the back end of the hook-on step's outer axle. The free corners
+ * of both legs are rounded.
  */
 annotation { "Feature Type Name" : "B3 Step Clip" }
 export const b3StepClip = defineFeature(function(context is Context, id is Id, definition is map)
@@ -1089,13 +1124,13 @@ export const b3StepClip = defineFeature(function(context is Context, id is Id, d
         const z1 = CLIP_Z0 + CLIP_H;
         const r = CLIP_CORNER_R;
 
-        // Rail leg, against the rail's inner face, with the rivet holes.
-        var rivets = [];
-        for (var i = 0; i < size(CLIP_RIVET_X); i += 1)
+        // Rail leg, against the rail's inner face, with the screw holes.
+        var screws = [];
+        for (var k = 0; k < size(CLIP_SCREW_X); k += 1)
         {
-            rivets = append(rivets, b3Hole(CLIP_RIVET_X[i], CLIP_RIVET_Z, RIVET_HOLE_DIA));
+            screws = append(screws, b3Hole(CLIP_SCREW_X[k], CLIP_SCREW_Z, SCREW_HOLE_DIA));
         }
-        b3PrismXZ(context, id + "railLeg", b3Rounded(b3Rect(CLIP_X0, z0, x1, z1), [r, 0, 0, r]), rivets, RAIL_Y - SHEET_T, RAIL_Y);
+        b3PrismXZ(context, id + "railLeg", b3Rounded(b3Rect(CLIP_X0, z0, x1, z1), [r, 0, 0, r]), screws, RAIL_Y - SHEET_T, RAIL_Y);
 
         // Keyhole leg, outer face flush with x = 12.
         b3PrismYZ(context, id + "keyLeg", b3Rounded(b3Rect(CLIP_KEY_LEG_Y0, z0, RAIL_Y, z1), [r, 0, 0, r]),
@@ -1104,13 +1139,17 @@ export const b3StepClip = defineFeature(function(context is Context, id is Id, d
 
         // Sheet metal: the face against the rail, then the keyhole leg's outer face.
         b3SheetMetal(context, id + "sm", b3Solids(id), [
-                    vector((CLIP_RIVET_X[0] + CLIP_RIVET_X[1]) / 2, RAIL_Y, z0 + CLIP_H / 4),
+                    vector((CLIP_SCREW_X[0] + CLIP_SCREW_X[1]) / 2, RAIL_Y, z0 + CLIP_H / 4),
                     vector(x1, (CLIP_KEY_LEG_Y0 + CLIP_KEYHOLE_Y) / 2, z0 + CLIP_H / 4)
                 ], SHEET_T, BEND_R_SHEET, K_SHEET);
 
         const clip = b3Solids(id);
         b3Finish(context, clip, "Step clip", RGB_ALU_DARK);
         b3Mc(context, id + "mcRail", clip, "Step clip", "Outer rail", b3StepClipJoint());
+        for (var k = 0; k < size(CLIP_SCREW_X); k += 1)
+        {
+            b3Mc(context, id + ("mcScrew" ~ k), clip, "Step clip", "Screw " ~ (k + 1), b3ClipScrewJoint(k));
+        }
     });
 
 // ===========================================================================
@@ -1121,10 +1160,12 @@ export const b3StepClip = defineFeature(function(context is Context, id is Id, d
  * clearances in the assembly:
  *   Tread axle (4 used) and step axle (2 used; the back end is the hook
  *   pin), 12 mm aluminum tube with a 5 mm bore tapped M6 at both ends.
- *   M6 fender washer and M6 button-head screw (12 each, one on each axle end).
+ *   M6 fender washer (12, one on each axle end) and M6 button-head screw (14:
+ *   one on each axle end, and two bolting the step clip to the outer rail).
  *   Stop pin (4 used), 3/16" pin through each cabinet bracket ear.
- *   M6 x 16 flat-head screw and M6 nyloc nut (8 each), bolting the two rail
- *   brackets inside the outer rail.
+ *   M6 x 16 flat-head screw (8), bolting the two rail brackets inside the
+ *   outer rail, and M6 nyloc nut (10), on the rail's outer face for those and
+ *   the step clip's screws.
  * Each is built where its first use sits: the top tread's cabinet axle, the
  * step's cabinet-side axle, the washer and screw on the top tread's cabinet
  * axle at the bed end, the top cabinet bracket's back stop pin, and the
@@ -1140,6 +1181,8 @@ export const b3PivotHardware = defineFeature(function(context is Context, id is 
         const tread = b3CabAxleJoint(TREAD_TOP);
         b3Axle(context, id + "treadAxle", tread, TREAD_AXLE_LEN, "Tread axle");
         b3Axle(context, id + "stepAxle", b3StepCabAxleJoint(), STEP_AXLE_X1 - STEP_AXLE_X0, "Step axle");
+        // Where the step axle meets the step's tray (a tread), for placing it on either pivot.
+        b3Mc(context, id + "mcStepTread", b3Solids(id + "stepAxle"), "Step axle", "Tread", b3CabAxleJoint(HOOK_STEP));
 
         // Washer and screw head, stacked out from the axle's bed-end tip.
         const p = tread.origin;
@@ -1257,7 +1300,7 @@ export const b3FrontAngle = defineFeature(function(context is Context, id is Id,
         const name = "Front angle";
         b3Finish(context, body, name, RGB_ALU_DARK);
         b3Mc(context, id + "mcCabinet", body, name, "Cabinet", b3FrontAngleJoint());
-        b3Mc(context, id + "mcStep", body, name, "Hook-on step", b3StepCabAxleJoint());
+        b3Mc(context, id + "mcStep", body, name, "Hook-on step", b3CabAxleJoint(HOOK_STEP));
     });
 
 // ===========================================================================
@@ -1304,116 +1347,72 @@ export const b3StepLedge = defineFeature(function(context is Context, id is Id, 
 // B3_HookOnStep.fs
 // ===========================================================================
 /*
- * B3 Hook-on Step: a 1/8" sheet-metal tray like the treads and two 3/16"
- * sheet-metal legs. Each leg is a web with an ear bent inboard at each end;
- * the ears turn on an axle through the tray lips. An ear's bend runs from 1"
- * below its axle hole up to the web's top edge, so the hole sits in the ear
- * with the bend beside it, and the ear's top runs straight from the web's top
- * edge onto the round over the hole. Below the ear, a bend relief is cut into
- * the web and the web's edge is cut back inside the bend line. The axle's back
- * end is a pin that drops into a keyhole: the front angle for the
- * cabinet-side leg, the step clip for the outer leg. Built open; the legs fold
- * flat in two layers inside the lips. Not modeled: the rubber boots.
+ * B3 Hook-on Step Leg, 1/8" sheet-metal part, used twice. The hook-on step's
+ * tray is the tread part, which the assembly places at the step. Each leg is
+ * a 5 1/8 x 10 web bent into a shallow channel: a 5/8" side flange at each x
+ * end, full height, that widens at the top into a pivot ear, and a 5/8" foot
+ * flange along the bottom. Each ear has two holes 7/8" apart, on the tray's
+ * two pivot lines: the cabinet-side leg turns on the upper one, and the outer
+ * leg, the same part turned to face the cabinet, on the lower one. The side
+ * flanges run to the top edge, so their bends need no relief; where they meet
+ * the foot flange, Onshape cuts round corner reliefs and the flanges' tips stay
+ * square. The top edge is the open stop against the tray's skin. Built where
+ * the cabinet-side leg sits, open.
+ * Not modeled: the rubber pad under the foot.
  */
-annotation { "Feature Type Name" : "B3 Hook-on Step" }
+annotation { "Feature Type Name" : "B3 Hook-on Step Leg" }
 export const b3HookOnStep = defineFeature(function(context is Context, id is Id, definition is map)
     precondition
     {
     }
     {
-        const top = b3T(HOOK_STEP);
+        const n = HOOK_STEP;
+        const faces = b3EarFaces(n);
+        const y0 = STEP_LEG_Y0;
+        const yTip = y0 + STEP_LEG_FLANGE;
+        const yEar = y0 + STEP_LEG_EAR;
+        const zb = STEP_LEG_BOTTOM_Z;
+        const zt = STEP_LEG_TOP_Z;
+        const r = R_OUTSIDE_SMALL;
+
+        // Web, its outer face toward the cabinet.
+        b3PrismXZ(context, id + "web", b3Rect(faces[0], zb, faces[1], zt), [], y0, y0 + SHEET_T);
+
+        // Side flanges in (y, z), outer faces at the ear faces, widening into the ears.
+        const side = b3Rounded([
+                    vector(y0, zb),
+                    vector(yTip, zb),
+                    vector(yTip, STEP_LEG_EAR_Z),
+                    vector(yEar, STEP_LEG_EAR_Z),
+                    vector(yEar, zt),
+                    vector(y0, zt)
+                ], [0, 0, R_INSIDE_MIN, r, STEP_LEG_EAR_R, 0]);
         const holes = [
-                b3Hole(STEP_CAB_AXLE_Y, STEP_CAB_AXLE_Z, HOLE_DIA),
-                b3Hole(STEP_OUT_AXLE_Y, STEP_OUT_AXLE_Z, HOLE_DIA)
+                b3Hole(CAB_AXLE_Y, b3T(n) - CAB_AXLE_DROP, HOLE_DIA),
+                b3Hole(CAB_AXLE_Y, b3T(n) - OUT_AXLE_DROP, HOLE_DIA)
             ];
-        b3Tray(context, id + "tray", b3GoingX(HOOK_STEP) + TRAY_INSET, top, holes);
-        const tray = b3Solids(id + "tray");
-        const name = "Hook-on step tray";
-        b3Finish(context, tray, name, RGB_STEP);
-        b3Mc(context, id + "mcCab", tray, name, "Cabinet-side axle", b3StepCabAxleJoint());
-        b3Mc(context, id + "mcOut", tray, name, "Outer axle", b3StepOutAxleJoint());
+        b3PrismYZ(context, id + "sideBack", side, holes, faces[0], faces[0] + SHEET_T);
+        b3PrismYZ(context, id + "sideFront", side, holes, faces[1] - SHEET_T, faces[1]);
 
-        // Cabinet-side leg: web y 3/8 to 9/16, ears reach toward +y.
-        const cabIn = STEP_LEG_CAB_Y0 + PLATE_T;
-        b3StepLeg(context, id + "cabLeg", STEP_LEG_CAB_Y0, cabIn, cabIn + STEP_EAR_W,
-            b3StepCabAxleJoint(), "Hook-on step leg, cabinet side");
+        // Foot flange in (x, y).
+        b3PrismXY(context, id + "foot", b3Rect(faces[0], y0, faces[1], yTip), [], zb, zb + SHEET_T);
+        b3Union(context, id + "join", b3Solids(id));
 
-        // Outer leg: web y 18 3/16 to 18 3/8, ears reach toward -y.
-        const outIn = STEP_LEG_OUT_Y1 - PLATE_T;
-        b3StepLeg(context, id + "outLeg", STEP_LEG_OUT_Y1, outIn, outIn - STEP_EAR_W,
-            b3StepOutAxleJoint(), "Hook-on step leg, outer");
+        // Sheet metal: the web's outer face, then the side flanges' outer faces and the foot's underside.
+        const midX = (faces[0] + faces[1]) / 2;
+        const midY = (y0 + yTip) / 2;
+        b3SheetMetal(context, id + "sm", b3Solids(id), [
+                    vector(midX, y0, zt / 2),
+                    vector(faces[0], midY, zt / 2),
+                    vector(faces[1], midY, zt / 2),
+                    vector(midX, midY, zb)
+                ], SHEET_T, BEND_R_SHEET, K_SHEET);
+
+        // The cabinet-side leg turns on the upper hole; the outer leg, turned half a
+        // turn, on the lower one.
+        const leg = b3Solids(id);
+        const name = "Hook-on step leg";
+        b3Finish(context, leg, name, RGB_STEP);
+        b3Mc(context, id + "mcAxle", leg, name, "Axle", b3CabAxleJoint(n));
+        b3Mc(context, id + "mcAxleTurned", leg, name, "Axle, turned", b3TurnInGoing(n, b3OutAxleJoint(n), 0 * inch));
     });
-
-// One leg. yOut and yIn are the web's faces; the ear runs from the web to
-// yFar below the axle.
-function b3StepLeg(context is Context, id is Id, yOut is ValueWithUnits, yIn is ValueWithUnits, yFar is ValueWithUnits,
-    axle is map, partName is string)
-{
-    const axY = axle.origin[1];
-    const axZ = axle.origin[2];
-    const faces = b3EarFaces(HOOK_STEP);
-    const ylo = min(yOut, yIn);
-    const yhi = max(yOut, yIn);
-    const top = STEP_LEG_TOP_Z;
-    const earLo = axZ - STEP_EAR_DROP;
-
-    // Web in (x, z). At each end the ear's bend runs from earLo up to the top
-    // edge. Below it, a bend relief, then the edge cut back inside the bend line.
-    const x0 = faces[0];
-    const x1 = faces[1];
-    const d = b3ReliefDepth(PLATE_T, BEND_R_PLATE, K_PLATE);
-    const e = b3BareInset(PLATE_T, BEND_R_PLATE, K_PLATE);
-    const zr = earLo - RELIEF_W_SCALE * PLATE_T;
-    const r = LEG_CORNER_R;
-    const web = [
-            vector(x0 + e, STEP_LEG_BOTTOM_Z),
-            vector(x1 - e, STEP_LEG_BOTTOM_Z),
-            vector(x1 - e, zr),
-            vector(x1 - d, zr),
-            vector(x1 - d, earLo),
-            vector(x1, earLo),
-            vector(x1, top),
-            vector(x0, top),
-            vector(x0, earLo),
-            vector(x0 + d, earLo),
-            vector(x0 + d, zr),
-            vector(x0 + e, zr)
-        ];
-    b3PrismXZ(context, id + "web", b3Rounded(web, [r, r, r, 0, 0, 0, 0, 0, 0, 0, 0, r]), [], ylo, yhi);
-
-    // Ear in (y, z): full width from earLo up to the axle, a round of EAR_HOOK_R
-    // on the hole, then a straight edge from the round's top side to the web's
-    // top edge, touching the round.
-    const c = vector(axY, axZ);
-    const corner = vector(yOut, top);
-    const toCorner = corner - c;
-    const reach = acos(EAR_HOOK_R / norm(toCorner));
-    const toCornerAngle = atan2(toCorner[1], toCorner[0]);
-    const t1 = c + vector(cos(toCornerAngle - reach), sin(toCornerAngle - reach)) * EAR_HOOK_R;
-    const t2 = c + vector(cos(toCornerAngle + reach), sin(toCornerAngle + reach)) * EAR_HOOK_R;
-    const touch = t1[1] > t2[1] ? t1 : t2;
-    const farAngle = yFar > axY ? 0 * degree : 180 * degree;
-    const midAngle = (farAngle + atan2(touch[1] - axZ, touch[0] - axY)) / 2;
-    const ear = concatenateArrays([
-                [vector(yOut, earLo)],
-                b3Corner(vector(yOut, earLo), vector(yFar, earLo), vector(yFar, axZ), r),
-                [vector(yFar, axZ), { "mid" : c + vector(cos(midAngle), sin(midAngle)) * EAR_HOOK_R, "end" : touch }, corner]
-            ]);
-    const holes = [b3Hole(axY, axZ, HOLE_DIA)];
-    const ranges = b3EarRanges(HOOK_STEP);
-    b3PrismYZ(context, id + "earBack", ear, holes, ranges[0][0], ranges[0][1]);
-    b3PrismYZ(context, id + "earFront", ear, holes, ranges[1][0], ranges[1][1]);
-    b3Union(context, id + "join", b3Solids(id));
-
-    // Sheet metal: the web's outer face, then each ear's outer face.
-    const earY = (yOut + yFar) / 2;
-    const midX = (faces[0] + faces[1]) / 2;
-    b3SheetMetal(context, id + "sm", b3Solids(id), [
-                vector(midX, yOut, STEP_LEG_BOTTOM_Z + 1 * inch),
-                vector(faces[0], earY, earLo + STEP_EAR_DROP / 4),
-                vector(faces[1], earY, earLo + STEP_EAR_DROP / 4)
-            ], PLATE_T, BEND_R_PLATE, K_PLATE);
-
-    b3Finish(context, b3Solids(id), partName, RGB_STEP);
-    b3Mc(context, id + "mcAxle", b3Solids(id), partName, "Axle", axle);
-}

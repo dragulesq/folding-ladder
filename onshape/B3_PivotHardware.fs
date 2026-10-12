@@ -11,10 +11,12 @@ import(path : "onshape/std/common.fs", version : "2641.0");
  * clearances in the assembly:
  *   Tread axle (4 used) and step axle (2 used; the back end is the hook
  *   pin), 12 mm aluminum tube with a 5 mm bore tapped M6 at both ends.
- *   M6 fender washer and M6 button-head screw (12 each, one on each axle end).
+ *   M6 fender washer (12, one on each axle end) and M6 button-head screw (14:
+ *   one on each axle end, and two bolting the step clip to the outer rail).
  *   Stop pin (4 used), 3/16" pin through each cabinet bracket ear.
- *   M6 x 16 flat-head screw and M6 nyloc nut (8 each), bolting the two rail
- *   brackets inside the outer rail.
+ *   M6 x 16 flat-head screw (8), bolting the two rail brackets inside the
+ *   outer rail, and M6 nyloc nut (10), on the rail's outer face for those and
+ *   the step clip's screws.
  * Each is built where its first use sits: the top tread's cabinet axle, the
  * step's cabinet-side axle, the washer and screw on the top tread's cabinet
  * axle at the bed end, the top cabinet bracket's back stop pin, and the
@@ -30,6 +32,8 @@ export const b3PivotHardware = defineFeature(function(context is Context, id is 
         const tread = b3CabAxleJoint(TREAD_TOP);
         b3Axle(context, id + "treadAxle", tread, TREAD_AXLE_LEN, "Tread axle");
         b3Axle(context, id + "stepAxle", b3StepCabAxleJoint(), STEP_AXLE_X1 - STEP_AXLE_X0, "Step axle");
+        // Where the step axle meets the step's tray (a tread), for placing it on either pivot.
+        b3Mc(context, id + "mcStepTread", b3Solids(id + "stepAxle"), "Step axle", "Tread", b3CabAxleJoint(HOOK_STEP));
 
         // Washer and screw head, stacked out from the axle's bed-end tip.
         const p = tread.origin;

@@ -55,5 +55,5 @@ export const b3FrontAngle = defineFeature(function(context is Context, id is Id,
         const name = "Front angle";
         b3Finish(context, body, name, RGB_ALU_DARK);
         b3Mc(context, id + "mcCabinet", body, name, "Cabinet", b3FrontAngleJoint());
-        b3Mc(context, id + "mcStep", body, name, "Hook-on step", b3StepCabAxleJoint());
+        b3Mc(context, id + "mcStep", body, name, "Hook-on step", b3CabAxleJoint(HOOK_STEP));
     });

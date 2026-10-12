@@ -103,18 +103,26 @@ export function b3BracketJoint(n is number) returns map
     return b3PanelJoint(b3EarFaces(n)[0], b3T(n) - BRACKET_TOP_DROP - BRACKET_H);
 }
 
+// A joint on a part turned half a turn about the vertical axis through the
+// middle of going n and halfway between the cabinet and outer axle lines,
+// then raised by dz. The cabinet side's y then lands on the outer side's.
+export function b3TurnInGoing(n is number, joint is map, dz is ValueWithUnits) returns map
+{
+    const xg = b3GoingX(n);
+    const p = joint.origin;
+    const z = joint.zAxis;
+    const x = joint.xAxis;
+    return b3Joint(vector(2 * xg + GOING - p[0], OUT_AXLE_Y + CAB_AXLE_Y - p[1], p[2] + dz),
+        vector(-z[0], -z[1], z[2]), vector(-x[0], -x[1], x[2]));
+}
+
 // Tread n's rail bracket is the same part as its cabinet bracket, turned
 // half a turn about a vertical axis and lowered so its axle hole lands on the
 // outer axle line. This moves a joint on the cabinet bracket to the same spot
 // on the rail bracket.
 export function b3OnRail(n is number, joint is map) returns map
 {
-    const xg = b3GoingX(n);
-    const p = joint.origin;
-    const z = joint.zAxis;
-    const x = joint.xAxis;
-    return b3Joint(vector(2 * xg + GOING - p[0], OUT_AXLE_Y + CAB_AXLE_Y - p[1], p[2] + CAB_AXLE_DROP - OUT_AXLE_DROP),
-        vector(-z[0], -z[1], z[2]), vector(-x[0], -x[1], x[2]));
+    return b3TurnInGoing(n, joint, CAB_AXLE_DROP - OUT_AXLE_DROP);
 }
 
 // Bracket n's web on the rail's inner face.
@@ -171,14 +179,25 @@ export function b3StepClipJoint() returns map
     return b3Joint(vector(CLIP_X0, RAIL_Y, CLIP_Z0), vector(0, -1, 0), vector(1, 0, 0));
 }
 
-export function b3StepCabAxleJoint() returns map
+// Step clip screw k: under its head on the clip's inside face, z out of the clip.
+export function b3ClipScrewJoint(k is number) returns map
 {
-    return b3AxleJoint(STEP_AXLE_X0, STEP_CAB_AXLE_Y, STEP_CAB_AXLE_Z);
+    return b3Joint(vector(CLIP_SCREW_X[k], RAIL_Y - SHEET_T, CLIP_SCREW_Z), vector(0, -1, 0), vector(1, 0, 0));
 }
 
-export function b3StepOutAxleJoint() returns map
+// Its nyloc nut on the rail's outer face.
+export function b3ClipNutJoint(k is number) returns map
 {
-    return b3AxleJoint(STEP_AXLE_X0, STEP_OUT_AXLE_Y, STEP_OUT_AXLE_Z);
+    return b3Joint(vector(CLIP_SCREW_X[k], RAIL_Y + PLATE_T, CLIP_SCREW_Z), vector(0, 1, 0), vector(1, 0, 0));
+}
+
+// The step axle on the hook-on step's cabinet-side pivot line, at its back
+// end, which runs out through the front angle's keyhole as the hook pin. The
+// step's tray is the tread part, so its pivots are b3CabAxleJoint(HOOK_STEP)
+// and b3OutAxleJoint(HOOK_STEP).
+export function b3StepCabAxleJoint() returns map
+{
+    return b3AxleJoint(STEP_AXLE_X0, CAB_AXLE_Y, b3T(HOOK_STEP) - CAB_AXLE_DROP);
 }
 
 // A mate connector named mcName on the part partName (the bodies in owner),
