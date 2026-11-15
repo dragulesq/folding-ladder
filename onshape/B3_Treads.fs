@@ -12,8 +12,9 @@ import(path : "onshape/std/common.fs", version : "2641.0");
  * axles, and a 1/2" radius on both bottom corners of each lip (at the outer
  * end it keeps the lip clear of the rail bracket's web as it swings). The
  * lips run the skin's full width, so their bends need no reliefs. The stair
- * uses it twice; it is built once, where the top tread sits, and the
- * assembly places both.
+ * uses it three times: the top and middle treads and the hook-on step's tray.
+ * It is built once, where the top tread sits, and the assembly places all
+ * three.
  */
 annotation { "Feature Type Name" : "B3 Tread" }
 export const b3Treads = defineFeature(function(context is Context, id is Id, definition is map)

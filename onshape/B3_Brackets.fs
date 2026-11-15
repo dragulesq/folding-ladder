@@ -12,7 +12,7 @@ import(path : "onshape/std/common.fs", version : "2641.0");
  * degrees off each end to carry a tread axle. Two sit on the cabinet panel,
  * ears toward the room, with a stop pin through each ear. The other two are
  * the same part turned to face the cabinet and bolted inside the outer rail
- * with M6 x 16 flat-head screws and nyloc nuts; their stop-pin holes stay
+ * with M6 x 20 flat-head screws and nyloc nuts; their stop-pin holes stay
  * empty. The ears run the web's full height and the hook starts past the
  * bend, so the bends need no extra reliefs. Built once, where the top
  * tread's cabinet bracket sits.
