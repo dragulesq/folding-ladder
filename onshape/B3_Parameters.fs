@@ -192,7 +192,7 @@ export const NUT_H = 6 * millimeter;
 export const RAIL_Y = OUT_AXLE_Y + CAB_AXLE_Y;     // 17 11/16, inner face (outer face 17 7/8)
 export const RAIL_STEP_DROP = 2 * inch;            // step edges at T - 2 (28 3/4 and 18 1/2)
 export const RAIL_BACK_Z = 23.5 * inch;            // bottom of the bed-side edge; the long lower edge runs from here straight to the foot
-export const RAIL_FOOT_X = 2 * GOING - 3.75 * inch; // foot runs x 7 3/4 to 11 1/2
+export const RAIL_FOOT_X = 2 * GOING - 4.5 * inch;  // foot runs x 7 to 11 1/2: 4 1/2 on the floor
 export const RAIL_FOOT_Z = 0.5 * inch;
 export const RAIL_FLANGE = 1 * inch;               // outward, beyond the plate (out to y 18 7/8)
 export const RAIL_FLANGE_TIP_R = R_OUTSIDE_LARGE;  // every flange's free corners
@@ -256,7 +256,7 @@ export const CLIP_CORNER_R = R_OUTSIDE_SMALL;      // the free corners of both l
 // the ledge.
 export const FOLD_DY = -(CAB_AXLE_DROP - OUT_AXLE_DROP) - (OUT_AXLE_Y - CAB_AXLE_Y);   // the rail's move when folded: -14 15/16
 export const FOLD_DZ = (OUT_AXLE_Y - CAB_AXLE_Y) - (CAB_AXLE_DROP - OUT_AXLE_DROP);    // +16 11/16
-export const LOCK_X = (RAIL_FOOT_X + 2 * GOING) / 2;   // pin line: mid-foot, 9 5/8 along the cabinet
+export const LOCK_X = (RAIL_FOOT_X + 2 * GOING) / 2;   // pin line: mid-foot, 9 1/4 along the cabinet
 export const LOCK_Y = RAIL_Y + PLATE_T + RAIL_FLANGE - RAIL_PAD_W / 2;   // on the open rail: mid-flat of the foot flange, 18 1/2
 export const LOCK_FOLD_Y = LOCK_Y + FOLD_DY;       // folded: 3 9/16 off the panel
 export const LOCK_HOLE = 6.5 * millimeter;         // in the rail's foot flange, for the nose
@@ -270,12 +270,12 @@ export const LOCK_NUT_AF = 17 * millimeter;        // across its flats
 export const LOCK_BLOCK_TOP_Z = RAIL_FOOT_Z + FOLD_DZ - LOCK_GAP;   // 17
 export const LOCK_SHELF_TOP_Z = LOCK_BLOCK_TOP_Z - LOCK_BLOCK_T;    // 16.80, just under the cabinet bracket's web (16 7/8)
 export const LOCK_LEDGE_W = 0.75 * inch;           // along x, between the two foot pads
-export const LOCK_LEDGE_X0 = LOCK_X - LOCK_LEDGE_W / 2;             // 9 1/4
+export const LOCK_LEDGE_X0 = LOCK_X - LOCK_LEDGE_W / 2;             // 8 7/8
 export const LOCK_LEDGE_REACH = RAIL_Y + PLATE_T + RAIL_FLANGE + FOLD_DY;   // 3 15/16, as far out as the folded rail's flange
 export const LOCK_LEDGE_LEG = 1.75 * inch;         // panel leg, down from the shelf's top
 export const LOCK_SCREW_DROP = [(5 / 8) * inch, (11 / 8) * inch];   // two #8 screws, one over the other, below the shelf's top
 export const RAIL_PAD_GAP = LOCK_LEDGE_W + (1 / 4) * inch;          // the foot pads stop 1/8 short of the ledge each side
-export const RAIL_PAD_L = (2 * GOING - RAIL_FOOT_X - RAIL_PAD_GAP) / 2;   // 1 3/8 each
+export const RAIL_PAD_L = (2 * GOING - RAIL_FOOT_X - RAIL_PAD_GAP) / 2;   // 1 3/4 each
 export const RAIL_PAD_X0 = [RAIL_FOOT_X, 2 * GOING - RAIL_PAD_L];  // back pad, front pad
 
 // ---------------------------------------------------------------------------
