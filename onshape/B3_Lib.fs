@@ -180,10 +180,16 @@ export function b3FrontAngleJoint() returns map
     return b3PanelJoint(FA_X1, FA_BOTTOM_Z);
 }
 
-// The travel lock's ledge on the panel: its panel leg's bottom corner at the bed end.
-export function b3LockLedgeJoint() returns map
+// The stow bracket on the panel: its panel leg's bottom corner at the hook plate.
+export function b3StowBracketJoint() returns map
 {
-    return b3PanelJoint(LOCK_LEDGE_X0, LOCK_SHELF_TOP_Z - LOCK_LEDGE_LEG);
+    return b3PanelJoint(STOW_HOOK_X0, STOW_BRACKET_Z0);
+}
+
+// The step keeper inside the rail's plate: its top corner on the bed-end side, z out of the plate's inner face.
+export function b3KeeperJoint() returns map
+{
+    return b3Joint(vector(KEEP_X0, RAIL_Y, KEEP_Z1), vector(0, -1, 0), vector(1, 0, 0));
 }
 
 // The plunger's line: on top of the ledge's tapped block, z up along the nose.
@@ -192,10 +198,10 @@ export function b3LockPlungerJoint() returns map
     return b3Joint(vector(LOCK_X, LOCK_FOLD_Y, LOCK_BLOCK_TOP_Z), vector(0, 0, 1), vector(1, 0, 0));
 }
 
-// The stowed step's hook plates on the panel: the plate's bottom corner at the panel.
-export function b3StowHookJoint(upper is boolean) returns map
+// The stowed step's lower hook plate on the panel: the plate's bottom corner at the panel.
+export function b3StowHookJoint() returns map
 {
-    return b3PanelJoint(STOW_HOOK_X0, upper ? STOW_UP_Z0 : STOW_LO_Z0);
+    return b3PanelJoint(STOW_HOOK_X0, STOW_LO_Z0);
 }
 
 // The stowed step's lower pin in the lower hook's slot, as the step's own cabinet
@@ -203,12 +209,6 @@ export function b3StowHookJoint(upper is boolean) returns map
 export function b3StowPinJoint() returns map
 {
     return b3Joint(vector(STOW_PIN_X, STOW_PIN_LO_Y, STOW_PIN_LO_Z), vector(1, 0, 0), vector(0, 0, 1));
-}
-
-// The turn tab on the upper hook plate's bed-side face, at its pivot screw.
-export function b3StowTabJoint() returns map
-{
-    return b3Joint(vector(STOW_HOOK_X0, (STOW_TAB_Y0 + STOW_TAB_Y1) / 2, STOW_PIN_UP_Z + STOW_TAB_PIVOT_UP), vector(-1, 0, 0), vector(0, 1, 0));
 }
 
 // Plate outline in (y, z) from the panel out to d, z0 to z1, with a slot

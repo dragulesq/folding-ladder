@@ -94,10 +94,50 @@ def checks(m):
     out.append(("Hook plate to the middle bracket's ear, past the pin's head", m.ear_faces(TREAD_MIDDLE)[0] - (m.STOW_HOOK_X0 + m.SHEET_T), 0.25, ""))
     lip_low = m.T(TREAD_MIDDLE) - m.CAB_AXLE_DROP - math.hypot(m.CAB_AXLE_Y - m.TRAY_Y0, m.LIP - m.CAB_AXLE_DROP)
     out.append(("Upper hook's top under the middle tread's back lip as it folds", lip_low - m.STOW_UP_Z1, 0.06, f"the lip's corner dips to {lip_low:.3f}"))
-    out.append(("Upper hook's panel leg under the cabinet bracket's web", web - m.STOW_UP_LEG_Z1, 0.06, ""))
-    out.append(("Upper hook's panel leg clear of the lock ledge", m.LOCK_LEDGE_X0 - (m.STOW_HOOK_X0 + m.SHEET_T + m.STOW_HOOK_LEG), 0.25, ""))
-    out.append(("Turn tab inside the upper hook's plate", min(m.STOW_UP_Z1 - (m.STOW_PIN_UP_Z + m.STOW_TAB_HALF), m.STOW_UP_D - m.STOW_TAB_Y1), 0, ""))
-    out.append(("Turn tab past the pin's neoprene washer", m.STOW_TAB_Y0 - (m.STOW_PIN_UP_Y + 0.375), 0.03, "washer taken as 3/4 OD; this is the pin's play in its slot"))
+    out.append(("Stow bracket's leg under the cabinet bracket's web", web - m.LOCK_SHELF_TOP_Z, 0.03, "one leg from the hook plate to the shelf"))
+    out.append(("Stow bracket's bottom under the upper pin's slot", m.STOW_PIN_UP_Z - m.KEYHOLE_SLOT_W / 2 - m.STOW_BRACKET_Z0, 0.5, ""))
+    out.append(("Plunger's regular nut between the shelf's flanges", m.LOCK_LEDGE_W - 2 * m.SHEET_T - 19.6 / MM, 0.03, "19.6 mm across its corners"))
+    xs = m.STOW_BRACKET_SCREW_X
+    out.append(("Stow bracket's screws clear of the hook plate and shelf flanges",
+                min(xs[0] - (m.STOW_HOOK_X0 + m.SHEET_T), xs[2] - (m.LOCK_LEDGE_X0 + m.SHEET_T), (m.LOCK_LEDGE_X0 + m.LOCK_LEDGE_W - m.SHEET_T) - xs[2]),
+                0.2, "screw centers to the bent-out plates; a #8 pan head is 0.27 across"))
+    # The step keeper, bolted inside the rail: folded, in front of the stowed step's top.
+    rmo = mo["rail"]
+    k_bot = m.KEEP_Z0 + rmo[2][3]
+    k_y = m.RAIL_Y - m.KEEP_T + rmo[1][3]
+    step_top = apply(mo["outer leg"], (m.going_x(HOOK_STEP), m.OUT_AXLE_Y + m.CAB_AXLE_Y - m.STEP_LEG_Y0, m.STEP_LEG_TOP_Z))[2]
+    out.append(("Folded, the keeper reaches below the stowed step's top", step_top - k_bot, 0.5, f"keeper bottom at z {k_bot:.2f}, step top {step_top:.2f}"))
+    gap = k_y - m.stow_top_y()
+    out.append(("Keeper to the stowed step's face", gap, 0.125, ""))
+    slot = m.STOW_UP_D - m.STOW_PIN_UP_Y
+    pin_move = gap * (m.STOW_PIN_UP_Z - m.STOW_PIN_LO_Z) / (k_bot - m.STOW_PIN_LO_Z)
+    out.append(("Upper pin's slot left when the step tips out onto the keeper", slot - pin_move, 0.5,
+                f"the pin can move {pin_move:.2f} of the slot's {slot:.2f}"))
+    tread_end = 3 * m.GOING - (m.going_x(HOOK_STEP) + m.TRAY_INSET)
+    out.append(("Keeper inside the stowed step's front end", tread_end - m.KEEP_X0, 0.5, f"step's tread ends at x {tread_end:.2f}"))
+    out.append(("Keeper clear of the upper hook plate", m.STOW_HOOK_X0 - (m.KEEP_X0 + m.KEEP_W), 0.06, ""))
+    # Perpendicular distance from the keeper's lower screw hole to the plate's lower edge, back to foot.
+    ex, ez = m.RAIL_FOOT_X, m.RAIL_FOOT_Z - m.RAIL_BACK_Z
+    px, pz = m.KEEP_X0 + m.KEEP_W / 2, m.KEEP_SCREW_Z[0] - m.RAIL_BACK_Z
+    dist = abs(ex * pz - ez * px) / math.hypot(ex, ez) - m.KEEP_SCREW_DIA / 2
+    out.append(("Keeper's lower screw hole clear of the lower edge's bend", dist - (m.BEND_R_PLATE + m.PLATE_T), 0.1,
+                "hole edge to the flange's bend zone, square to the edge"))
+    out.append(("Open keeper above the floor", m.KEEP_Z0, 1.0, ""))
+    worst = 9.0
+    kx0, kx1 = m.KEEP_X0, m.KEEP_X0 + m.KEEP_W
+    for n, body in ((TREAD_TOP, "top tread"), (TREAD_MIDDLE, "middle tread")):
+        xg = m.going_x(n)
+        if xg + m.TRAY_INSET > kx1 or xg + m.TRAY_INSET + m.TRAY_D < kx0:
+            continue
+        pts = [(y, z) for y in [m.TRAY_Y0 + m.TRAY_W * i / 60 for i in range(61)] for z in (m.T(n), m.T(n) - m.LIP)]
+        for a in range(0, 91):
+            mt, mr = m.body_motions(a)[body], m.body_motions(a)["rail"]
+            for y, z in pts:
+                q = apply(mt, (kx0, y, z))
+                ry, rz = q[1] - mr[1][3], q[2] - mr[2][3]
+                if m.KEEP_Z0 - 0.05 <= rz <= m.KEEP_Z1 + 0.05:
+                    worst = min(worst, (m.RAIL_Y - m.KEEP_T) - ry)
+    out.append(("Folding, the treads past the keeper", worst, 0.06, "closest a tread comes to the keeper's inner face"))
     stop_z = m.T(TREAD_MIDDLE) - m.STOP_PIN_DROP - m.STOP_PIN_DIA / 2
     out.append(("Upper hook's top under the cabinet bracket's stop pin", stop_z - m.STOW_UP_Z1, 0.03, "the pin sticks out to the plate's face"))
     out.append(("Upper pin's washer under that stop pin as it slides in", stop_z - (m.STOW_PIN_UP_Z + m.END_WASHER_DIA / 2), 0.125, ""))

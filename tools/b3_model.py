@@ -44,10 +44,6 @@ class Model:
         """The travel lock's pin line: on top of the ledge's block, z up (b3LockPlungerJoint)."""
         return self.joint((self.LOCK_X, self.LOCK_FOLD_Y, self.LOCK_BLOCK_TOP_Z), (0, 0, 1), (1, 0, 0))
 
-    def stow_tab(self):
-        return self.joint((self.STOW_HOOK_X0, (self.STOW_TAB_Y0 + self.STOW_TAB_Y1) / 2, self.STOW_PIN_UP_Z + self.STOW_TAB_PIVOT_UP),
-                          (-1, 0, 0), (0, 1, 0))
-
     def going_x(self, n):
         return (2 - n) * self.GOING
 
@@ -155,18 +151,16 @@ class Model:
             ("Outer rail", "Step clip"): self.step_clip(),
             ("Outer rail", "Foot pad"): self.rail_pad(),
             ("Step clip", "Outer rail"): self.step_clip(),
-            ("REF cabinet", "Rail lock ledge"): self.panel_joint(self.LOCK_LEDGE_X0, self.LOCK_SHELF_TOP_Z - self.LOCK_LEDGE_LEG),
-            ("Rail lock ledge", "Cabinet"): self.panel_joint(self.LOCK_LEDGE_X0, self.LOCK_SHELF_TOP_Z - self.LOCK_LEDGE_LEG),
+            ("REF cabinet", "Stow bracket"): self.panel_joint(self.STOW_HOOK_X0, self.STOW_BRACKET_Z0),
+            ("Stow bracket", "Cabinet"): self.panel_joint(self.STOW_HOOK_X0, self.STOW_BRACKET_Z0),
             ("REF cabinet", "Plunger"): self.lock_plunger(),
             ("Plunger jam nut", "Ledge"): self.lock_plunger(),
             ("Stow hook, lower", "Pin"): self.joint((self.STOW_PIN_X, self.STOW_PIN_LO_Y, self.STOW_PIN_LO_Z), (1, 0, 0), (0, 0, 1)),
             ("Outer rail", "Foot pad, back"): self.joint((self.RAIL_PAD_X0[0], self.RAIL_Y + self.PLATE_T + self.RAIL_FLANGE - self.RAIL_PAD_W, self.RAIL_FOOT_Z), (0, 0, -1), (1, 0, 0)),
-            ("REF cabinet", "Stow hook, upper"): self.panel_joint(self.STOW_HOOK_X0, self.STOW_UP_Z0),
-            ("Stow hook, upper", "Cabinet"): self.panel_joint(self.STOW_HOOK_X0, self.STOW_UP_Z0),
             ("REF cabinet", "Stow hook, lower"): self.panel_joint(self.STOW_HOOK_X0, self.STOW_LO_Z0),
             ("Stow hook, lower", "Cabinet"): self.panel_joint(self.STOW_HOOK_X0, self.STOW_LO_Z0),
-            ("REF cabinet", "Stow tab"): self.stow_tab(),
-            ("Stow tab", "Hook"): self.stow_tab(),
+            ("Outer rail", "Step keeper"): self.joint((self.KEEP_X0, self.RAIL_Y, self.KEEP_Z1), (0, -1, 0), (1, 0, 0)),
+            ("Step keeper", "Rail"): self.joint((self.KEEP_X0, self.RAIL_Y, self.KEEP_Z1), (0, -1, 0), (1, 0, 0)),
             ("Tread axle", "Back end"): axle,
             ("Tread axle", "Front end"): self.joint((p[0] + self.TREAD_AXLE_LEN, p[1], p[2]), (1, 0, 0), (0, 1, 0)),
             ("Step axle", "Back end"): step_axle,

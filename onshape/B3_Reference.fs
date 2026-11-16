@@ -39,11 +39,9 @@ export const b3Reference = defineFeature(function(context is Context, id is Id, 
         b3Mc(context, id + "mcBracketMiddle", cabinet, "REF cabinet", "Bracket, middle tread", b3BracketJoint(TREAD_MIDDLE));
         b3Mc(context, id + "mcFrontAngle", cabinet, "REF cabinet", "Front angle", b3FrontAngleJoint());
         b3Mc(context, id + "mcLedge", cabinet, "REF cabinet", "Step ledge", b3StepLedgeJoint());
-        b3Mc(context, id + "mcLockLedge", cabinet, "REF cabinet", "Rail lock ledge", b3LockLedgeJoint());
+        b3Mc(context, id + "mcStowBracket", cabinet, "REF cabinet", "Stow bracket", b3StowBracketJoint());
         b3Mc(context, id + "mcPlunger", cabinet, "REF cabinet", "Plunger", b3LockPlungerJoint());
-        b3Mc(context, id + "mcStowUp", cabinet, "REF cabinet", "Stow hook, upper", b3StowHookJoint(true));
-        b3Mc(context, id + "mcStowLo", cabinet, "REF cabinet", "Stow hook, lower", b3StowHookJoint(false));
-        b3Mc(context, id + "mcStowTab", cabinet, "REF cabinet", "Stow tab", b3StowTabJoint());
+        b3Mc(context, id + "mcStowLo", cabinet, "REF cabinet", "Stow hook, lower", b3StowHookJoint());
         b3Mc(context, id + "mcBumperTop", cabinet, "REF cabinet", "Bumper, top tread", b3BumperJoint(TREAD_TOP));
         b3Mc(context, id + "mcBumperMiddle", cabinet, "REF cabinet", "Bumper, middle tread", b3BumperJoint(TREAD_MIDDLE));
     });

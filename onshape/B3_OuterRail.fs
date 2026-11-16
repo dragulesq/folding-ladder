@@ -54,7 +54,9 @@ export const b3OuterRail = defineFeature(function(context is Context, id is Id, 
                 foot,
                 back
             ];
-        var holes = [b3Slot(vector(HAND_SLOT_X, HAND_SLOT_Z), HAND_SLOT_L, HAND_SLOT_H)];
+        // The hand slot, and the step keeper's two screws.
+        var holes = [b3Slot(vector(HAND_SLOT_X, HAND_SLOT_Z), HAND_SLOT_L, HAND_SLOT_H),
+                b3Hole(KEEP_X0 + KEEP_W / 2, KEEP_SCREW_Z[0], KEEP_SCREW_DIA), b3Hole(KEEP_X0 + KEEP_W / 2, KEEP_SCREW_Z[1], KEEP_SCREW_DIA)];
         for (var k = 0; k < size(CLIP_SCREW_X); k += 1)
         {
             holes = append(holes, b3Hole(CLIP_SCREW_X[k], CLIP_SCREW_Z, SCREW_HOLE_DIA));
@@ -120,6 +122,7 @@ export const b3OuterRail = defineFeature(function(context is Context, id is Id, 
         b3Mc(context, id + "mcClip", rail, name, "Step clip", b3StepClipJoint());
         b3Mc(context, id + "mcPad", rail, name, "Foot pad", b3RailPadJoint(1));
         b3Mc(context, id + "mcPadBack", rail, name, "Foot pad, back", b3RailPadJoint(0));
+        b3Mc(context, id + "mcKeeper", rail, name, "Step keeper", b3KeeperJoint());
         for (var k = 0; k < size(CLIP_SCREW_X); k += 1)
         {
             b3Mc(context, id + ("mcNutClip" ~ k), rail, name, "Nut, clip " ~ (k + 1), b3ClipNutJoint(k));

@@ -276,13 +276,13 @@ export const LOCK_BLOCK_T = 5 * millimeter;        // M10 x 1.5 thin jam nut on 
 export const LOCK_NUT_AF = 17 * millimeter;        // across its flats
 export const LOCK_BLOCK_TOP_Z = RAIL_FOOT_Z + FOLD_DZ - LOCK_GAP;   // 17
 export const LOCK_SHELF_TOP_Z = LOCK_BLOCK_TOP_Z - LOCK_BLOCK_T;    // 16.80, just under the cabinet bracket's web (16 7/8)
-export const LOCK_LEDGE_W = 0.75 * inch;           // along x, between the two foot pads
-export const LOCK_LEDGE_X0 = LOCK_X - LOCK_LEDGE_W / 2;             // 8 7/8
+export const LOCK_LEDGE_W = (9 / 8) * inch;        // shelf along x, between the two foot pads; room for the nut under it between its flanges
+export const LOCK_SHELF_FLANGE = 0.5 * inch;      // a flange bent down along each side of the shelf, for stiffness
+export const LOCK_LEDGE_X0 = LOCK_X - LOCK_LEDGE_W / 2;             // 8 11/16
 export const LOCK_LEDGE_REACH = RAIL_Y + PLATE_T + RAIL_FLANGE + FOLD_DY;   // 3 15/16, as far out as the folded rail's flange
 export const LOCK_LEDGE_LEG = 1.75 * inch;         // panel leg, down from the shelf's top
-export const LOCK_SCREW_DROP = [(5 / 8) * inch, (11 / 8) * inch];   // two #8 screws, one over the other, below the shelf's top
 export const RAIL_PAD_GAP = LOCK_LEDGE_W + (1 / 4) * inch;          // the foot pads stop 1/8 short of the ledge each side
-export const RAIL_PAD_L = (2 * GOING - RAIL_FOOT_X - RAIL_PAD_GAP) / 2;   // 1 3/4 each
+export const RAIL_PAD_L = (2 * GOING - RAIL_FOOT_X - RAIL_PAD_GAP) / 2;   // 1 9/16 each
 export const RAIL_PAD_X0 = [RAIL_FOOT_X, 2 * GOING - RAIL_PAD_L];  // back pad, front pad
 
 // ---------------------------------------------------------------------------
@@ -334,9 +334,12 @@ export const STEP_PAD_T = STEP_LEG_BOTTOM_Z;       // 1/8, down to the floor
 // the cabinet front, just past x = GOING, where plates like the front angle's
 // catch them. The lower plate's slot opens upward: the step's bottom end is
 // set down on the ledge and its lower pin drops in. The upper plate's slot
-// opens toward the room: the step's top is then tipped in to the panel and
-// the upper pin slides in, held up and down by the slot. A turn tab across
-// the slot's mouth keeps it in.
+// opens toward the room: the step's top is tipped in to the panel and the
+// upper pin slides in. The upper plate is one part with the travel lock's
+// ledge, the "Stow bracket": one panel leg from the hook plate to the shelf.
+// The step is stowed before the stair is folded; the folded rail then holds it
+// in, with the "Step keeper" bolted inside the rail's plate in front of the
+// step's top, so the one plunger locks everything.
 export const STOW_TOP_Y = STOW_PANEL_GAP + OUT_AXLE_DROP + CAB_AXLE_Y - STEP_LEG_Y0;   // the stowed step's tread face: 2 1/4
 export const STOW_Z0 = LEDGE_TOP_Z + LEDGE_STRIP_T - TRAY_Y0;      // stowed height of the step's y = 0: 7/8
 export const STOW_PIN_UP_Y = STOW_TOP_Y - OUT_AXLE_DROP;           // upper pin: 3/4 off the panel
@@ -346,18 +349,25 @@ export const STOW_PIN_LO_Z = STOW_Z0 + CAB_AXLE_Y;                 // 1 13/16
 export const STOW_HOOK_X0 = GOING;                 // plates from here to GOING + SHEET_T, where the front angle sits when the step is in use
 export const STOW_SLOT_DROP = (1 / 8) * inch;      // each slot's round end past the resting pin
 export const STOW_HOOK_LEG = 1.5 * inch;           // panel leg, along x past the plate
-export const STOW_UP_Z0 = 15.25 * inch;            // upper hook: plate bottom; its panel leg runs under the cabinet bracket
-export const STOW_UP_LEG_Z1 = 16.75 * inch;        // panel leg top, 1/8 under the bracket's web
-export const STOW_UP_Z1 = 18.25 * inch;            // plate top, under the middle tread's back lip as it folds (18.39)
+export const STOW_BRACKET_Z0 = LOCK_SHELF_TOP_Z - LOCK_LEDGE_LEG;   // the stow bracket's bottom edge: 15.05
+export const STOW_UP_Z1 = 18.25 * inch;            // upper hook plate's top, under the middle tread's back lip as it folds (18.39)
 export const STOW_UP_D = 2 * inch;                 // plate reach from the panel
+export const STOW_BRACKET_SCREW_X = [GOING + (5 / 8) * inch, GOING + (15 / 8) * inch, LOCK_X];   // three #8 screws along the leg, the last under the shelf
+export const STOW_BRACKET_SCREW_Z = STOW_BRACKET_Z0 + (5 / 8) * inch;
 export const STOW_LO_Z0 = 1 * inch;                // lower hook
 export const STOW_LO_Z1 = (21 / 8) * inch;
 export const STOW_LO_D = 2.25 * inch;
 export const STOW_SCREW_DIA = 0.177 * inch;        // #8 clearance
-export const STOW_TAB_Y0 = 1.2 * inch;             // turn tab, closed: upright across the slot's mouth, past the pin's neoprene washer
-export const STOW_TAB_Y1 = 1.4 * inch;
-export const STOW_TAB_HALF = 0.6 * inch;           // it reaches this far above and below the pin
-export const STOW_TAB_PIVOT_UP = 0.5 * inch;       // its screw, above the slot
+// Step keeper: 3/16 x 3/4 flat bar bolted inside the rail's plate near its bed
+// end, hanging below the plate's lower edge. Folded, it stands 5/16 in front
+// of the stowed step's top.
+export const KEEP_X0 = GOING - 0.875 * inch;       // 4 7/8 to 5 5/8, inside the step's front end (5.56)
+export const KEEP_W = 0.75 * inch;
+export const KEEP_T = PLATE_T;
+export const KEEP_Z0 = 1.5 * inch;                 // bottom, open: 18.19 folded, under the step's top (19)
+export const KEEP_Z1 = 11 * inch;                  // top
+export const KEEP_SCREW_Z = [9.25 * inch, 10.5 * inch];   // two #10 screws through the plate, clear of the lower edge's bend
+export const KEEP_SCREW_DIA = 0.201 * inch;        // #10 clearance
 export const STOW_PIN_X = GOING - TREAD_AXLE_X0;   // the stowed step's lower pin's tube end, where it hinges in the lower hook
 
 // ===========================================================================
@@ -536,10 +546,16 @@ export function b3FrontAngleJoint() returns map
     return b3PanelJoint(FA_X1, FA_BOTTOM_Z);
 }
 
-// The travel lock's ledge on the panel: its panel leg's bottom corner at the bed end.
-export function b3LockLedgeJoint() returns map
+// The stow bracket on the panel: its panel leg's bottom corner at the hook plate.
+export function b3StowBracketJoint() returns map
 {
-    return b3PanelJoint(LOCK_LEDGE_X0, LOCK_SHELF_TOP_Z - LOCK_LEDGE_LEG);
+    return b3PanelJoint(STOW_HOOK_X0, STOW_BRACKET_Z0);
+}
+
+// The step keeper inside the rail's plate: its top corner on the bed-end side, z out of the plate's inner face.
+export function b3KeeperJoint() returns map
+{
+    return b3Joint(vector(KEEP_X0, RAIL_Y, KEEP_Z1), vector(0, -1, 0), vector(1, 0, 0));
 }
 
 // The plunger's line: on top of the ledge's tapped block, z up along the nose.
@@ -548,10 +564,10 @@ export function b3LockPlungerJoint() returns map
     return b3Joint(vector(LOCK_X, LOCK_FOLD_Y, LOCK_BLOCK_TOP_Z), vector(0, 0, 1), vector(1, 0, 0));
 }
 
-// The stowed step's hook plates on the panel: the plate's bottom corner at the panel.
-export function b3StowHookJoint(upper is boolean) returns map
+// The stowed step's lower hook plate on the panel: the plate's bottom corner at the panel.
+export function b3StowHookJoint() returns map
 {
-    return b3PanelJoint(STOW_HOOK_X0, upper ? STOW_UP_Z0 : STOW_LO_Z0);
+    return b3PanelJoint(STOW_HOOK_X0, STOW_LO_Z0);
 }
 
 // The stowed step's lower pin in the lower hook's slot, as the step's own cabinet
@@ -559,12 +575,6 @@ export function b3StowHookJoint(upper is boolean) returns map
 export function b3StowPinJoint() returns map
 {
     return b3Joint(vector(STOW_PIN_X, STOW_PIN_LO_Y, STOW_PIN_LO_Z), vector(1, 0, 0), vector(0, 0, 1));
-}
-
-// The turn tab on the upper hook plate's bed-side face, at its pivot screw.
-export function b3StowTabJoint() returns map
-{
-    return b3Joint(vector(STOW_HOOK_X0, (STOW_TAB_Y0 + STOW_TAB_Y1) / 2, STOW_PIN_UP_Z + STOW_TAB_PIVOT_UP), vector(-1, 0, 0), vector(0, 1, 0));
 }
 
 // Plate outline in (y, z) from the panel out to d, z0 to z1, with a slot
@@ -1149,11 +1159,9 @@ export const b3Reference = defineFeature(function(context is Context, id is Id, 
         b3Mc(context, id + "mcBracketMiddle", cabinet, "REF cabinet", "Bracket, middle tread", b3BracketJoint(TREAD_MIDDLE));
         b3Mc(context, id + "mcFrontAngle", cabinet, "REF cabinet", "Front angle", b3FrontAngleJoint());
         b3Mc(context, id + "mcLedge", cabinet, "REF cabinet", "Step ledge", b3StepLedgeJoint());
-        b3Mc(context, id + "mcLockLedge", cabinet, "REF cabinet", "Rail lock ledge", b3LockLedgeJoint());
+        b3Mc(context, id + "mcStowBracket", cabinet, "REF cabinet", "Stow bracket", b3StowBracketJoint());
         b3Mc(context, id + "mcPlunger", cabinet, "REF cabinet", "Plunger", b3LockPlungerJoint());
-        b3Mc(context, id + "mcStowUp", cabinet, "REF cabinet", "Stow hook, upper", b3StowHookJoint(true));
-        b3Mc(context, id + "mcStowLo", cabinet, "REF cabinet", "Stow hook, lower", b3StowHookJoint(false));
-        b3Mc(context, id + "mcStowTab", cabinet, "REF cabinet", "Stow tab", b3StowTabJoint());
+        b3Mc(context, id + "mcStowLo", cabinet, "REF cabinet", "Stow hook, lower", b3StowHookJoint());
         b3Mc(context, id + "mcBumperTop", cabinet, "REF cabinet", "Bumper, top tread", b3BumperJoint(TREAD_TOP));
         b3Mc(context, id + "mcBumperMiddle", cabinet, "REF cabinet", "Bumper, middle tread", b3BumperJoint(TREAD_MIDDLE));
     });
@@ -1323,7 +1331,9 @@ export const b3OuterRail = defineFeature(function(context is Context, id is Id, 
                 foot,
                 back
             ];
-        var holes = [b3Slot(vector(HAND_SLOT_X, HAND_SLOT_Z), HAND_SLOT_L, HAND_SLOT_H)];
+        // The hand slot, and the step keeper's two screws.
+        var holes = [b3Slot(vector(HAND_SLOT_X, HAND_SLOT_Z), HAND_SLOT_L, HAND_SLOT_H),
+                b3Hole(KEEP_X0 + KEEP_W / 2, KEEP_SCREW_Z[0], KEEP_SCREW_DIA), b3Hole(KEEP_X0 + KEEP_W / 2, KEEP_SCREW_Z[1], KEEP_SCREW_DIA)];
         for (var k = 0; k < size(CLIP_SCREW_X); k += 1)
         {
             holes = append(holes, b3Hole(CLIP_SCREW_X[k], CLIP_SCREW_Z, SCREW_HOLE_DIA));
@@ -1389,6 +1399,7 @@ export const b3OuterRail = defineFeature(function(context is Context, id is Id, 
         b3Mc(context, id + "mcClip", rail, name, "Step clip", b3StepClipJoint());
         b3Mc(context, id + "mcPad", rail, name, "Foot pad", b3RailPadJoint(1));
         b3Mc(context, id + "mcPadBack", rail, name, "Foot pad, back", b3RailPadJoint(0));
+        b3Mc(context, id + "mcKeeper", rail, name, "Step keeper", b3KeeperJoint());
         for (var k = 0; k < size(CLIP_SCREW_X); k += 1)
         {
             b3Mc(context, id + ("mcNutClip" ~ k), rail, name, "Nut, clip " ~ (k + 1), b3ClipNutJoint(k));
@@ -1839,18 +1850,21 @@ export const b3HookOnStep = defineFeature(function(context is Context, id is Id,
 // B3_StowLocks.fs
 // ===========================================================================
 /*
- * B3 Stow Locks, the parts on the panel that hold the folded stair and the
- * stowed hook-on step for travel:
- *   Rail lock ledge (1): 3/16" angle under where the rail's foot flange lands
- *   when folded. The spring plunger (McMaster 8501A58) points up through its
- *   shelf and the jam nut on it, into the hole in the foot flange.
- *   Plunger jam nut (1): M10 thin jam nut on the shelf; a regular nut
- *   under the shelf clamps the plunger in its plain hole.
- *   Stow hook, upper and lower (1 each): 1/8" angles whose plates stand where
- *   the stowed step's two pins point. The lower pin drops into an open-top
- *   slot; the upper pin slides into a slot open toward the room as the step
- *   is tipped in to the panel.
- *   Stow tab (1): 1/8" turn tab on the upper hook, turned across the slot's mouth.
+ * B3 Stow Locks, the parts that hold the folded stair and the stowed hook-on
+ * step for travel:
+ *   Stow bracket (1): 1/8" sheet on the panel. One leg along the panel, bent
+ *   out at its bed end into the upper hook plate (a slot open to the room
+ *   takes the stowed step's upper pin) and along its top into the travel
+ *   lock's shelf, under where the rail's foot flange lands when folded, with
+ *   a flange down each side of the shelf. The spring plunger (McMaster
+ *   8501A58) points up through the shelf into the hole in the foot flange.
+ *   Plunger jam nut (1): M10 thin jam nut on the shelf; a regular nut under
+ *   the shelf clamps the plunger in its plain hole.
+ *   Stow hook, lower (1): 1/8" angle whose plate takes the stowed step's
+ *   lower pin in an open-top slot.
+ *   Step keeper (1): 3/16 x 3/4 flat bar bolted inside the rail's plate. The
+ *   step is stowed before the stair is folded; folded, the keeper stands in
+ *   front of the step's top, so the plunger locks the step too.
  * Modeled as plain solids, not sheet metal. Not modeled: the block's two
  * screws, the jam nut under the shelf, the tab's pivot screw (countersunk
  * from the cabinet-front face, nyloc nut on the tab side).
@@ -1861,18 +1875,34 @@ export const b3StowLocks = defineFeature(function(context is Context, id is Id, 
     {
     }
     {
-        // Rail lock ledge: shelf out from the panel, leg down the panel.
+        // Stow bracket, 1/8" sheet: one panel leg from the upper hook plate (bent out at its
+        // bed end) to the travel lock's shelf (bent out along its top, with a flange down
+        // each side of the shelf).
         const lx0 = LOCK_LEDGE_X0;
         const lx1 = LOCK_LEDGE_X0 + LOCK_LEDGE_W;
         const shelfTop = LOCK_SHELF_TOP_Z;
-        b3PrismXY(context, id + "ledge" + "shelf", b3Rounded(b3Rect(lx0, 0 * inch, lx1, LOCK_LEDGE_REACH), [0, 0, R_OUTSIDE_SMALL, R_OUTSIDE_SMALL]),
-            [b3Hole(LOCK_X, LOCK_FOLD_Y, LOCK_SHELF_HOLE)], shelfTop - PLATE_T, shelfTop);
-        b3PrismXZ(context, id + "ledge" + "leg", b3Rect(lx0, shelfTop - LOCK_LEDGE_LEG, lx1, shelfTop),
-            [b3Hole(LOCK_X, shelfTop - LOCK_SCREW_DROP[0], STOW_SCREW_DIA), b3Hole(LOCK_X, shelfTop - LOCK_SCREW_DROP[1], STOW_SCREW_DIA)],
-            0 * inch, PLATE_T);
-        b3Union(context, id + "ledgeJoin", b3Solids(id + "ledge"));
-        b3Finish(context, b3Solids(id + "ledge"), "Rail lock ledge", RGB_ALU_DARK);
-        b3Mc(context, id + "mcLedge", b3Solids(id + "ledge"), "Rail lock ledge", "Cabinet", b3LockLedgeJoint());
+        const hx0 = STOW_HOOK_X0;
+        const hx1 = STOW_HOOK_X0 + SHEET_T;
+        const z0 = STOW_BRACKET_Z0;
+        var screws = [];
+        for (var k = 0; k < size(STOW_BRACKET_SCREW_X); k += 1)
+        {
+            screws = append(screws, b3Hole(STOW_BRACKET_SCREW_X[k], STOW_BRACKET_SCREW_Z, STOW_SCREW_DIA));
+        }
+        b3PrismXZ(context, id + "bracket" + "leg", b3Rect(hx0, z0, lx1, shelfTop), screws, 0 * inch, SHEET_T);
+        b3PrismYZ(context, id + "bracket" + "hook", b3SideSlottedPlate(STOW_UP_D, z0, STOW_UP_Z1, STOW_PIN_UP_Z, STOW_PIN_UP_Y - STOW_SLOT_DROP),
+            [], hx0, hx1);
+        b3PrismXY(context, id + "bracket" + "shelf", b3Rounded(b3Rect(lx0, 0 * inch, lx1, LOCK_LEDGE_REACH), [0, 0, R_OUTSIDE_SMALL, R_OUTSIDE_SMALL]),
+            [b3Hole(LOCK_X, LOCK_FOLD_Y, LOCK_SHELF_HOLE)], shelfTop - SHEET_T, shelfTop);
+        for (var side in [0, 1])
+        {
+            const fx0 = side == 0 ? lx0 : lx1 - SHEET_T;
+            b3PrismYZ(context, id + "bracket" + ("flange" ~ side), b3Rect(SHEET_T, shelfTop - SHEET_T - LOCK_SHELF_FLANGE, LOCK_LEDGE_REACH - R_OUTSIDE_SMALL, shelfTop - SHEET_T),
+                [], fx0, fx0 + SHEET_T);
+        }
+        b3Union(context, id + "bracketJoin", b3Solids(id + "bracket"));
+        b3Finish(context, b3Solids(id + "bracket"), "Stow bracket", RGB_ALU_DARK);
+        b3Mc(context, id + "mcBracket", b3Solids(id + "bracket"), "Stow bracket", "Cabinet", b3StowBracketJoint());
 
         // Thin jam nut on the shelf, drawn round at its across-flats size.
         const pj = b3LockPlungerJoint().origin;
@@ -1882,18 +1912,7 @@ export const b3StowLocks = defineFeature(function(context is Context, id is Id, 
         b3FinishSteel(context, b3Solids(id + "nut"), "Plunger jam nut");
         b3Mc(context, id + "mcNut", b3Solids(id + "nut"), "Plunger jam nut", "Ledge", b3LockPlungerJoint());
 
-        // Hook plates for the stowed step's pins.
-        const hx0 = STOW_HOOK_X0;
-        const hx1 = STOW_HOOK_X0 + SHEET_T;
-        b3PrismYZ(context, id + "hookUp" + "plate", b3SideSlottedPlate(STOW_UP_D, STOW_UP_Z0, STOW_UP_Z1, STOW_PIN_UP_Z, STOW_PIN_UP_Y - STOW_SLOT_DROP),
-            [b3Hole((STOW_TAB_Y0 + STOW_TAB_Y1) / 2, STOW_PIN_UP_Z + STOW_TAB_PIVOT_UP, 0.14 * inch)], hx0, hx1);
-        b3PrismXZ(context, id + "hookUp" + "leg", b3Rect(hx0, STOW_UP_Z0, hx1 + STOW_HOOK_LEG, STOW_UP_LEG_Z1),
-            [b3Hole(hx1 + STOW_HOOK_LEG - (1 / 2) * inch, (STOW_UP_Z0 + STOW_UP_LEG_Z1) / 2, STOW_SCREW_DIA),
-                b3Hole(hx1 + (3 / 8) * inch, (STOW_UP_Z0 + STOW_UP_LEG_Z1) / 2, STOW_SCREW_DIA)], 0 * inch, SHEET_T);
-        b3Union(context, id + "hookUpJoin", b3Solids(id + "hookUp"));
-        b3Finish(context, b3Solids(id + "hookUp"), "Stow hook, upper", RGB_ALU_DARK);
-        b3Mc(context, id + "mcHookUp", b3Solids(id + "hookUp"), "Stow hook, upper", "Cabinet", b3StowHookJoint(true));
-
+        // Lower hook plate for the stowed step's lower pin.
         b3PrismYZ(context, id + "hookLo" + "plate", b3SlottedPlate(STOW_LO_D, STOW_LO_Z0, STOW_LO_Z1, STOW_PIN_LO_Y, STOW_PIN_LO_Z - STOW_SLOT_DROP),
             [], hx0, hx1);
         b3PrismXZ(context, id + "hookLo" + "leg", b3Rect(hx0, STOW_LO_Z0, hx1 + STOW_HOOK_LEG, STOW_LO_Z1),
@@ -1901,11 +1920,11 @@ export const b3StowLocks = defineFeature(function(context is Context, id is Id, 
                 b3Hole(hx1 + (3 / 8) * inch, (STOW_LO_Z0 + STOW_LO_Z1) / 2, STOW_SCREW_DIA)], 0 * inch, SHEET_T);
         b3Union(context, id + "hookLoJoin", b3Solids(id + "hookLo"));
         b3Finish(context, b3Solids(id + "hookLo"), "Stow hook, lower", RGB_ALU_DARK);
-        b3Mc(context, id + "mcHookLo", b3Solids(id + "hookLo"), "Stow hook, lower", "Cabinet", b3StowHookJoint(false));
+        b3Mc(context, id + "mcHookLo", b3Solids(id + "hookLo"), "Stow hook, lower", "Cabinet", b3StowHookJoint());
         b3Mc(context, id + "mcHookPin", b3Solids(id + "hookLo"), "Stow hook, lower", "Pin", b3StowPinJoint());
 
-        // Turn tab, drawn closed: upright across the upper slot's mouth, on the plate's bed-side face.
-        b3Box(context, id + "tab", vector(hx0 - SHEET_T, STOW_TAB_Y0, STOW_PIN_UP_Z - STOW_TAB_HALF), vector(hx0, STOW_TAB_Y1, STOW_PIN_UP_Z + STOW_TAB_HALF));
-        b3Finish(context, b3Solids(id + "tab"), "Stow tab", RGB_STEEL);
-        b3Mc(context, id + "mcTab", b3Solids(id + "tab"), "Stow tab", "Hook", b3StowTabJoint());
+        // Step keeper: flat bar bolted inside the rail's plate, hanging below its lower edge.
+        b3Box(context, id + "keeper", vector(KEEP_X0, RAIL_Y - KEEP_T, KEEP_Z0), vector(KEEP_X0 + KEEP_W, RAIL_Y, KEEP_Z1));
+        b3Finish(context, b3Solids(id + "keeper"), "Step keeper", RGB_ALU_DARK);
+        b3Mc(context, id + "mcKeeper", b3Solids(id + "keeper"), "Step keeper", "Rail", b3KeeperJoint());
     });
