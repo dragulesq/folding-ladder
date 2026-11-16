@@ -26,7 +26,7 @@ export const b3Reference = defineFeature(function(context is Context, id is Id, 
         b3Ref(context, id + "cabinet", vector(wallX, -CABINET_WIDTH, 0 * inch), vector(wallX + CABINET_DEPTH, 0 * inch, CABINET_TOP_Z), "REF cabinet");
         b3Ref(context, id + "wall", vector(wallX - 1 * inch, 0 * inch, 0 * inch), vector(wallX, far, BED_PLATFORM_Z), "REF bed-end wall");
         b3Ref(context, id + "mattress", vector(-far, -CABINET_WIDTH, BED_PLATFORM_Z), vector(wallX, far, BED_PLATFORM_Z + MATTRESS_THICK), "REF mattress");
-        b3Ref(context, id + "handle", vector(wallX, HANDLE_Y, HANDLE_Z - 0.5 * inch), vector(wallX + HANDLE_PROJECTION, HANDLE_Y + 4 * inch, HANDLE_Z + 0.5 * inch), "REF door handle");
+        b3Ref(context, id + "handle", vector(wallX, HANDLE_Y, HANDLE_Z - HANDLE_H / 2), vector(wallX + HANDLE_PROJECTION, HANDLE_Y + HANDLE_W, HANDLE_Z + HANDLE_H / 2), "REF door handle");
 
         const cabinet = b3Solids(id + "cabinet");
         b3Mc(context, id + "mcBracketTop", cabinet, "REF cabinet", "Bracket, top tread", b3BracketJoint(TREAD_TOP));

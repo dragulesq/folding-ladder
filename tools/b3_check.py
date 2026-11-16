@@ -27,6 +27,9 @@ def checks(m):
     top = m.T(TREAD_TOP) - m.CAB_AXLE_DROP + m.TRAY_Y0 + m.TRAY_W - m.CAB_AXLE_Y
     out.append(("Cabinet top to the folded top tread", m.CABINET_TOP_Z - top, 0.25, f"folded stair tops out at {top:.3f}"))
 
+    over = m.CABINET_DEPTH - m.WALL_GAP - 2 * m.GOING
+    out.append(("Cabinet front edge past the stair's front end", over, 0,
+                f"cabinet is {m.CABINET_DEPTH:.3f} deep, the stair starts {m.WALL_GAP:.3f} off the wall and runs {2 * m.GOING:.3f}"))
     # The stack between a lip and its ear.
     gap = m.EAR_X0 - m.TRAY_INSET - m.SHEET_T
     wave = gap - m.THRUST_T - m.BUSHING_FLANGE_T

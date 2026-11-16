@@ -31,14 +31,16 @@ import(path : "onshape/std/sheetMetalStart.fs", version : "2641.0");
 // ---------------------------------------------------------------------------
 // Room and cabinet (reference only)
 // ---------------------------------------------------------------------------
-export const CABINET_TOP_Z = 48 * inch;            // folded stair tops out at 46 9/16
+export const CABINET_TOP_Z = 47 * inch;            // measured, top of the 8020 frame; folded stair tops out at 46 5/16
 export const BED_PLATFORM_Z = 47.75 * inch;
 export const MATTRESS_THICK = 4 * inch;
 export const WALL_GAP = 0.5 * inch;                // bed-end wall to the stair's bed end
-export const CABINET_DEPTH = 12.5 * inch;          // along x, wall to front post
-export const CABINET_WIDTH = 13 * inch;            // behind the side panel
-export const HANDLE_Y = 19.25 * inch;              // cab door handle's closest point to the panel (19 3/4 from the 8020)
-export const HANDLE_Z = 22 * inch;                 // center; the block is 1" tall, so its top is at 22 1/2
+export const CABINET_DEPTH = 12 * inch;            // measured, along x, wall to the front of the 8020 frame
+export const CABINET_WIDTH = 29.25 * inch;         // measured, behind the side panel
+export const HANDLE_Y = 19.125 * inch;             // cab door handle's closest point to the panel (measured 19 5/8 from the 8020, less the 1/2 panel)
+export const HANDLE_Z = 22 * inch;                 // measured, taken as the center
+export const HANDLE_W = 4.25 * inch;               // measured, along y
+export const HANDLE_H = 0.75 * inch;               // measured, along z
 export const HANDLE_PROJECTION = 2 * inch;         // out from the bed-end wall, to x 1 1/2
 
 // ---------------------------------------------------------------------------
@@ -85,11 +87,11 @@ export const RUBBER_DENSITY = 1.3 * gram / (centimeter ^ 3);     // neoprene
 // ---------------------------------------------------------------------------
 // Treads (three: top, middle, and the hook-on step's tray)
 // ---------------------------------------------------------------------------
-// 17" wide keeps the open stair inside the cab door handle: the rail's flange
-// tips reach TRAY_W + 1 7/8 out from the panel (18 7/8), 3/8" short of
+// 16 3/4" wide keeps the open stair inside the cab door handle: the rail's
+// flange tips reach TRAY_W + 1 7/8 out from the panel (18 5/8), 1/2" short of
 // HANDLE_Y, so the rail needs no notch around the handle. Everything across
 // the stair (the outer axle line, the rail, the step clip) follows TRAY_W.
-export const TRAY_W = 17 * inch;                   // along y
+export const TRAY_W = 16.75 * inch;                   // along y
 export const TRAY_Y0 = (3 / 8) * inch;             // tray's cabinet-side edge
 export const TRAY_D = (45 / 8) * inch;             // 5 5/8 along x
 export const TRAY_INSET = (3 / 16) * inch;         // tray starts this far into its going
@@ -974,7 +976,7 @@ export const b3Reference = defineFeature(function(context is Context, id is Id, 
         b3Ref(context, id + "cabinet", vector(wallX, -CABINET_WIDTH, 0 * inch), vector(wallX + CABINET_DEPTH, 0 * inch, CABINET_TOP_Z), "REF cabinet");
         b3Ref(context, id + "wall", vector(wallX - 1 * inch, 0 * inch, 0 * inch), vector(wallX, far, BED_PLATFORM_Z), "REF bed-end wall");
         b3Ref(context, id + "mattress", vector(-far, -CABINET_WIDTH, BED_PLATFORM_Z), vector(wallX, far, BED_PLATFORM_Z + MATTRESS_THICK), "REF mattress");
-        b3Ref(context, id + "handle", vector(wallX, HANDLE_Y, HANDLE_Z - 0.5 * inch), vector(wallX + HANDLE_PROJECTION, HANDLE_Y + 4 * inch, HANDLE_Z + 0.5 * inch), "REF door handle");
+        b3Ref(context, id + "handle", vector(wallX, HANDLE_Y, HANDLE_Z - HANDLE_H / 2), vector(wallX + HANDLE_PROJECTION, HANDLE_Y + HANDLE_W, HANDLE_Z + HANDLE_H / 2), "REF door handle");
 
         const cabinet = b3Solids(id + "cabinet");
         b3Mc(context, id + "mcBracketTop", cabinet, "REF cabinet", "Bracket, top tread", b3BracketJoint(TREAD_TOP));

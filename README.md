@@ -15,7 +15,7 @@ Every bent part is an Onshape sheet-metal part, with the bend radius and K-facto
 | `onshape/B3_Reference.fs` | B3 Reference | Floor, cabinet, bed-end wall, mattress, door handle (parts named `REF ...`), for a Part Studio of their own |
 | `onshape/B3_Treads.fs` | B3 Tread | The tread (used three times: the top and middle treads and the hook-on step's tray) |
 | `onshape/B3_Brackets.fs` | B3 Bracket | The bracket with its two bent pivot ears (used four times: two on the cabinet, two bolted inside the rail) |
-| `onshape/B3_OuterRail.fs` | B3 Outer Rail | Stepped rail with flanges, a straight lower edge (the 17" treads keep it inside the door handle, so it has no notch), hand slot and the rail brackets' and step clip's screw holes |
+| `onshape/B3_OuterRail.fs` | B3 Outer Rail | Stepped rail with flanges, a straight lower edge (the 16 3/4" treads keep it inside the door handle, so it has no notch), hand slot and the rail brackets' and step clip's screw holes |
 | `onshape/B3_StepClip.fs` | B3 Step Clip | Clip bolted inside the outer rail with the outer keyhole |
 | `onshape/B3_PivotHardware.fs` | B3 Pivot Hardware | Tread axle (used 4 times) and step axle (2), 12 mm tube; M6 fender washer (12, one per axle end); M6 button-head screw (14: one per axle end, two for the step clip); stop pin (4); M6 x 20 flat-head screw (8, for the rail brackets); M6 nyloc nut (10, for the rail brackets and the step clip) |
 | `onshape/B3_BushingsPads.fs` | B3 Bushings and Pads | The bought-in soft parts, one of each: lip bushing (16 used), ear bushing (8), PTFE thrust washer (12), wave washer (6), neoprene washer (2), rail foot pad (1), step leg pad (2), ledge strip (1), panel bumper (2) |
@@ -102,7 +102,7 @@ The bent parts are Onshape sheet-metal parts: the tread, the step leg, the step 
 - **Cut features** sit at least half SendCutSend's die width from a bend line (0.315" on .125", 0.492" on .187"), except the bushing holes (see Limitations).
 - **Export:** open the flat view with the sheet-metal table button in the Part Studio, or right-click the part in the parts list and export its flat pattern as DXF for SendCutSend.
 
-Estimated flat sizes: tread about 17 x 9 3/16, bracket about 7 3/16 x 3 7/16, outer rail about 13 11/16 x 29 1/16, step leg about 6 13/16 x 10 7/16, all within SendCutSend's 44 x 30.
+Estimated flat sizes: tread about 16 3/4 x 9 3/16, bracket about 7 3/16 x 3 7/16, outer rail about 13 11/16 x 29 1/16, step leg about 6 13/16 x 10 7/16, all within SendCutSend's 44 x 30.
 
 ## Checking the code
 
@@ -140,6 +140,7 @@ The page's y runs along Onshape's -Y so that the model isn't mirrored: facing th
 
 - **Not modeled:** countersinks, which are picked in SendCutSend's configurator when ordering (the bracket's screw holes and the step ledge's are plain holes, so in the assembly each flat-head screw's head overlaps the rail bracket's web), the rail's latch holes, the front angle's keeper holes and the step clip screws' shanks. The wave washer is a flat ring squeezed to its gap.
 - **Bushings** are the igus sizes the page calls for (14 mm bore, 1 mm flange, 4 mm long in a lip and 6 mm in an ear), and follow `AXLE_DIA` and `BUSHING_WALL`. McMaster's nearest, 2705T142, is 4.5 mm long: its sleeve would stand 0.3 mm proud inside a 1/8" lip and take half the wave washer's room.
-- **Not yet rebuilt in Onshape:** the 17" treads, the rail's straight lower edge and the bushings and pads are checked by the lint and the offline tools only. The rail's long flange now meets the bed-side flange at a 20 degree corner, which relies on Onshape's corner relief and may need a relief of its own.
+- **Cabinet depth:** the entry cabinet's frame measures 12" from the bed-end wall, and the stair starts 1/2" off the wall and runs 12", so its front end and the front angle stand 1/2" past the frame. `tools/b3_check.py` fails on this until it is decided.
+- **Not yet rebuilt in Onshape:** the 16 3/4" treads, the rail's straight lower edge and the bushings and pads are checked by the lint and the offline tools only. The rail's long flange now meets the bed-side flange at a 20 degree corner, which relies on Onshape's corner relief and may need a relief of its own.
 - **Bushing holes** are modeled at their finished 14 mm. The page cuts them as 3/8" pilots, then reams them after bending, because most of them sit closer to a bend than SendCutSend's die-width rule allows; a flat pattern exported from the model has the finished size.
 - **Flange corners:** every free flange corner is rounded. Where two flanges meet at a corner relief (the rail's foot, and each step leg's bottom corners, where the side flanges meet the foot flange), their tips stay square: Onshape's corner relief takes most of the short edge between them, and rounding the tips as well leaves it nothing to meet. Where a step leg's ear steps back to its flange, the outside corner is rounded 1/4" and the inside one 1/8"; the ear's top outer corner is 3/8", as the page's leg table gives it.

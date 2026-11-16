@@ -178,7 +178,7 @@ def end_view(m):
     for cls, body, box in parts(m):
         if body != "cabinet":
             v.box("ghost", moved(box, open_[body]))
-    v.rect("handle", m.HANDLE_Y, m.HANDLE_Y + 1.5, m.HANDLE_Z - 0.5, m.HANDLE_Z + 0.5, "Cab door handle")
+    v.rect("handle", m.HANDLE_Y, min(m.HANDLE_Y + m.HANDLE_W, 22.5), m.HANDLE_Z - m.HANDLE_H / 2, m.HANDLE_Z + m.HANDLE_H / 2, "Cab door handle")
     order = {"rail": 0, "top tread": 1, "middle tread": 1, "cabinet": 2, "cabinet-side leg": 3, "outer leg": 3, "step": 4}
     for cls, body, box in sorted(parts(m), key=lambda p: order[p[1]]):
         v.box(cls, moved(box, mo[body]), NAMES[body])
@@ -200,7 +200,8 @@ def face_view(m):
     v = View(0, -1.5, 25.0, 50.0, "Facing the panel, stowed (open stair dashed)")
     mo, open_ = m.body_motions(), m.body_motions(0)
     n = numbers(m)
-    v.rect("panel", 0, 12.0, 0, m.CABINET_TOP_Z, "Cabinet side panel")
+    front = m.CABINET_DEPTH - m.WALL_GAP
+    v.rect("panel", -m.WALL_GAP, front, 0, m.CABINET_TOP_Z, "Cabinet side panel")
     for cls, body, box in parts(m):
         if body in ("step", "top tread", "middle tread"):
             v.box("ghost", moved(box, open_[body]))
@@ -220,7 +221,7 @@ def face_view(m):
     v.text("dimt", s[0], s[5], f'step {frac(s[5] - s[4])} tall, {frac(s[1] - s[0])} wide', "start", 2, -6)
     v.hdim(0, 12.0, -1.0, '12" along the cabinet')
     v.text("lbl", -m.WALL_GAP, 49.0, "bed-end wall", "start", 4)
-    v.text("lbl", 12.0, 48.6, "cabinet front edge", "end", -2)
+    v.text("lbl", front, 48.6, "cabinet front edge", "end", -2)
     v.text("lbl", 15.0, 11.2, "step, open", "middle")
     return v.svg()
 
