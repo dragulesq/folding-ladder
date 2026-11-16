@@ -78,7 +78,7 @@ def parts(m):
     out.append(("fixed", "cabinet", (0, m.LEDGE_LEN, 0, m.LEDGE_SHELF, m.LEDGE_TOP_Z - m.SHEET_T, m.LEDGE_TOP_Z)))
     out.append(("fixed", "cabinet", (0, m.LEDGE_LEN, 0, m.SHEET_T, m.LEDGE_TOP_Z - m.LEDGE_LEG_H, m.LEDGE_TOP_Z)))
     out.append(("rubber", "cabinet", (0, m.LEDGE_LEN, 0, m.LEDGE_SHELF, m.LEDGE_TOP_Z, m.LEDGE_TOP_Z + m.LEDGE_STRIP_T)))
-    out.append(("fixed", "cabinet", (m.FA_PANEL_LEG_X0, m.FA_X1, 0, m.SHEET_T, m.FA_BOTTOM_Z, m.FA_PANEL_LEG_TOP)))
+    out.append(("fixed", "cabinet", (m.FA_PANEL_LEG_X0, m.FA_X1, 0, m.SHEET_T, m.FA_BOTTOM_Z, m.FA_TOP_Z)))
     out.append(("fixed", "cabinet", (m.FA_X1 - m.SHEET_T, m.FA_X1, 0, m.FA_OUT_LEG, m.FA_BOTTOM_Z, m.FA_TOP_Z)))
     return out
 

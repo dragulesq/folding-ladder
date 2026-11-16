@@ -21,7 +21,11 @@ import(path : "onshape/std/common.fs", version : "2641.0");
  * cuts a round corner relief and the flanges' tips stay square. Every free
  * flange corner is rounded. The step tops are bare.
  *
- * The foot pad is its own part (B3 Bushings and Pads).
+ * The foot is 7" long. Folded, its back inch stands in front of the stowed
+ * hook-on step's top, and a rubber bumper stuck on the inner face there
+ * presses on the step, so the travel lock holds the step too.
+ *
+ * The foot pads and the bumper are their own parts (B3 Bushings and Pads).
  */
 annotation { "Feature Type Name" : "B3 Outer Rail" }
 export const b3OuterRail = defineFeature(function(context is Context, id is Id, definition is map)
@@ -54,9 +58,8 @@ export const b3OuterRail = defineFeature(function(context is Context, id is Id, 
                 foot,
                 back
             ];
-        // The hand slot, and the step keeper's two screws.
-        var holes = [b3Slot(vector(HAND_SLOT_X, HAND_SLOT_Z), HAND_SLOT_L, HAND_SLOT_H),
-                b3Hole(KEEP_X0 + KEEP_W / 2, KEEP_SCREW_Z[0], KEEP_SCREW_DIA), b3Hole(KEEP_X0 + KEEP_W / 2, KEEP_SCREW_Z[1], KEEP_SCREW_DIA)];
+        // The hand slot.
+        var holes = [b3Slot(vector(HAND_SLOT_X, HAND_SLOT_Z), HAND_SLOT_L, HAND_SLOT_H)];
         for (var k = 0; k < size(CLIP_SCREW_X); k += 1)
         {
             holes = append(holes, b3Hole(CLIP_SCREW_X[k], CLIP_SCREW_Z, SCREW_HOLE_DIA));
@@ -122,7 +125,7 @@ export const b3OuterRail = defineFeature(function(context is Context, id is Id, 
         b3Mc(context, id + "mcClip", rail, name, "Step clip", b3StepClipJoint());
         b3Mc(context, id + "mcPad", rail, name, "Foot pad", b3RailPadJoint(1));
         b3Mc(context, id + "mcPadBack", rail, name, "Foot pad, back", b3RailPadJoint(0));
-        b3Mc(context, id + "mcKeeper", rail, name, "Step keeper", b3KeeperJoint());
+        b3Mc(context, id + "mcBumper", rail, name, "Step bumper", b3RailBumperJoint());
         for (var k = 0; k < size(CLIP_SCREW_X); k += 1)
         {
             b3Mc(context, id + ("mcNutClip" ~ k), rail, name, "Nut, clip " ~ (k + 1), b3ClipNutJoint(k));

@@ -48,10 +48,10 @@ def checks(m):
                 f"{m.PLUNGER_NOSE * MM:.0f} mm travel, {gap * MM:.2f} mm gap, {m.PLATE_T * MM:.2f} mm flange; this much stands above it"))
     flat = m.RAIL_PAD_W
     out.append(("Flange metal beside the lock hole", (flat - m.LOCK_HOLE) / 2, 0.125, "hole centered on the flange's flat"))
-    thread_in = m.LOCK_BLOCK_T + m.PLATE_T
-    out.append(("Plunger thread in the block and shelf", thread_in, 8 / MM, f"{thread_in * MM:.1f} mm"))
+    thread_in = m.LOCK_BLOCK_T + m.SHEET_T
+    out.append(("Plunger thread in the jam nut and shelf", thread_in, 8 / MM, f"{thread_in * MM:.1f} mm"))
     out.append(("Plunger thread left under the shelf for a jam nut", m.PLUNGER_THREAD - thread_in, 8 / MM,
-                f"handle hangs to about z {m.LOCK_SHELF_TOP_Z - m.PLATE_T - (m.PLUNGER_THREAD - thread_in) - 18 / MM - 0.2:.2f}"))
+                f"handle hangs to about z {m.LOCK_SHELF_TOP_Z - m.SHEET_T - (m.PLUNGER_THREAD - thread_in) - 18 / MM - 0.2:.2f}"))
     # The rail's first move out of the fold is square to the pin.
     r90, r85 = m.body_motions(90)["rail"], m.body_motions(85)["rail"]
     dy, dz = r85[1][3] - r90[1][3], r85[2][3] - r90[2][3]
@@ -69,7 +69,7 @@ def checks(m):
     out.append(("Folding, the rail's foot over the lock's block and shelf", worst, 1 / 16, "closest over the last 30 degrees"))
     web = m.T(TREAD_MIDDLE) - m.BRACKET_TOP_DROP - m.BRACKET_H
     out.append(("Lock ledge under the middle tread's cabinet bracket", web - m.LOCK_SHELF_TOP_Z, 1 / 32, ""))
-    out.append(("Lock ledge clear of the front angle's panel leg", m.FA_PANEL_LEG_X0 - (m.LOCK_LEDGE_X0 + m.LOCK_LEDGE_W), 0.125, ""))
+    out.append(("Lock shelf clear of the front angle's panel leg", m.FA_PANEL_LEG_X0 - (m.LOCK_LEDGE_X0 + m.LOCK_LEDGE_W), 0.125, ""))
     out.append(("Rail foot pads clear of the lock ledge, either side",
                 min(m.LOCK_LEDGE_X0 - (m.RAIL_PAD_X0[0] + m.RAIL_PAD_L), m.RAIL_PAD_X0[1] - (m.LOCK_LEDGE_X0 + m.LOCK_LEDGE_W)), 0.125,
                 f"pads {m.RAIL_PAD_L:.3f} long at x {m.RAIL_PAD_X0[0]:.3f} and {m.RAIL_PAD_X0[1]:.3f}; hole at x {m.LOCK_X:.3f}"))
@@ -96,53 +96,62 @@ def checks(m):
     out.append(("Upper hook's top under the middle tread's back lip as it folds", lip_low - m.STOW_UP_Z1, 0.06, f"the lip's corner dips to {lip_low:.3f}"))
     out.append(("Stow bracket's leg under the cabinet bracket's web", web - m.LOCK_SHELF_TOP_Z, 0.03, "one leg from the hook plate to the shelf"))
     out.append(("Stow bracket's bottom under the upper pin's slot", m.STOW_PIN_UP_Z - m.KEYHOLE_SLOT_W / 2 - m.STOW_BRACKET_Z0, 0.5, ""))
-    out.append(("Plunger's regular nut between the shelf's flanges", m.LOCK_LEDGE_W - 2 * m.SHEET_T - 19.6 / MM, 0.03, "19.6 mm across its corners"))
     xs = m.STOW_BRACKET_SCREW_X
-    out.append(("Stow bracket's screws clear of the hook plate and shelf flanges",
-                min(xs[0] - (m.STOW_HOOK_X0 + m.SHEET_T), xs[2] - (m.LOCK_LEDGE_X0 + m.SHEET_T), (m.LOCK_LEDGE_X0 + m.LOCK_LEDGE_W - m.SHEET_T) - xs[2]),
-                0.2, "screw centers to the bent-out plates; a #8 pan head is 0.27 across"))
-    # The step keeper, bolted inside the rail: folded, in front of the stowed step's top.
+    lx1 = m.LOCK_LEDGE_X0 + m.LOCK_LEDGE_W
+    out.append(("Stow bracket's screws inside its leg's ends", min(xs[0] - m.STOW_NOTCH_X, lx1 - xs[2]) - m.STOW_SCREW_DIA / 2, 0.2, ""))
+    # SendCutSend, 1/8 5052: holes half a die width (0.315) from a bend line, flanges at least 0.476 after the bend.
+    die = 0.63 / 2
+    line = m.BEND_R_SHEET + m.SHEET_T - (math.pi / 4) * (m.BEND_R_SHEET + m.K_SHEET * m.SHEET_T)
+    out.append(("Stow bracket's screw holes clear of the leg's bend", (m.LOCK_SHELF_TOP_Z - line) - (m.STOW_BRACKET_SCREW_Z + m.STOW_SCREW_DIA / 2) - die, 0, "hole edge to half a die width from the bend line"))
+    out.append(("Upper pin's slot clear of the hook plate's bend", (m.STOW_PIN_UP_Z - m.KEYHOLE_SLOT_W / 2) - (m.LOCK_SHELF_TOP_Z - m.SHEET_T + line) - die, 0, ""))
+    out.append(("Plunger hole clear of the shelf's bends", m.LOCK_FOLD_Y - m.LOCK_SHELF_HOLE / 2 - line - die, 0, ""))
+    out.append(("Hook plate's bend clear of the leg's bend", min(m.STOW_UP_Y0, m.STOW_NOTCH_X - m.STOW_HOOK_X0) - (m.BEND_R_SHEET + m.SHEET_T), 0.03,
+                "the notch in the shelf's corner, past each bend's radius and thickness"))
+    out.append(("Hook plate's height after its bend", m.STOW_UP_Z1 - (m.LOCK_SHELF_TOP_Z - m.SHEET_T), 0.476, "SendCutSend's least flange"))
+    out.append(("Metal behind the upper slot's round end", m.STOW_PIN_UP_Y - m.KEYHOLE_SLOT_W / 2 - m.STOW_UP_Y0, 0.3, "ties the plate's top prong to the bottom one"))
+    out.append(("Metal above the upper slot", m.STOW_UP_Z1 - (m.STOW_PIN_UP_Z + m.KEYHOLE_SLOT_W / 2), 0.3, ""))
+    out.append(("Lower hook's screw holes clear of its bend", m.STOW_LO_SCREW_X[0] - m.STOW_SCREW_DIA / 2 - (m.STOW_HOOK_X0 + line) - die, 0, ""))
+    out.append(("Metal around the lower slot", min(m.STOW_LO_D - (m.STOW_PIN_LO_Y + m.KEYHOLE_SLOT_W / 2),
+                                                 m.STOW_PIN_LO_Z - m.STOW_SLOT_DROP - m.KEYHOLE_SLOT_W / 2 - m.STOW_LO_Z0), 0.3, ""))
+    out.append(("Shelf behind the hook plate under the middle bracket and the upper pin's washer",
+                min(web, m.STOW_PIN_UP_Z - m.END_WASHER_DIA / 2) - m.LOCK_SHELF_TOP_Z, 0.03, ""))
+    out.append(("Back foot pad clear of the shelf behind the hook plate", (m.RAIL_Y + m.PLATE_T + m.RAIL_FLANGE - m.RAIL_PAD_W + m.FOLD_DY) - m.STOW_UP_D - m.STOW_SHELF_R, 0.25,
+                "folded, the pads sit beyond the shelf's 2 1/4 part"))
+    # The folded rail's foot in front of the stowed step's top, and its bumper on the step's face.
     rmo = mo["rail"]
-    k_bot = m.KEEP_Z0 + rmo[2][3]
-    k_y = m.RAIL_Y - m.KEEP_T + rmo[1][3]
-    step_top = apply(mo["outer leg"], (m.going_x(HOOK_STEP), m.OUT_AXLE_Y + m.CAB_AXLE_Y - m.STEP_LEG_Y0, m.STEP_LEG_TOP_Z))[2]
-    out.append(("Folded, the keeper reaches below the stowed step's top", step_top - k_bot, 0.5, f"keeper bottom at z {k_bot:.2f}, step top {step_top:.2f}"))
-    gap = k_y - m.stow_top_y()
-    out.append(("Keeper to the stowed step's face", gap, 0.125, ""))
-    slot = m.STOW_UP_D - m.STOW_PIN_UP_Y
-    pin_move = gap * (m.STOW_PIN_UP_Z - m.STOW_PIN_LO_Z) / (k_bot - m.STOW_PIN_LO_Z)
-    out.append(("Upper pin's slot left when the step tips out onto the keeper", slot - pin_move, 0.5,
-                f"the pin can move {pin_move:.2f} of the slot's {slot:.2f}"))
+    foot_z = m.RAIL_FOOT_Z + rmo[2][3]
+    step_top = apply(mo["step"], (0, m.TRAY_Y0 + m.TRAY_W, 0))[2]
     tread_end = 3 * m.GOING - (m.going_x(HOOK_STEP) + m.TRAY_INSET)
-    out.append(("Keeper inside the stowed step's front end", tread_end - m.KEEP_X0, 0.5, f"step's tread ends at x {tread_end:.2f}"))
-    out.append(("Keeper clear of the upper hook plate", m.STOW_HOOK_X0 - (m.KEEP_X0 + m.KEEP_W), 0.06, ""))
-    # Perpendicular distance from the keeper's lower screw hole to the plate's lower edge, back to foot.
-    ex, ez = m.RAIL_FOOT_X, m.RAIL_FOOT_Z - m.RAIL_BACK_Z
-    px, pz = m.KEEP_X0 + m.KEEP_W / 2, m.KEEP_SCREW_Z[0] - m.RAIL_BACK_Z
-    dist = abs(ex * pz - ez * px) / math.hypot(ex, ez) - m.KEEP_SCREW_DIA / 2
-    out.append(("Keeper's lower screw hole clear of the lower edge's bend", dist - (m.BEND_R_PLATE + m.PLATE_T), 0.1,
-                "hole edge to the flange's bend zone, square to the edge"))
-    out.append(("Open keeper above the floor", m.KEEP_Z0, 1.0, ""))
-    worst = 9.0
-    kx0, kx1 = m.KEEP_X0, m.KEEP_X0 + m.KEEP_W
-    for n, body in ((TREAD_TOP, "top tread"), (TREAD_MIDDLE, "middle tread")):
-        xg = m.going_x(n)
-        if xg + m.TRAY_INSET > kx1 or xg + m.TRAY_INSET + m.TRAY_D < kx0:
-            continue
-        pts = [(y, z) for y in [m.TRAY_Y0 + m.TRAY_W * i / 60 for i in range(61)] for z in (m.T(n), m.T(n) - m.LIP)]
-        for a in range(0, 91):
-            mt, mr = m.body_motions(a)[body], m.body_motions(a)["rail"]
-            for y, z in pts:
-                q = apply(mt, (kx0, y, z))
-                ry, rz = q[1] - mr[1][3], q[2] - mr[2][3]
-                if m.KEEP_Z0 - 0.05 <= rz <= m.KEEP_Z1 + 0.05:
-                    worst = min(worst, (m.RAIL_Y - m.KEEP_T) - ry)
-    out.append(("Folding, the treads past the keeper", worst, 0.06, "closest a tread comes to the keeper's inner face"))
+    out.append(("Folded, the rail's plate reaches below the stowed step's top", step_top - foot_z, 0.75, f"plate's bottom edge at z {foot_z:.2f}, step's tread ends at {step_top:.2f}"))
+    out.append(("Folded, the rail's foot overlaps the stowed step along x", tread_end - m.RAIL_FOOT_X, 0.75, f"foot from x {m.RAIL_FOOT_X:.2f}, step's tread to {tread_end:.2f}"))
+    bz, r = m.RAIL_BUMPER_Z + rmo[2][3], m.BUMPER_DIA / 2
+    out.append(("Step bumper wholly on the stowed step's face", min(step_top - (bz + r), tread_end - (m.RAIL_BUMPER_X + r), m.RAIL_BUMPER_X - r - m.RAIL_FOOT_X), 0.03, ""))
+    out.append(("Step bumper above the foot flange's bend", m.RAIL_BUMPER_Z - r - (m.RAIL_FOOT_Z + m.BEND_R_PLATE + m.PLATE_T), 0, ""))
+    squeeze = m.BUMPER_H - (m.RAIL_Y + rmo[1][3] - m.stow_top_y())
+    out.append(("Step bumper squeezed by the stowed step", squeeze, 1 / 32, "the squeeze, not a gap"))
+    out.append(("Step bumper's squeeze within reason", 0.1 - squeeze, 0, ""))
+    # Carrying the folded step in through the front of the open stair: on end, under the middle
+    # tread's lips, between the lock's shelf on the panel side and the step clip on the rail.
+    length = apply(mo["outer leg"], (m.going_x(HOOK_STEP), m.OUT_AXLE_Y + m.CAB_AXLE_Y - m.STEP_LEG_Y0, m.STEP_LEG_TOP_Z))[2] - apply(mo["step"], (0, m.TRAY_Y0, 0))[2]
+    thick = m.stow_top_y() - m.STOW_PANEL_GAP + m.SHEET_T
+    under = m.T(TREAD_MIDDLE) - m.LIP
+    out.append(("Folded step on end under the middle tread, upright", under - length, 0.5, f"step {length:.2f} long and {thick:.2f} thick, {under:.2f} under the tread's lips"))
+    lean = math.radians(25)
+    tall, wide = length * math.cos(lean) + thick * math.sin(lean), length * math.sin(lean) + thick * math.cos(lean)
+    out.append(("The same, leaning 25 degrees sideways", under - tall, 1.0, f"{tall:.2f} tall and {wide:.2f} wide"))
+    lane = m.CLIP_KEY_LEG_Y0 - m.LOCK_LEDGE_REACH
+    out.append(("Lane between the lock's shelf and the step clip, leaning", lane - wide, 1.0,
+                f"{lane:.2f} from the shelf's tip to the clip; {m.CLIP_KEY_LEG_Y0 - m.FA_OUT_LEG:.2f} from the front angle to the clip"))
+    depth = m.T(TREAD_TOP) - m.BRACKET_TOP_DROP - m.BRACKET_H - 0.25
+    out.append(("Room to stand the step up under the top tread", depth - math.hypot(length, thick), 1.0, "its diagonal under the top bracket"))
+    lift = (m.STOW_LO_Z1 + m.AXLE_DIA / 2) - m.STOW_PIN_LO_Z
+    out.append(("Room to lift the lower pin over its hook plate", depth - (step_top + lift), 1.0, f"lift {lift:.2f}"))
+    out.append(("Folded rail's plate outside the upper hook plate", m.RAIL_Y + rmo[1][3] - m.BUMPER_H - m.STOW_UP_D, 0.06, "bumper tip to the plate's edge, were they in line"))
     stop_z = m.T(TREAD_MIDDLE) - m.STOP_PIN_DROP - m.STOP_PIN_DIA / 2
     out.append(("Upper hook's top under the cabinet bracket's stop pin", stop_z - m.STOW_UP_Z1, 0.03, "the pin sticks out to the plate's face"))
     out.append(("Upper pin's washer under that stop pin as it slides in", stop_z - (m.STOW_PIN_UP_Z + m.END_WASHER_DIA / 2), 0.125, ""))
-    head = m.T(TREAD_MIDDLE) - m.CAB_AXLE_DROP - m.END_WASHER_DIA / 2
-    out.append(("Front angle top under the middle tread's axle washer", head - m.FA_TOP_Z, 0.125, ""))
+    out.append(("Front angle's metal above and below its keyhole", min(m.FA_TOP_Z - (m.FA_KEYHOLE_Z + m.KEYHOLE_DIA / 2), m.FA_KEYHOLE_END_Z - m.KEYHOLE_SLOT_W / 2 - m.FA_BOTTOM_Z), 2.0, ""))
+    out.append(("Front angle's screws inside its ends", min(m.FA_SCREW_Z[0] - m.FA_BOTTOM_Z, m.FA_TOP_Z - m.FA_SCREW_Z[-1]), 0.75, ""))
     # The stack between a lip and its ear.
     gap = m.EAR_X0 - m.TRAY_INSET - m.SHEET_T
     wave = gap - m.THRUST_T - m.BUSHING_FLANGE_T

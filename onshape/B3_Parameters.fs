@@ -192,7 +192,7 @@ export const NUT_H = 6 * millimeter;
 export const RAIL_Y = OUT_AXLE_Y + CAB_AXLE_Y;     // 17 11/16, inner face (outer face 17 7/8)
 export const RAIL_STEP_DROP = 2 * inch;            // step edges at T - 2 (28 3/4 and 18 1/2)
 export const RAIL_BACK_Z = 23.5 * inch;            // bottom of the bed-side edge; the long lower edge runs from here straight to the foot
-export const RAIL_FOOT_X = 2 * GOING - 4.5 * inch;  // foot runs x 7 to 11 1/2: 4 1/2 on the floor
+export const RAIL_FOOT_X = GOING - 1.25 * inch;    // foot runs x 4 1/2 to 11 1/2: 7 on the floor. Folded, its back inch stands in front of the stowed step's top
 export const RAIL_FOOT_Z = 0.5 * inch;
 export const RAIL_FLANGE = 1 * inch;               // outward, beyond the plate (out to y 18 7/8)
 export const RAIL_FLANGE_TIP_R = R_OUTSIDE_LARGE;  // every flange's free corners
@@ -219,18 +219,17 @@ export const KEYHOLE_SLOT_W = AXLE_DIA + 1 * millimeter;      // 13 mm, clears t
 // ---------------------------------------------------------------------------
 export const FA_X1 = 2 * GOING;                    // 11 1/2, flush with the cabinet's front edge
 export const FA_PANEL_LEG_X0 = FA_X1 - (11 / 8) * inch;    // 10 1/8
-export const FA_PANEL_LEG_TOP = 16.5 * inch;
 export const FA_OUT_LEG = 2 * inch;                // along y
-export const FA_BOTTOM_Z = 1 * inch;
-export const FA_TOP_Z = 18 * inch;
+export const FA_BOTTOM_Z = 6.5 * inch;            // a 6 in band around the keyhole
+export const FA_TOP_Z = 12.5 * inch;
 export const FA_SCREW_X = FA_X1 - (19 / 32) * inch;  // 10 29/32, front post centerline (15 mm in from the frame's front)
-export const FA_SCREW_Z = [4.5 * inch, 12.25 * inch, 15.5 * inch];
+export const FA_SCREW_Z = [7.5 * inch, 11.5 * inch];
 export const FA_SCREW_HOLE_DIA = (17 / 64) * inch;
 export const FA_KEYHOLE_Y = CAB_AXLE_Y;            // 15/16, on the step's cabinet-side pivot line
 export const FA_KEYHOLE_Z = (161 / 16) * inch;     // 10 1/16, hole center
 export const FA_KEYHOLE_END_Z = 9.5 * inch;        // slot's round end, 1/8 below the pin at 9 5/8
 export const FA_CORNER_R = R_OUTSIDE_SMALL;
-export const FA_ENTRY_R = R_OUTSIDE_LARGE;         // outward leg's top outer corner (y 2, z 18), facing the entry
+export const FA_ENTRY_R = R_OUTSIDE_LARGE;         // outward leg's top outer corner, facing the entry
 
 // ---------------------------------------------------------------------------
 // Step clip (bolted inside the outer rail with M6 button heads and nyloc nuts)
@@ -269,8 +268,7 @@ export const LOCK_BLOCK_T = 5 * millimeter;        // M10 x 1.5 thin jam nut on 
 export const LOCK_NUT_AF = 17 * millimeter;        // across its flats
 export const LOCK_BLOCK_TOP_Z = RAIL_FOOT_Z + FOLD_DZ - LOCK_GAP;   // 17
 export const LOCK_SHELF_TOP_Z = LOCK_BLOCK_TOP_Z - LOCK_BLOCK_T;    // 16.80, just under the cabinet bracket's web (16 7/8)
-export const LOCK_LEDGE_W = (9 / 8) * inch;        // shelf along x, between the two foot pads; room for the nut under it between its flanges
-export const LOCK_SHELF_FLANGE = 0.5 * inch;      // a flange bent down along each side of the shelf, for stiffness
+export const LOCK_LEDGE_W = (9 / 8) * inch;        // the shelf's tongue along x, between the two foot pads
 export const LOCK_LEDGE_X0 = LOCK_X - LOCK_LEDGE_W / 2;             // 8 11/16
 export const LOCK_LEDGE_REACH = RAIL_Y + PLATE_T + RAIL_FLANGE + FOLD_DY;   // 3 15/16, as far out as the folded rail's flange
 export const LOCK_LEDGE_LEG = 1.75 * inch;         // panel leg, down from the shelf's top
@@ -291,7 +289,7 @@ export const LEDGE_SCREW_DIA = 0.177 * inch;       // #8 clearance (countersink 
 export const LEDGE_SHELF_R = R_OUTSIDE_LARGE;      // the shelf's front corners, at ankle height
 export const LEDGE_LEG_R = R_OUTSIDE_SMALL;        // the back leg's bottom corners
 export const LEDGE_STRIP_T = (1 / 8) * inch;       // rubber strip on the shelf; the folded step stands on it
-export const STOW_PANEL_GAP = (1 / 8) * inch;      // the folded step's back stands this far off the panel (drawings and the stowed assembly)
+export const STOW_PANEL_GAP = (5 / 16) * inch;     // the folded step's back stands this far off the panel, so the folded rail's bumper presses on its face
 
 // ---------------------------------------------------------------------------
 // Bumpers: rubber, stuck to the panel behind each folded tread. The folded
@@ -328,37 +326,39 @@ export const STEP_PAD_T = STEP_LEG_BOTTOM_Z;       // 1/8, down to the floor
 // catch them. The lower plate's slot opens upward: the step's bottom end is
 // set down on the ledge and its lower pin drops in. The upper plate's slot
 // opens toward the room: the step's top is tipped in to the panel and the
-// upper pin slides in. The upper plate is one part with the travel lock's
-// ledge, the "Stow bracket": one panel leg from the hook plate to the shelf.
-// The step is stowed before the stair is folded; the folded rail then holds it
-// in, with the "Step keeper" bolted inside the rail's plate in front of the
-// step's top, so the one plunger locks everything.
-export const STOW_TOP_Y = STOW_PANEL_GAP + OUT_AXLE_DROP + CAB_AXLE_Y - STEP_LEG_Y0;   // the stowed step's tread face: 2 1/4
+// upper pin slides in until it seats on the slot's round end.
+// The upper plate is one part with the travel lock's shelf, the "Stow
+// bracket", all 1/8 sheet with two bends: the shelf is the base, the panel leg
+// is bent down along its panel edge and the hook plate is bent up along its
+// bed-end edge. A notch in the shelf's corner keeps the two bends apart.
+// The step is stowed before the stair is folded. Folded, the back inch of the
+// rail's foot stands in front of the step's top and a rubber bumper on the
+// rail's inner face presses on the step, so the one plunger locks everything.
+export const STOW_TOP_Y = STOW_PANEL_GAP + OUT_AXLE_DROP + CAB_AXLE_Y - STEP_LEG_Y0;   // the stowed step's tread face: 2 7/16
 export const STOW_Z0 = LEDGE_TOP_Z + LEDGE_STRIP_T - TRAY_Y0;      // stowed height of the step's y = 0: 7/8
-export const STOW_PIN_UP_Y = STOW_TOP_Y - OUT_AXLE_DROP;           // upper pin: 3/4 off the panel
+export const STOW_PIN_UP_Y = STOW_TOP_Y - OUT_AXLE_DROP;           // upper pin: 15/16 off the panel
 export const STOW_PIN_UP_Z = STOW_Z0 + OUT_AXLE_Y;                 // 17 5/8
-export const STOW_PIN_LO_Y = STOW_TOP_Y - CAB_AXLE_DROP;           // lower pin: 1 5/8
+export const STOW_PIN_LO_Y = STOW_TOP_Y - CAB_AXLE_DROP;           // lower pin: 1 13/16
 export const STOW_PIN_LO_Z = STOW_Z0 + CAB_AXLE_Y;                 // 1 13/16
 export const STOW_HOOK_X0 = GOING;                 // plates from here to GOING + SHEET_T, where the front angle sits when the step is in use
-export const STOW_SLOT_DROP = (1 / 8) * inch;      // each slot's round end past the resting pin
-export const STOW_HOOK_LEG = 1.5 * inch;           // panel leg, along x past the plate
+export const STOW_SLOT_DROP = (1 / 8) * inch;      // the lower slot's round end below the resting pin (the step stands on the ledge)
+export const STOW_HOOK_LEG = 1.5 * inch;           // lower hook's panel leg, along x past the plate
 export const STOW_BRACKET_Z0 = LOCK_SHELF_TOP_Z - LOCK_LEDGE_LEG;   // the stow bracket's bottom edge: 15.05
 export const STOW_UP_Z1 = 18.25 * inch;            // upper hook plate's top, under the middle tread's back lip as it folds (18.39)
-export const STOW_UP_D = 2 * inch;                 // plate reach from the panel
-export const STOW_BRACKET_SCREW_X = [GOING + (5 / 8) * inch, GOING + (15 / 8) * inch, LOCK_X];   // three #8 screws along the leg, the last under the shelf
-export const STOW_BRACKET_SCREW_Z = STOW_BRACKET_Z0 + (5 / 8) * inch;
+export const STOW_UP_D = 2.25 * inch;              // plate reach from the panel
+export const STOW_UP_Y0 = (5 / 16) * inch;         // the hook plate and its bend start here, clear of the panel leg's bend
+export const STOW_NOTCH_X = STOW_HOOK_X0 + (7 / 16) * inch;   // the panel leg and its bend start here, clear of the hook plate's bend
+export const STOW_SHELF_R = R_OUTSIDE_SMALL;       // the shelf's inside corner and the tongue's tips
+export const STOW_BRACKET_SCREW_X = [STOW_NOTCH_X + (5 / 16) * inch, (STOW_NOTCH_X + LOCK_LEDGE_X0 + LOCK_LEDGE_W) / 2,
+        LOCK_LEDGE_X0 + LOCK_LEDGE_W - (5 / 16) * inch];   // three #8 screws along the leg
+export const STOW_BRACKET_SCREW_Z = LOCK_SHELF_TOP_Z - (11 / 16) * inch;   // high on the leg, half a die width below the bend
 export const STOW_LO_Z0 = 1 * inch;                // lower hook
 export const STOW_LO_Z1 = (21 / 8) * inch;
-export const STOW_LO_D = 2.25 * inch;
+export const STOW_LO_D = 2.5 * inch;
+export const STOW_LO_SCREW_X = [STOW_HOOK_X0 + SHEET_T + 0.5 * inch, STOW_HOOK_X0 + SHEET_T + 1.125 * inch];
 export const STOW_SCREW_DIA = 0.177 * inch;        // #8 clearance
-// Step keeper: 3/16 x 3/4 flat bar bolted inside the rail's plate near its bed
-// end, hanging below the plate's lower edge. Folded, it stands 5/16 in front
-// of the stowed step's top.
-export const KEEP_X0 = GOING - 0.875 * inch;       // 4 7/8 to 5 5/8, inside the step's front end (5.56)
-export const KEEP_W = 0.75 * inch;
-export const KEEP_T = PLATE_T;
-export const KEEP_Z0 = 1.5 * inch;                 // bottom, open: 18.19 folded, under the step's top (19)
-export const KEEP_Z1 = 11 * inch;                  // top
-export const KEEP_SCREW_Z = [9.25 * inch, 10.5 * inch];   // two #10 screws through the plate, clear of the lower edge's bend
-export const KEEP_SCREW_DIA = 0.201 * inch;        // #10 clearance
+// Step bumper: a panel bumper stuck on the rail's inner face, on the back inch
+// of the foot. Folded, it presses on the stowed step's face.
+export const RAIL_BUMPER_X = (RAIL_FOOT_X + GOING - TRAY_INSET) / 2;   // 5.03, between the foot's back end and the step's front end
+export const RAIL_BUMPER_Z = RAIL_FOOT_Z + 0.75 * inch;                // 1 1/4, above the foot flange's bend
 export const STOW_PIN_X = GOING - TREAD_AXLE_X0;   // the stowed step's lower pin's tube end, where it hinges in the lower hook

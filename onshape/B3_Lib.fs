@@ -180,19 +180,19 @@ export function b3FrontAngleJoint() returns map
     return b3PanelJoint(FA_X1, FA_BOTTOM_Z);
 }
 
-// The stow bracket on the panel: its panel leg's bottom corner at the hook plate.
+// The stow bracket on the panel: the level of its panel leg's bottom edge, under the hook plate.
 export function b3StowBracketJoint() returns map
 {
     return b3PanelJoint(STOW_HOOK_X0, STOW_BRACKET_Z0);
 }
 
-// The step keeper inside the rail's plate: its top corner on the bed-end side, z out of the plate's inner face.
-export function b3KeeperJoint() returns map
+// The step bumper on the rail's inner face, z in toward the cabinet.
+export function b3RailBumperJoint() returns map
 {
-    return b3Joint(vector(KEEP_X0, RAIL_Y, KEEP_Z1), vector(0, -1, 0), vector(1, 0, 0));
+    return b3Joint(vector(RAIL_BUMPER_X, RAIL_Y, RAIL_BUMPER_Z), vector(0, -1, 0), vector(1, 0, 0));
 }
 
-// The plunger's line: on top of the ledge's tapped block, z up along the nose.
+// The plunger's line: on top of the jam nut on the stow bracket's shelf, z up along the nose.
 export function b3LockPlungerJoint() returns map
 {
     return b3Joint(vector(LOCK_X, LOCK_FOLD_Y, LOCK_BLOCK_TOP_Z), vector(0, 0, 1), vector(1, 0, 0));
@@ -211,21 +211,21 @@ export function b3StowPinJoint() returns map
     return b3Joint(vector(STOW_PIN_X, STOW_PIN_LO_Y, STOW_PIN_LO_Z), vector(1, 0, 0), vector(0, 0, 1));
 }
 
-// Plate outline in (y, z) from the panel out to d, z0 to z1, with a slot
+// Plate outline in (y, z) from y0 out to d, z0 to z1, with a slot
 // KEYHOLE_SLOT_W wide on z = pinZ, open at the plate's outer edge and running
 // in toward the panel to a round end centered yEnd.
-export function b3SideSlottedPlate(d is ValueWithUnits, z0 is ValueWithUnits, z1 is ValueWithUnits, pinZ is ValueWithUnits, yEnd is ValueWithUnits) returns array
+export function b3SideSlottedPlate(y0 is ValueWithUnits, d is ValueWithUnits, z0 is ValueWithUnits, z1 is ValueWithUnits, pinZ is ValueWithUnits, yEnd is ValueWithUnits) returns array
 {
     const h = KEYHOLE_SLOT_W / 2;
     return [
-            vector(0 * inch, z0),
+            vector(y0, z0),
             vector(d, z0),
             vector(d, pinZ - h),
             vector(yEnd, pinZ - h),
             { "mid" : vector(yEnd - h, pinZ), "end" : vector(yEnd, pinZ + h) },
             vector(d, pinZ + h),
             vector(d, z1),
-            vector(0 * inch, z1)
+            vector(y0, z1)
         ];
 }
 

@@ -81,11 +81,11 @@ INSTANCES = {
     # Rubber.
     "Rail foot pad 1": "Rail foot pad", "Rail foot pad 2": "Rail foot pad", "Step leg pad 1": "Step leg pad", "Step leg pad 2": "Step leg pad",
     "Ledge strip": "Ledge strip", "Panel bumper 1": "Panel bumper", "Panel bumper 2": "Panel bumper",
-    # Travel locks on the panel: the ledge and tapped block the plunger stands in, under the folded
-    # rail's foot, and the hook plates and turn tab that hold the stowed hook-on step.
+    # Travel locks on the panel: the stow bracket (lock shelf and upper hook), the plunger's jam nut
+    # and the lower hook.
     "Stow bracket": "Stow bracket", "Plunger jam nut": "Plunger jam nut", "Stow hook, lower": "Stow hook, lower",
-    # Bolted inside the rail: holds the stowed step in once the stair is folded.
-    "Step keeper": "Step keeper",
+    # Stuck inside the rail's foot: presses on the stowed step once the stair is folded.
+    "Step bumper": "Panel bumper",
 }
 
 # Mates between the main parts: (type, (instance, its mate connector), (instance it goes on, that one's
@@ -179,7 +179,7 @@ HARDWARE += [
     (("Stow bracket", "Cabinet"), ("REF cabinet", "Stow bracket")),
     (("Plunger jam nut", "Ledge"), ("REF cabinet", "Plunger")),
     (("Stow hook, lower", "Cabinet"), ("REF cabinet", "Stow hook, lower")),
-    (("Step keeper", "Rail"), ("Outer rail", "Step keeper")),
+    (("Step bumper", "Panel"), ("Outer rail", "Step bumper")),
 ]
 
 # Bought parts imported into the document (McMaster's models), used in place of the modeled ones:
