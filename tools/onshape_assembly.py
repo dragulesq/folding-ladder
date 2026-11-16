@@ -192,6 +192,12 @@ SWAP_CONNECTOR = {"M6 flat-head screw": "Head", "M6 button-head screw": "Washer"
                   "M6 nyloc nut": "Rail", "Wave washer": "Axle", "Lip bushing": "Axle", "Ear bushing": "Axle"}
 # A second part of an import (the nut's nylon insert) -> the instance it goes with.
 EXTRA = {}
+# Bought parts with no modeled stand-in: (instance, import key, part instance, its mate connector).
+# Each goes where the import's frame meets that connector, and moves with that part.
+ADDS = [
+    ("Draw latch", "1864A17", "Outer rail", "Latch"),
+    ("Draw latch strike", "1864A17 strike", "Front angle", "Latch strike"),
+]
 
 
 def swap_key(name):
@@ -217,6 +223,16 @@ def swapped(instances, mcs, imports):
                       "composite": imp.get("composite", False)}
             if j:
                 EXTRA[n] = name
+    for name, key, parent, connector in ADDS:
+        imp = imports.get(key)
+        if imp is None:
+            continue
+        t = mul(mul(out[parent]["transform"], frame(mcs[(out[parent]["part"], connector)])), inverse(frame(imp["frame"])))
+        for j, pid in enumerate(imp["parts"]):
+            n = name if j == 0 else f"{name}, part {j + 1}"
+            out[n] = {"part": imp["name"], "studio": "parts", "fixed": False, "element": imp["element"], "partId": pid,
+                      "transform": t, "composite": imp.get("composite", False)}
+            EXTRA[n] = parent
     return out
 
 
