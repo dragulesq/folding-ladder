@@ -198,6 +198,13 @@ export function b3StowHookJoint(upper is boolean) returns map
     return b3PanelJoint(STOW_HOOK_X0, upper ? STOW_UP_Z0 : STOW_LO_Z0);
 }
 
+// The stowed step's lower pin in the lower hook's slot, as the step's own cabinet
+// axle connector sits there: the hinge the step tips in and out on.
+export function b3StowPinJoint() returns map
+{
+    return b3Joint(vector(STOW_PIN_X, STOW_PIN_LO_Y, STOW_PIN_LO_Z), vector(1, 0, 0), vector(0, 0, 1));
+}
+
 // The turn tab on the upper hook plate's bed-side face, at its pivot screw.
 export function b3StowTabJoint() returns map
 {
@@ -299,9 +306,9 @@ export function b3LegEarBushingJoint() returns map
 
 // Rubber pad under the rail's foot flange: its top corner at the back of the
 // foot, on the cabinet side, z down.
-export function b3RailPadJoint() returns map
+export function b3RailPadJoint(k is number) returns map
 {
-    return b3Joint(vector(RAIL_PAD_X0, RAIL_Y + PLATE_T + RAIL_FLANGE - RAIL_PAD_W, RAIL_FOOT_Z), vector(0, 0, -1), vector(1, 0, 0));
+    return b3Joint(vector(RAIL_PAD_X0[k], RAIL_Y + PLATE_T + RAIL_FLANGE - RAIL_PAD_W, RAIL_FOOT_Z), vector(0, 0, -1), vector(1, 0, 0));
 }
 
 // Rubber pad under a step leg's foot flange: the middle of its top face, z down.

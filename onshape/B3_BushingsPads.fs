@@ -16,7 +16,7 @@ import(path : "onshape/std/common.fs", version : "2641.0");
  *   Wave washer (6): one per axle, in the back gap between the thrust washer
  *   and the ear bushing's flange, drawn as a flat ring squeezed to that gap.
  *   Neoprene washer (2): on each step pin, behind the back lip's bushing.
- *   Rail foot pad (1), step leg pad (2), ledge strip (1): rubber under the
+ *   Rail foot pad (2), step leg pad (2), ledge strip (1): rubber under the
  *   rail's foot and the step legs' feet, and on the step ledge's shelf.
  *   Panel bumper (2): rubber, on the panel behind each folded tread.
  * The pivot parts are built on the back end of the top tread's cabinet axle,
@@ -77,10 +77,10 @@ export const b3BushingsAndPads = defineFeature(function(context is Context, id i
         b3Mc(context, id + "mcNeoprene", neoprene, "Neoprene washer", "Tread", pin);
 
         // Rubber pad under the flat of the rail's foot flange, down to the floor;
-        // it starts past the travel lock's hole.
-        const railPad = b3RailPadJoint();
+        // two of them, either side of the travel lock's hole.
+        const railPad = b3RailPadJoint(1);
         const rp = railPad.origin;
-        b3Box(context, id + "railPad", vector(rp[0], rp[1], rp[2] - RAIL_PAD_T), vector(2 * GOING, rp[1] + RAIL_PAD_W, rp[2]));
+        b3Box(context, id + "railPad", vector(rp[0], rp[1], rp[2] - RAIL_PAD_T), vector(rp[0] + RAIL_PAD_L, rp[1] + RAIL_PAD_W, rp[2]));
         b3FinishRubber(context, b3Solids(id + "railPad"), "Rail foot pad");
         b3Mc(context, id + "mcRailPad", b3Solids(id + "railPad"), "Rail foot pad", "Rail", railPad);
 

@@ -62,16 +62,27 @@ def checks(m):
     for a10 in range(600, 901):
         r = m.body_motions(a10 / 10)["rail"]
         y_in, y_out, z = m.RAIL_Y + r[1][3], m.RAIL_Y + m.PLATE_T + m.RAIL_FLANGE + r[1][3], m.RAIL_FOOT_Z + r[2][3]
-        if y_in < pin[1] + m.LOCK_BLOCK_D / 2 and y_out > pin[1] - m.LOCK_BLOCK_D / 2:
+        if y_in < pin[1] + m.LOCK_NUT_AF / 2 and y_out > pin[1] - m.LOCK_NUT_AF / 2:
             worst = min(worst, z - m.LOCK_BLOCK_TOP_Z)
         if y_in < m.LOCK_LEDGE_REACH:
             worst = min(worst, z - m.LOCK_SHELF_TOP_Z)
     out.append(("Folding, the rail's foot over the lock's block and shelf", worst, 1 / 16, "closest over the last 30 degrees"))
     web = m.T(TREAD_MIDDLE) - m.BRACKET_TOP_DROP - m.BRACKET_H
     out.append(("Lock ledge under the middle tread's cabinet bracket", web - m.LOCK_SHELF_TOP_Z, 1 / 32, ""))
-    out.append(("Lock ledge clear of the front angle's panel leg", m.FA_PANEL_LEG_X0 - (m.LOCK_LEDGE_X0 + m.LOCK_LEDGE_W), 0.25, ""))
-    out.append(("Rail foot pad clear of the lock ledge", m.RAIL_PAD_X0 - (m.LOCK_LEDGE_X0 + m.LOCK_LEDGE_W), 0.125,
-                f"pad runs x {m.RAIL_PAD_X0:.2f} to {2 * m.GOING:.2f}"))
+    out.append(("Lock ledge clear of the front angle's panel leg", m.FA_PANEL_LEG_X0 - (m.LOCK_LEDGE_X0 + m.LOCK_LEDGE_W), 0.125, ""))
+    out.append(("Rail foot pads clear of the lock ledge, either side",
+                min(m.LOCK_LEDGE_X0 - (m.RAIL_PAD_X0[0] + m.RAIL_PAD_L), m.RAIL_PAD_X0[1] - (m.LOCK_LEDGE_X0 + m.LOCK_LEDGE_W)), 0.125,
+                f"pads {m.RAIL_PAD_L:.3f} long at x {m.RAIL_PAD_X0[0]:.3f} and {m.RAIL_PAD_X0[1]:.3f}; hole at x {m.LOCK_X:.3f}"))
+    out.append(("Lock hole centered on the foot", -abs(m.LOCK_X - (m.RAIL_FOOT_X + 2 * m.GOING) / 2), -0.001, ""))
+    # The hand slot under the middle tread's bracket: clear of the bracket's screws, the clip and the plate's lower edge.
+    sl, sh = m.HAND_SLOT_L / 2, m.HAND_SLOT_H / 2
+    out.append(("Hand slot under the middle bracket's screw row", m.T(TREAD_MIDDLE) - m.SCREW_DROP - m.SCREW_HOLE_DIA / 2 - (m.HAND_SLOT_Z + sh), 0.5, ""))
+    out.append(("Hand slot above the step clip", m.HAND_SLOT_Z - sh - (m.CLIP_Z0 + m.CLIP_H), 0.5, ""))
+    x0 = m.HAND_SLOT_X - sl
+    edge = m.RAIL_BACK_Z + (m.RAIL_FOOT_Z - m.RAIL_BACK_Z) * min(x0, m.RAIL_FOOT_X) / m.RAIL_FOOT_X
+    out.append(("Hand slot above the rail's lower edge", m.HAND_SLOT_Z - sh - edge, 0.75, f"edge at z {edge:.2f} under the slot's back end"))
+    out.append(("Hand slot to the lock's handle, folded (one-hand reach)", (m.HAND_SLOT_Z + m.FOLD_DZ) - (m.LOCK_SHELF_TOP_Z - 2.0), -99,
+                "height between the folded slot and the plunger's handle"))
     # The stowed step's pins in the hook plates' slots.
     for name, y_open, drop, py, pz in (("upper", m.OUT_AXLE_Y, m.OUT_AXLE_DROP, m.STOW_PIN_UP_Y, m.STOW_PIN_UP_Z),
                                        ("lower", m.CAB_AXLE_Y, m.CAB_AXLE_DROP, m.STOW_PIN_LO_Y, m.STOW_PIN_LO_Z)):

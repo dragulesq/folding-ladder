@@ -117,7 +117,7 @@ class Model:
         return self.joint((self.CLIP_SCREW_X[k], self.RAIL_Y + self.PLATE_T, self.CLIP_SCREW_Z), (0, 1, 0), (1, 0, 0))
 
     def rail_pad(self):
-        return self.joint((self.RAIL_PAD_X0, self.RAIL_Y + self.PLATE_T + self.RAIL_FLANGE - self.RAIL_PAD_W, self.RAIL_FOOT_Z),
+        return self.joint((self.RAIL_PAD_X0[1], self.RAIL_Y + self.PLATE_T + self.RAIL_FLANGE - self.RAIL_PAD_W, self.RAIL_FOOT_Z),
                           (0, 0, -1), (1, 0, 0))
 
     def step_pad(self):
@@ -158,7 +158,9 @@ class Model:
             ("REF cabinet", "Rail lock ledge"): self.panel_joint(self.LOCK_LEDGE_X0, self.LOCK_SHELF_TOP_Z - self.LOCK_LEDGE_LEG),
             ("Rail lock ledge", "Cabinet"): self.panel_joint(self.LOCK_LEDGE_X0, self.LOCK_SHELF_TOP_Z - self.LOCK_LEDGE_LEG),
             ("REF cabinet", "Plunger"): self.lock_plunger(),
-            ("Plunger block", "Ledge"): self.lock_plunger(),
+            ("Plunger jam nut", "Ledge"): self.lock_plunger(),
+            ("Stow hook, lower", "Pin"): self.joint((self.STOW_PIN_X, self.STOW_PIN_LO_Y, self.STOW_PIN_LO_Z), (1, 0, 0), (0, 0, 1)),
+            ("Outer rail", "Foot pad, back"): self.joint((self.RAIL_PAD_X0[0], self.RAIL_Y + self.PLATE_T + self.RAIL_FLANGE - self.RAIL_PAD_W, self.RAIL_FOOT_Z), (0, 0, -1), (1, 0, 0)),
             ("REF cabinet", "Stow hook, upper"): self.panel_joint(self.STOW_HOOK_X0, self.STOW_UP_Z0),
             ("Stow hook, upper", "Cabinet"): self.panel_joint(self.STOW_HOOK_X0, self.STOW_UP_Z0),
             ("REF cabinet", "Stow hook, lower"): self.panel_joint(self.STOW_HOOK_X0, self.STOW_LO_Z0),

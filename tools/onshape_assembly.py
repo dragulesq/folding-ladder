@@ -79,11 +79,11 @@ INSTANCES = {
     **{f"Wave washer {i}": "Wave washer" for i in range(1, 7)},
     "Neoprene washer 1": "Neoprene washer", "Neoprene washer 2": "Neoprene washer",
     # Rubber.
-    "Rail foot pad": "Rail foot pad", "Step leg pad 1": "Step leg pad", "Step leg pad 2": "Step leg pad",
+    "Rail foot pad 1": "Rail foot pad", "Rail foot pad 2": "Rail foot pad", "Step leg pad 1": "Step leg pad", "Step leg pad 2": "Step leg pad",
     "Ledge strip": "Ledge strip", "Panel bumper 1": "Panel bumper", "Panel bumper 2": "Panel bumper",
     # Travel locks on the panel: the ledge and tapped block the plunger stands in, under the folded
     # rail's foot, and the hook plates and turn tab that hold the stowed hook-on step.
-    "Rail lock ledge": "Rail lock ledge", "Plunger block": "Plunger block",
+    "Rail lock ledge": "Rail lock ledge", "Plunger jam nut": "Plunger jam nut",
     "Stow hook, upper": "Stow hook, upper", "Stow hook, lower": "Stow hook, lower", "Stow tab": "Stow tab",
 }
 
@@ -168,14 +168,15 @@ for i, (leg, end) in enumerate((("Hook-on step leg 1", "Axle"), ("Hook-on step l
 HARDWARE += [
     (("Neoprene washer 1", "Tread"), ("Tread 3", "Cabinet axle")),
     (("Neoprene washer 2", "Tread"), ("Tread 3", "Outer axle")),
-    (("Rail foot pad", "Rail"), ("Outer rail", "Foot pad")),
+    (("Rail foot pad 1", "Rail"), ("Outer rail", "Foot pad, back")),
+    (("Rail foot pad 2", "Rail"), ("Outer rail", "Foot pad")),
     (("Step leg pad 1", "Leg"), ("Hook-on step leg 1", "Foot pad")),
     (("Step leg pad 2", "Leg"), ("Hook-on step leg 2", "Foot pad")),
     (("Ledge strip", "Ledge"), ("Step ledge", "Rubber strip")),
     (("Panel bumper 1", "Panel"), ("REF cabinet", "Bumper, top tread")),
     (("Panel bumper 2", "Panel"), ("REF cabinet", "Bumper, middle tread")),
     (("Rail lock ledge", "Cabinet"), ("REF cabinet", "Rail lock ledge")),
-    (("Plunger block", "Ledge"), ("REF cabinet", "Plunger")),
+    (("Plunger jam nut", "Ledge"), ("REF cabinet", "Plunger")),
     (("Stow hook, upper", "Cabinet"), ("REF cabinet", "Stow hook, upper")),
     (("Stow hook, lower", "Cabinet"), ("REF cabinet", "Stow hook, lower")),
     (("Stow tab", "Hook"), ("REF cabinet", "Stow tab")),
@@ -347,12 +348,22 @@ def plan(state=None):
     return instances, mcs
 
 
+STEP_BODIES = ("step", "cabinet-side leg", "outer leg")
+# The stowed step hinges on its lower pin in the lower hook plate, so it can be tipped in and out.
+STOW_HINGE = ("REVOLUTE", ("Tread 3", "Cabinet axle"), ("Stow hook, lower", "Pin"))
+
+
 def stowed(instances):
-    """The same instances where they sit with the stair folded and the step on its ledge, all fixed."""
+    """The same instances where they sit with the stair folded and the step on its ledge. Everything is
+    fixed except the hook-on step and its hardware, which hinge on the lower hook plate."""
     motions = {body: to_onshape(m) for body, m in Model().body_motions().items()}
     find = lead_of()
-    return {name: {**inst, "fixed": True, "transform": mul(motions[BODIES.get(find(name), "cabinet")], inst["transform"])}
-            for name, inst in instances.items()}
+    out = {}
+    for name, inst in instances.items():
+        body = BODIES.get(find(name), "cabinet")
+        out[name] = {**inst, "fixed": body not in STEP_BODIES, "stow_body": body,
+                     "transform": mul(motions[body], inst["transform"])}
+    return out
 
 
 def main():
@@ -360,7 +371,7 @@ def main():
     ap.add_argument("--state", help="state file (default: the project's shared folder if present)")
     ap.add_argument("--dry-run", action="store_true", help="print the plan without calling the API")
     ap.add_argument("--offline", action="store_true", help="with --dry-run: plan from tools/b3_model.py, not the state file")
-    ap.add_argument("--stowed", action="store_true", help="build B3 test Stowed: every part fixed in its stowed place (2 calls)")
+    ap.add_argument("--stowed", action="store_true", help="build B3 test Stowed: every part in its stowed place, the hook-on step hinged (5 calls)")
     ap.add_argument("--rebuild", action="store_true", help="delete the assembly in the state file and build a new one")
     ap.add_argument("--no-groups", action="store_true", help="fasten the hardware with mates instead of groups")
     args = ap.parse_args()
@@ -382,7 +393,7 @@ def main():
             print(f"{name:34} {inst['part']:32} at ({t[0][3] / 0.0254:7.3f}, {t[1][3] / 0.0254:7.3f}, {t[2][3] / 0.0254:7.3f}) in"
                   + ("  fixed" if inst["fixed"] else ""))
         if args.stowed:
-            print(f"{len(instances)} instances, all fixed, in {STOWED_NAME}")
+            print(f"{len(instances)} instances in {STOWED_NAME}; unfixed: {', '.join(n for n, i in instances.items() if not i['fixed'])}")
             return
         for kind, (a, an), (b, bn) in MATES:
             print(f"{kind:9} {a} ({an}) to {b} ({bn})")
@@ -392,6 +403,8 @@ def main():
         return
     try:
         if args.stowed:
+            global MCS_FOR_STOWED
+            MCS_FOR_STOWED = mcs
             build_stowed(st, instances, args.rebuild)
             return
         if args.no_groups:
@@ -424,8 +437,12 @@ def insert_groups(api, state, instances):
     return out
 
 
+MCS_FOR_STOWED = {}
+
+
 def build_stowed(st, instances, rebuild):
-    """Two calls: create the assembly, then insert every instance, fixed, where it sits stowed."""
+    """Five calls: create the assembly, insert every instance where it sits stowed, read it back,
+    group the hook-on step's parts and hinge them on the lower hook plate."""
     api, state = st.api, st.data
     asm = state.setdefault("stowed", {})
     if asm.get("inserted") and not rebuild:
@@ -449,11 +466,34 @@ def build_stowed(st, instances, rebuild):
         asm["id"] = api("POST", f"/assemblies{api.dw}", {"name": asm["name"]})["id"]
         print(f"created the assembly {asm['name']}")
         st.save()
-    api("POST", f"/assemblies{api.dw}/e/{asm['id']}/transformedinstances",
-        {"transformGroups": insert_groups(api, state, instances)})
-    asm["inserted"] = True
-    st.save()
-    print(f"{asm['name']}: {len(instances)} instances, all fixed in their stowed places")
+    path = f"/assemblies{api.dw}/e/{asm['id']}"
+    if not asm.get("inserted"):
+        api("POST", f"{path}/transformedinstances", {"transformGroups": insert_groups(api, state, instances)})
+        asm["inserted"] = True
+        st.save()
+    # The hook-on step: one group of its parts, and a hinge on its lower pin (3 calls).
+    step = [n for n, i in instances.items() if i.get("stow_body") in STEP_BODIES]
+    if step and not asm.get("hinged"):
+        ids = asm.get("instances") or match(api("GET", f"{path}?includeNonSolids=true"), instances, state)
+        asm["instances"] = ids
+        st.save()
+        if not asm.get("step_group"):
+            lead = STOW_HINGE[1][0]
+            members = [lead] + [n for n in step if n != lead]
+            r = api("POST", f"{path}/features", mate_group("Hook-on step, stowed", [ids[m] for m in members]))
+            print(f"group     Hook-on step, stowed ({len(members)} parts): {(r.get('featureState') or {}).get('featureStatus')}")
+            asm["step_group"] = r["feature"]["featureId"]
+            st.save()
+        kind, (a, an), (b, bn) = STOW_HINGE
+        queries = [{"btType": "BTMPartStudioMateConnectorQuery-1324", "path": [ids[i]],
+                    "featureId": MCS_FOR_STOWED[(instances[i]["part"], n)]["featureId"], "queryData": ""} for i, n in ((a, an), (b, bn))]
+        r = api("POST", f"{path}/features", mate("Step hinge, stowed", kind, queries))
+        status = (r.get("featureState") or {}).get("featureStatus")
+        print(f"revolute  Step hinge, stowed: {status}")
+        asm["hinged"] = status in ("OK", "INFO", "WARNING")
+        st.save()
+    print(f"{asm['name']}: {len(instances)} instances, fixed in their stowed places"
+          + (f"; the hook-on step ({len(step)} parts) hinges on its lower pin" if step else ""))
 
 
 def build(st, instances, mcs, rebuild):

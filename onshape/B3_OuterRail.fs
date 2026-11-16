@@ -89,7 +89,8 @@ export const b3OuterRail = defineFeature(function(context is Context, id is Id, 
         {
             const f = flanges[i];
             b3Flange(context, id + ("flange" ~ i), f[0], f[1], y0, fy1, f[2], f[3]);
-            const mid = (f[0] + f[1]) / 2;
+            // A point on each flange's outside face; on the foot, off the travel lock's hole at mid-foot.
+            const mid = i == 3 ? (f[0] * 3 + f[1]) / 4 : (f[0] + f[1]) / 2;
             outside = append(outside, vector(mid[0], (y1 + fy1) / 2, mid[1]));
         }
         b3Union(context, id + "join", b3Solids(id));
@@ -117,7 +118,8 @@ export const b3OuterRail = defineFeature(function(context is Context, id is Id, 
         b3Mc(context, id + "mcTop", rail, name, "Top tread bracket", b3RailBracketJoint(TREAD_TOP));
         b3Mc(context, id + "mcMiddle", rail, name, "Middle tread bracket", b3RailBracketJoint(TREAD_MIDDLE));
         b3Mc(context, id + "mcClip", rail, name, "Step clip", b3StepClipJoint());
-        b3Mc(context, id + "mcPad", rail, name, "Foot pad", b3RailPadJoint());
+        b3Mc(context, id + "mcPad", rail, name, "Foot pad", b3RailPadJoint(1));
+        b3Mc(context, id + "mcPadBack", rail, name, "Foot pad, back", b3RailPadJoint(0));
         for (var k = 0; k < size(CLIP_SCREW_X); k += 1)
         {
             b3Mc(context, id + ("mcNutClip" ~ k), rail, name, "Nut, clip " ~ (k + 1), b3ClipNutJoint(k));
