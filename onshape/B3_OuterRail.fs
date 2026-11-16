@@ -21,8 +21,7 @@ import(path : "onshape/std/common.fs", version : "2641.0");
  * cuts a round corner relief and the flanges' tips stay square. Every free
  * flange corner is rounded. The step tops are bare.
  *
- * Not modeled: the latch holes. The foot pad is its own part (B3 Bushings and
- * Pads).
+ * The foot pad is its own part (B3 Bushings and Pads).
  */
 annotation { "Feature Type Name" : "B3 Outer Rail" }
 export const b3OuterRail = defineFeature(function(context is Context, id is Id, definition is map)
@@ -102,15 +101,6 @@ export const b3OuterRail = defineFeature(function(context is Context, id is Id, 
         const reliefs = b3Solids(id + "riserRelief");
         b3Subtract(context, id + "cutRelief", qSubtraction(b3Solids(id), reliefs), reliefs);
 
-        // The draw latch's two base screws through the front flange (drill after
-        // bending: they sit closer to the bend than SendCutSend's die allows).
-        for (var k = 0; k < 2; k += 1)
-        {
-            b3CylX(context, id + ("latchHole" ~ k), LATCH_BASE_Y, LATCH_Z + (k - 0.5) * LATCH_BASE_DZ,
-                xf - PLATE_T - 0.05 * inch, xf + 0.05 * inch, LATCH_SCREW_DIA);
-        }
-        const latchHoles = qUnion([b3Solids(id + "latchHole0"), b3Solids(id + "latchHole1")]);
-        b3Subtract(context, id + "cutLatch", qSubtraction(b3Solids(id), latchHoles), latchHoles);
 
         b3SheetMetal(context, id + "sm", b3Solids(id), outside, PLATE_T, BEND_R_PLATE, K_PLATE);
 
@@ -121,7 +111,6 @@ export const b3OuterRail = defineFeature(function(context is Context, id is Id, 
         b3Mc(context, id + "mcMiddle", rail, name, "Middle tread bracket", b3RailBracketJoint(TREAD_MIDDLE));
         b3Mc(context, id + "mcClip", rail, name, "Step clip", b3StepClipJoint());
         b3Mc(context, id + "mcPad", rail, name, "Foot pad", b3RailPadJoint());
-        b3Mc(context, id + "mcLatch", rail, name, "Latch", b3LatchJoint());
         for (var k = 0; k < size(CLIP_SCREW_X); k += 1)
         {
             b3Mc(context, id + ("mcNutClip" ~ k), rail, name, "Nut, clip " ~ (k + 1), b3ClipNutJoint(k));

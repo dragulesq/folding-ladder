@@ -180,17 +180,11 @@ export function b3FrontAngleJoint() returns map
     return b3PanelJoint(FA_X1, FA_BOTTOM_Z);
 }
 
-// Draw latch body on the rail's front flange, open: between its two base
-// screws on the flange's outer face, z out of the face, x toward the strike.
-export function b3LatchJoint() returns map
+// The travel lock's pin line on the front lip of tread n, built where the top
+// tread sits: on the lip's outer face, z along the nose (toward the front).
+export function b3PlungerJoint(n is number) returns map
 {
-    return b3Joint(vector(2 * GOING, LATCH_BASE_Y, LATCH_Z), vector(1, 0, 0), vector(0, -1, 0));
-}
-
-// Its strike on the front angle's outward leg, between the strike's two screws.
-export function b3LatchStrikeJoint() returns map
-{
-    return b3Joint(vector(FA_X1, LATCH_STRIKE_Y, LATCH_Z + FOLD_DZ), vector(1, 0, 0), vector(0, -1, 0));
+    return b3Joint(vector(b3GoingX(n) + TRAY_INSET + TRAY_D, PLUNGER_Y, b3T(n) - PLUNGER_DROP), vector(1, 0, 0), vector(0, 1, 0));
 }
 
 // Step ledge on the panel: the leg's bottom corner at the bed end.
@@ -518,7 +512,7 @@ export function b3Flange(context is Context, id is Id, p is Vector, q is Vector,
 // as a sheet-metal part. Holes are in (y, z) and go through both lips. Both
 // bottom corners of each lip are rounded to LIP_CORNER_R.
 // ---------------------------------------------------------------------------
-export function b3Tray(context is Context, id is Id, x0 is ValueWithUnits, top is ValueWithUnits, holes is array)
+export function b3Tray(context is Context, id is Id, x0 is ValueWithUnits, top is ValueWithUnits, holes is array, frontHoles is array)
 {
     const y0 = TRAY_Y0;
     const y1 = TRAY_Y0 + TRAY_W;
@@ -528,7 +522,7 @@ export function b3Tray(context is Context, id is Id, x0 is ValueWithUnits, top i
         [0, 0, LIP_CORNER_R, LIP_CORNER_R]);
     b3Box(context, id + "skin", vector(x0, y0, top - SHEET_T), vector(x1, y1, top));
     b3PrismYZ(context, id + "lipBack", lip, holes, x0, x0 + SHEET_T);
-    b3PrismYZ(context, id + "lipFront", lip, holes, x1 - SHEET_T, x1);
+    b3PrismYZ(context, id + "lipFront", lip, concatenateArrays([holes, frontHoles]), x1 - SHEET_T, x1);
     b3Union(context, id + "join", b3Solids(id));
     const ym = (y0 + y1) / 2;
     b3SheetMetal(context, id + "sm", b3Solids(id), [

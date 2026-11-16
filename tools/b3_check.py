@@ -36,15 +36,29 @@ def checks(m):
                 f"aisle is {m.ENTRY_AISLE_W:.3f}, the step reaches {step_end - 2 * m.GOING:.3f} into it"))
     out.append(("Open rail to the shower wall, across the middle aisle", m.SHOWER_Y - tip, 12,
                 f"middle aisle runs y {m.DINETTE_Y1:.3f} to {m.SHOWER_Y:.3f}"))
-    # The draw latch: folded, its body on the rail's front flange, its strike on the front angle.
+    # The stowing lock: a spring plunger in a block on the middle tread's front lip, its nose
+    # through the lip and into a hole in the step clip's keyhole leg when the stair is folded.
     mo = m.body_motions()
-    base = apply(mo["rail"], (2 * m.GOING, m.LATCH_BASE_Y, m.LATCH_Z))
-    out.append(("Latch strike screws inside the front angle's outward leg", min(m.LATCH_STRIKE_Y, m.FA_OUT_LEG - m.LATCH_STRIKE_Y) - 0.25, 0,
-                f"strike at y {m.LATCH_STRIKE_Y:.3f}, latch base folded at y {base[1]:.3f}, {base[1] - m.LATCH_STRIKE_Y:.3f} apart"))
-    out.append(("Latch's adjustment either side of the drawn pitch", min(m.LATCH_PITCH - 2.31, 2.66 - m.LATCH_PITCH), 0.1,
-                "base to strike screws, about 2.31 to 2.66 over its 2 to 2 3/8 latching distance"))
-    out.append(("Latch top to the front angle's top", m.FA_TOP_Z - (m.LATCH_Z + m.FOLD_DZ + 0.555), 0, "the latch is 1 1/8 wide"))
-    out.append(("Latch bottom above the folded rail's front flange end", m.LATCH_Z - 0.555 - m.RAIL_FOOT_Z, 0.25, ""))
+    lip = apply(mo["middle tread"], m.plunger(TREAD_MIDDLE)["origin"])
+    clip = apply(mo["rail"], (m.CLIP_X0, m.PLUNGER_FOLD_Y - m.FOLD_DY, m.PLUNGER_FOLD_Z - m.FOLD_DZ))
+    off = math.hypot(lip[1] - clip[1], lip[2] - clip[2])
+    out.append(("Folded, the lip's plunger hole on the clip's", -off, -0.002 / MM,
+                f"lip hole at y {lip[1]:.4f} z {lip[2]:.4f}, clip hole at y {clip[1]:.4f} z {clip[2]:.4f}"))
+    hy, hz, r = m.PLUNGER_FOLD_Y - m.FOLD_DY, m.PLUNGER_FOLD_Z - m.FOLD_DZ, m.PLUNGER_CLIP_HOLE / 2
+    key = math.hypot(m.CLIP_KEYHOLE_Y - hy, m.CLIP_KEYHOLE_Z - hz) - m.KEYHOLE_DIA / 2 - r
+    out.append(("Clip's plunger hole to its keyhole", key, 0.125, ""))
+    edge = min(hy - m.CLIP_KEY_LEG_Y0, hz - m.CLIP_Z0, m.CLIP_Z0 + m.CLIP_H - hz) - r
+    out.append(("Clip's plunger hole to the keyhole leg's edges", edge, 0.125, ""))
+    lip_out, clip_in = lip[0], 2 * m.GOING - m.SHEET_T
+    need = (clip_in - lip_out) + m.SHEET_T
+    need = (clip_in - lip_out) + m.SHEET_T   # gap and clip: the nose's reach past the lip's outer face
+    setback = m.PLUNGER_NOSE - need           # thread end inside the lip's outer face, nose flush with the clip's
+    engaged = m.PLUNGER_BLOCK_T - (setback - m.SHEET_T)
+    out.append(("Plunger thread in the block, nose flush with the clip's outer face", engaged, 8 / MM,
+                f"nose travel {m.PLUNGER_NOSE * MM:.1f} mm reaches {need * MM:.2f} past the lip (gap {(clip_in - lip_out) * MM:.2f}, "
+                f"clip {m.SHEET_T * MM:.2f}), so the thread ends {setback * MM:.2f} mm inside the lip's outer face; add a jam nut"))
+    blk_top = m.T(TREAD_MIDDLE) - m.PLUNGER_DROP + m.PLUNGER_BLOCK_H / 2
+    out.append(("Plunger block under the lip's bend", m.T(TREAD_MIDDLE) - m.SHEET_T - m.BEND_R_SHEET - blk_top, 0, ""))
     head = m.T(TREAD_MIDDLE) - m.CAB_AXLE_DROP - m.END_WASHER_DIA / 2
     out.append(("Front angle top under the middle tread's axle washer", head - m.FA_TOP_Z, 0.125, ""))
     # The stack between a lip and its ear.

@@ -19,6 +19,9 @@ import(path : "onshape/std/common.fs", version : "2641.0");
  *   Rail foot pad (1), step leg pad (2), ledge strip (1): rubber under the
  *   rail's foot and the step legs' feet, and on the step ledge's shelf.
  *   Panel bumper (2): rubber, on the panel behind each folded tread.
+ *   Plunger block (1): aluminum, inside the middle tread's front lip, tapped
+ *   M10 for the 8501A58 spring plunger that locks the folded stair to the
+ *   step clip.
  * The pivot parts are built on the back end of the top tread's cabinet axle,
  * the neoprene washer on the step's cabinet-side pin, each pad where it is
  * used first. Their sizes come from the tube (AXLE_DIA, BUSHING_WALL) and the
@@ -96,6 +99,17 @@ export const b3BushingsAndPads = defineFeature(function(context is Context, id i
         b3PrismXY(context, id + "ledgeStrip", shelf, [], LEDGE_TOP_Z, LEDGE_TOP_Z + LEDGE_STRIP_T);
         b3FinishRubber(context, b3Solids(id + "ledgeStrip"), "Ledge strip");
         b3Mc(context, id + "mcLedgeStrip", b3Solids(id + "ledgeStrip"), "Ledge strip", "Ledge", b3LedgeStripJoint());
+
+        // The travel lock's block: aluminum, against the inside of the tread's front
+        // lip, tapped M10 for the plunger; two #8 screws through the lip (not modeled).
+        const pl = b3PlungerJoint(TREAD_TOP).origin;
+        const frontIn = pl[0] - SHEET_T;
+        b3Box(context, id + "plungerBlock", vector(frontIn - PLUNGER_BLOCK_T, pl[1] - PLUNGER_BLOCK_W / 2, pl[2] - PLUNGER_BLOCK_H / 2),
+            vector(frontIn, pl[1] + PLUNGER_BLOCK_W / 2, pl[2] + PLUNGER_BLOCK_H / 2));
+        b3CylX(context, id + "plungerTap", pl[1], pl[2], frontIn - PLUNGER_BLOCK_T - 1 * millimeter, frontIn + 1 * millimeter, PLUNGER_TAP);
+        b3Subtract(context, id + "plungerCut", b3Solids(id + "plungerBlock"), b3Solids(id + "plungerTap"));
+        b3Finish(context, b3Solids(id + "plungerBlock"), "Plunger block", RGB_ALU_DARK);
+        b3Mc(context, id + "mcPlungerBlock", b3Solids(id + "plungerBlock"), "Plunger block", "Tread", b3PlungerJoint(TREAD_TOP));
 
         // Rubber bumper on the panel behind the folded top tread, at its free height.
         const bumper = b3BumperJoint(TREAD_TOP);

@@ -40,6 +40,11 @@ class Model:
     def T(self, n):
         return (n + 1) * self.RISE
 
+    def plunger(self, n):
+        """The plunger's axis through tread n's front lip, at the lip's outer face (b3PlungerJoint)."""
+        return self.joint((self.going_x(n) + self.TRAY_INSET + self.TRAY_D, self.PLUNGER_Y, self.T(n) - self.PLUNGER_DROP),
+                          (1, 0, 0), (0, 1, 0))
+
     def going_x(self, n):
         return (2 - n) * self.GOING
 
@@ -146,8 +151,9 @@ class Model:
             ("Outer rail", "Middle tread bracket"): self.on_rail(mid, self.bracket(mid)),
             ("Outer rail", "Step clip"): self.step_clip(),
             ("Outer rail", "Foot pad"): self.rail_pad(),
-            ("Outer rail", "Latch"): self.joint((2 * self.GOING, self.LATCH_BASE_Y, self.LATCH_Z), (1, 0, 0), (0, -1, 0)),
             ("Step clip", "Outer rail"): self.step_clip(),
+            ("Tread", "Plunger"): self.plunger(top),
+            ("Plunger block", "Tread"): self.plunger(top),
             ("Tread axle", "Back end"): axle,
             ("Tread axle", "Front end"): self.joint((p[0] + self.TREAD_AXLE_LEN, p[1], p[2]), (1, 0, 0), (0, 1, 0)),
             ("Step axle", "Back end"): step_axle,
@@ -161,7 +167,6 @@ class Model:
             ("M6 nyloc nut", "Rail"): self.rail_nut(top, 0),
             ("Front angle", "Cabinet"): self.panel_joint(self.FA_X1, self.FA_BOTTOM_Z),
             ("Front angle", "Hook-on step"): self.cab_axle(step),
-            ("Front angle", "Latch strike"): self.joint((self.FA_X1, self.LATCH_STRIKE_Y, self.LATCH_Z + self.FOLD_DZ), (1, 0, 0), (0, -1, 0)),
             ("Step ledge", "Cabinet"): self.panel_joint(0, self.LEDGE_TOP_Z - self.LEDGE_LEG_H),
             ("Step ledge", "Rubber strip"): self.joint((0, 0, self.LEDGE_TOP_Z), (0, 0, 1), (1, 0, 0)),
             ("Hook-on step leg", "Axle"): self.cab_axle(step),

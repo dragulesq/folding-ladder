@@ -229,7 +229,7 @@ export const FA_PANEL_LEG_X0 = FA_X1 - (11 / 8) * inch;    // 10 1/8
 export const FA_PANEL_LEG_TOP = 16.5 * inch;
 export const FA_OUT_LEG = 2 * inch;                // along y
 export const FA_BOTTOM_Z = 1 * inch;
-export const FA_TOP_Z = 19.25 * inch;             // tall enough to carry the draw latch's strike beside the folded rail; 3/8 under the middle tread's axle screw head
+export const FA_TOP_Z = 18 * inch;
 export const FA_SCREW_X = FA_X1 - (19 / 32) * inch;  // 10 29/32, front post centerline (15 mm in from the frame's front)
 export const FA_SCREW_Z = [4.5 * inch, 12.25 * inch, 15.5 * inch];
 export const FA_SCREW_HOLE_DIA = (17 / 64) * inch;
@@ -237,19 +237,6 @@ export const FA_KEYHOLE_Y = CAB_AXLE_Y;            // 15/16, on the step's cabin
 export const FA_KEYHOLE_Z = (161 / 16) * inch;     // 10 1/16, hole center
 export const FA_KEYHOLE_END_Z = 9.5 * inch;        // slot's round end, 1/8 below the pin at 9 5/8
 export const FA_CORNER_R = R_OUTSIDE_SMALL;
-// Travel latch: McMaster 1864A17 adjustable draw latch, its body on the rail's
-// front flange and its strike on the front angle's outward leg. Folded, the
-// two faces are in one plane (x = 2 GOING), so the latch pulls the folded
-// stair straight in against the bumpers. #6 machine screws and nyloc nuts.
-export const FOLD_DY = -(CAB_AXLE_DROP - OUT_AXLE_DROP) - (OUT_AXLE_Y - CAB_AXLE_Y);   // the rail's move when folded: -14 15/16
-export const FOLD_DZ = (OUT_AXLE_Y - CAB_AXLE_Y) - (CAB_AXLE_DROP - OUT_AXLE_DROP);    // +16 11/16
-export const LATCH_SCREW_DIA = 0.15 * inch;        // #6 clearance
-export const LATCH_BASE_Y = RAIL_Y + PLATE_T + RAIL_FLANGE - (3 / 8) * inch;   // base screws on the rail's front flange, 3/8 in from its tip (open)
-export const LATCH_BASE_DZ = 0.562 * inch;         // base screws apart, along z
-export const LATCH_Z = (31 / 16) * inch;           // the latch's center line on the rail, open (18 5/8 folded)
-export const LATCH_PITCH = 2.45 * inch;            // base screws to strike screws, mid-way through its adjustment
-export const LATCH_STRIKE_Y = LATCH_BASE_Y + FOLD_DY - LATCH_PITCH;   // 1 1/8 on the front angle
-export const LATCH_STRIKE_DZ = 0.312 * inch;       // strike screws apart, along z
 export const FA_ENTRY_R = R_OUTSIDE_LARGE;         // outward leg's top outer corner (y 2, z 18), facing the entry
 
 // ---------------------------------------------------------------------------
@@ -264,6 +251,28 @@ export const CLIP_KEYHOLE_Y = OUT_AXLE_Y;          // 16 3/4, on the step's oute
 export const CLIP_KEYHOLE_Z = (147 / 16) * inch;   // 9 3/16, hole center
 export const CLIP_KEYHOLE_END_Z = (69 / 8) * inch; // 8 5/8, slot's round end, 1/8 below the pin at 8 3/4
 export const CLIP_CORNER_R = R_OUTSIDE_SMALL;      // the free corners of both legs
+
+// ---------------------------------------------------------------------------
+// Travel lock
+// ---------------------------------------------------------------------------
+// Travel lock: McMaster 8501A58 twist-lock spring plunger (M10, 6 mm nose,
+// 14 mm travel) in a tapped block inside the middle tread's front lip. Folded,
+// that lip lies 1/16 behind the step clip's keyhole leg, and the nose drops
+// through both into a hole in the clip, locking the fold. Extended, the nose
+// stops flush with the clip's outer face.
+export const FOLD_DY = -(CAB_AXLE_DROP - OUT_AXLE_DROP) - (OUT_AXLE_Y - CAB_AXLE_Y);   // the rail's move when folded: -14 15/16
+export const FOLD_DZ = (OUT_AXLE_Y - CAB_AXLE_Y) - (CAB_AXLE_DROP - OUT_AXLE_DROP);    // +16 11/16
+export const PLUNGER_FOLD_Y = 1 * inch;            // the pin's line, folded: out from the panel, 3/8 clear of the clip's keyhole
+export const PLUNGER_FOLD_Z = CLIP_Z0 + CLIP_H / 2 + FOLD_DZ;   // and up, mid-height on the clip's keyhole leg (25 5/8)
+export const PLUNGER_Y = PLUNGER_FOLD_Z - (2 * RISE - CAB_AXLE_DROP) + CAB_AXLE_Y;   // the same line on the open middle tread: 6 11/16 out
+export const PLUNGER_DROP = CAB_AXLE_DROP + PLUNGER_FOLD_Y - CAB_AXLE_Y;            // and 11/16 under the tread top
+export const PLUNGER_LIP_HOLE = 6.5 * millimeter;  // in the tread's front lip, for the nose
+export const PLUNGER_CLIP_HOLE = 6.2 * millimeter; // in the clip, close on the nose so the folded stair can't rattle
+export const PLUNGER_NOSE = 14 * millimeter;       // nose travel past the plunger's thread
+export const PLUNGER_TAP = 8.5 * millimeter;       // M10 x 1.5 tap drill
+export const PLUNGER_BLOCK_T = (5 / 8) * inch;     // along x, against the lip's inner face
+export const PLUNGER_BLOCK_W = 1 * inch;           // along y
+export const PLUNGER_BLOCK_H = (7 / 8) * inch;     // along z, clear of the lip's bend
 
 // ---------------------------------------------------------------------------
 // Step ledge
@@ -483,17 +492,11 @@ export function b3FrontAngleJoint() returns map
     return b3PanelJoint(FA_X1, FA_BOTTOM_Z);
 }
 
-// Draw latch body on the rail's front flange, open: between its two base
-// screws on the flange's outer face, z out of the face, x toward the strike.
-export function b3LatchJoint() returns map
+// The travel lock's pin line on the front lip of tread n, built where the top
+// tread sits: on the lip's outer face, z along the nose (toward the front).
+export function b3PlungerJoint(n is number) returns map
 {
-    return b3Joint(vector(2 * GOING, LATCH_BASE_Y, LATCH_Z), vector(1, 0, 0), vector(0, -1, 0));
-}
-
-// Its strike on the front angle's outward leg, between the strike's two screws.
-export function b3LatchStrikeJoint() returns map
-{
-    return b3Joint(vector(FA_X1, LATCH_STRIKE_Y, LATCH_Z + FOLD_DZ), vector(1, 0, 0), vector(0, -1, 0));
+    return b3Joint(vector(b3GoingX(n) + TRAY_INSET + TRAY_D, PLUNGER_Y, b3T(n) - PLUNGER_DROP), vector(1, 0, 0), vector(0, 1, 0));
 }
 
 // Step ledge on the panel: the leg's bottom corner at the bed end.
@@ -821,7 +824,7 @@ export function b3Flange(context is Context, id is Id, p is Vector, q is Vector,
 // as a sheet-metal part. Holes are in (y, z) and go through both lips. Both
 // bottom corners of each lip are rounded to LIP_CORNER_R.
 // ---------------------------------------------------------------------------
-export function b3Tray(context is Context, id is Id, x0 is ValueWithUnits, top is ValueWithUnits, holes is array)
+export function b3Tray(context is Context, id is Id, x0 is ValueWithUnits, top is ValueWithUnits, holes is array, frontHoles is array)
 {
     const y0 = TRAY_Y0;
     const y1 = TRAY_Y0 + TRAY_W;
@@ -831,7 +834,7 @@ export function b3Tray(context is Context, id is Id, x0 is ValueWithUnits, top i
         [0, 0, LIP_CORNER_R, LIP_CORNER_R]);
     b3Box(context, id + "skin", vector(x0, y0, top - SHEET_T), vector(x1, y1, top));
     b3PrismYZ(context, id + "lipBack", lip, holes, x0, x0 + SHEET_T);
-    b3PrismYZ(context, id + "lipFront", lip, holes, x1 - SHEET_T, x1);
+    b3PrismYZ(context, id + "lipFront", lip, concatenateArrays([holes, frontHoles]), x1 - SHEET_T, x1);
     b3Union(context, id + "join", b3Solids(id));
     const ym = (y0 + y1) / 2;
     b3SheetMetal(context, id + "sm", b3Solids(id), [
@@ -1074,7 +1077,8 @@ export const b3Treads = defineFeature(function(context is Context, id is Id, def
                 b3Hole(CAB_AXLE_Y, top - CAB_AXLE_DROP, HOLE_DIA),
                 b3Hole(OUT_AXLE_Y, top - OUT_AXLE_DROP, HOLE_DIA)
             ];
-        b3Tray(context, id + "tray", b3GoingX(n) + TRAY_INSET, top, holes);
+        // The travel lock's hole, in the front lip only; it is used on the middle tread.
+        b3Tray(context, id + "tray", b3GoingX(n) + TRAY_INSET, top, holes, [b3Hole(PLUNGER_Y, top - PLUNGER_DROP, PLUNGER_LIP_HOLE)]);
 
         const body = b3Solids(id + "tray");
         b3Finish(context, body, "Tread", RGB_ALU);
@@ -1083,6 +1087,7 @@ export const b3Treads = defineFeature(function(context is Context, id is Id, def
         // The same two axles from the front, for the bushings and washers at the front lip.
         b3Mc(context, id + "mcCabTurned", body, "Tread", "Cabinet axle, turned", b3CabAxleTurnedJoint(n));
         b3Mc(context, id + "mcOutTurned", body, "Tread", "Outer axle, turned", b3OutAxleTurnedJoint(n));
+        b3Mc(context, id + "mcPlunger", body, "Tread", "Plunger", b3PlungerJoint(n));
     });
 
 // ===========================================================================
@@ -1173,8 +1178,7 @@ export const b3CabinetBrackets = defineFeature(function(context is Context, id i
  * cuts a round corner relief and the flanges' tips stay square. Every free
  * flange corner is rounded. The step tops are bare.
  *
- * Not modeled: the latch holes. The foot pad is its own part (B3 Bushings and
- * Pads).
+ * The foot pad is its own part (B3 Bushings and Pads).
  */
 annotation { "Feature Type Name" : "B3 Outer Rail" }
 export const b3OuterRail = defineFeature(function(context is Context, id is Id, definition is map)
@@ -1254,15 +1258,6 @@ export const b3OuterRail = defineFeature(function(context is Context, id is Id, 
         const reliefs = b3Solids(id + "riserRelief");
         b3Subtract(context, id + "cutRelief", qSubtraction(b3Solids(id), reliefs), reliefs);
 
-        // The draw latch's two base screws through the front flange (drill after
-        // bending: they sit closer to the bend than SendCutSend's die allows).
-        for (var k = 0; k < 2; k += 1)
-        {
-            b3CylX(context, id + ("latchHole" ~ k), LATCH_BASE_Y, LATCH_Z + (k - 0.5) * LATCH_BASE_DZ,
-                xf - PLATE_T - 0.05 * inch, xf + 0.05 * inch, LATCH_SCREW_DIA);
-        }
-        const latchHoles = qUnion([b3Solids(id + "latchHole0"), b3Solids(id + "latchHole1")]);
-        b3Subtract(context, id + "cutLatch", qSubtraction(b3Solids(id), latchHoles), latchHoles);
 
         b3SheetMetal(context, id + "sm", b3Solids(id), outside, PLATE_T, BEND_R_PLATE, K_PLATE);
 
@@ -1273,7 +1268,6 @@ export const b3OuterRail = defineFeature(function(context is Context, id is Id, 
         b3Mc(context, id + "mcMiddle", rail, name, "Middle tread bracket", b3RailBracketJoint(TREAD_MIDDLE));
         b3Mc(context, id + "mcClip", rail, name, "Step clip", b3StepClipJoint());
         b3Mc(context, id + "mcPad", rail, name, "Foot pad", b3RailPadJoint());
-        b3Mc(context, id + "mcLatch", rail, name, "Latch", b3LatchJoint());
         for (var k = 0; k < size(CLIP_SCREW_X); k += 1)
         {
             b3Mc(context, id + ("mcNutClip" ~ k), rail, name, "Nut, clip " ~ (k + 1), b3ClipNutJoint(k));
@@ -1315,7 +1309,9 @@ export const b3StepClip = defineFeature(function(context is Context, id is Id, d
 
         // Keyhole leg, outer face flush with x = 12.
         b3PrismYZ(context, id + "keyLeg", b3Rounded(b3Rect(CLIP_KEY_LEG_Y0, z0, RAIL_Y, z1), [r, 0, 0, r]),
-            [b3Keyhole(CLIP_KEYHOLE_Y, CLIP_KEYHOLE_Z, CLIP_KEYHOLE_END_Z)], x1 - SHEET_T, x1);
+            [b3Keyhole(CLIP_KEYHOLE_Y, CLIP_KEYHOLE_Z, CLIP_KEYHOLE_END_Z),
+                // The travel lock's pin drops in here when the stair is folded.
+                b3Hole(PLUNGER_FOLD_Y - FOLD_DY, PLUNGER_FOLD_Z - FOLD_DZ, PLUNGER_CLIP_HOLE)], x1 - SHEET_T, x1);
         b3Union(context, id + "join", b3Solids(id));
 
         // Sheet metal: the face against the rail, then the keyhole leg's outer face.
@@ -1445,6 +1441,9 @@ function b3Axle(context is Context, id is Id, tip is map, len is ValueWithUnits,
  *   Rail foot pad (1), step leg pad (2), ledge strip (1): rubber under the
  *   rail's foot and the step legs' feet, and on the step ledge's shelf.
  *   Panel bumper (2): rubber, on the panel behind each folded tread.
+ *   Plunger block (1): aluminum, inside the middle tread's front lip, tapped
+ *   M10 for the 8501A58 spring plunger that locks the folded stair to the
+ *   step clip.
  * The pivot parts are built on the back end of the top tread's cabinet axle,
  * the neoprene washer on the step's cabinet-side pin, each pad where it is
  * used first. Their sizes come from the tube (AXLE_DIA, BUSHING_WALL) and the
@@ -1523,6 +1522,17 @@ export const b3BushingsAndPads = defineFeature(function(context is Context, id i
         b3FinishRubber(context, b3Solids(id + "ledgeStrip"), "Ledge strip");
         b3Mc(context, id + "mcLedgeStrip", b3Solids(id + "ledgeStrip"), "Ledge strip", "Ledge", b3LedgeStripJoint());
 
+        // The travel lock's block: aluminum, against the inside of the tread's front
+        // lip, tapped M10 for the plunger; two #8 screws through the lip (not modeled).
+        const pl = b3PlungerJoint(TREAD_TOP).origin;
+        const frontIn = pl[0] - SHEET_T;
+        b3Box(context, id + "plungerBlock", vector(frontIn - PLUNGER_BLOCK_T, pl[1] - PLUNGER_BLOCK_W / 2, pl[2] - PLUNGER_BLOCK_H / 2),
+            vector(frontIn, pl[1] + PLUNGER_BLOCK_W / 2, pl[2] + PLUNGER_BLOCK_H / 2));
+        b3CylX(context, id + "plungerTap", pl[1], pl[2], frontIn - PLUNGER_BLOCK_T - 1 * millimeter, frontIn + 1 * millimeter, PLUNGER_TAP);
+        b3Subtract(context, id + "plungerCut", b3Solids(id + "plungerBlock"), b3Solids(id + "plungerTap"));
+        b3Finish(context, b3Solids(id + "plungerBlock"), "Plunger block", RGB_ALU_DARK);
+        b3Mc(context, id + "mcPlungerBlock", b3Solids(id + "plungerBlock"), "Plunger block", "Tread", b3PlungerJoint(TREAD_TOP));
+
         // Rubber bumper on the panel behind the folded top tread, at its free height.
         const bumper = b3BumperJoint(TREAD_TOP);
         const bp = bumper.origin;
@@ -1557,7 +1567,6 @@ function b3Bushing(context is Context, id is Id, y is ValueWithUnits, z is Value
  * of the bare edge. The outward leg is flush with the front edge and carries
  * the keyhole for the hook-on step's cabinet-side pin. Corners are rounded
  * 1/4", and 1/2" on the outward leg's top outer corner, which faces the entry.
- * Not modeled: the keeper holes (drill to suit the latch).
  */
 annotation { "Feature Type Name" : "B3 Front Angle" }
 export const b3FrontAngle = defineFeature(function(context is Context, id is Id, definition is map)
@@ -1584,11 +1593,8 @@ export const b3FrontAngle = defineFeature(function(context is Context, id is Id,
                 vector(stepBack, FA_PANEL_LEG_TOP),
                 vector(0 * inch, FA_PANEL_LEG_TOP)
             ];
-        const strikeZ = LATCH_Z + FOLD_DZ;
         b3PrismYZ(context, id + "outLeg", b3Rounded(outLeg, [0, r, FA_ENTRY_R, r, 0, 0]),
-            [b3Keyhole(FA_KEYHOLE_Y, FA_KEYHOLE_Z, FA_KEYHOLE_END_Z),
-                b3Hole(LATCH_STRIKE_Y, strikeZ - LATCH_STRIKE_DZ / 2, LATCH_SCREW_DIA),
-                b3Hole(LATCH_STRIKE_Y, strikeZ + LATCH_STRIKE_DZ / 2, LATCH_SCREW_DIA)], FA_X1 - SHEET_T, FA_X1);
+            [b3Keyhole(FA_KEYHOLE_Y, FA_KEYHOLE_Z, FA_KEYHOLE_END_Z)], FA_X1 - SHEET_T, FA_X1);
         b3Union(context, id + "join", b3Solids(id));
 
         // Sheet metal: the panel leg's face on the panel, then the outward leg's outer face.
@@ -1602,7 +1608,6 @@ export const b3FrontAngle = defineFeature(function(context is Context, id is Id,
         b3Finish(context, body, name, RGB_ALU_DARK);
         b3Mc(context, id + "mcCabinet", body, name, "Cabinet", b3FrontAngleJoint());
         b3Mc(context, id + "mcStep", body, name, "Hook-on step", b3CabAxleJoint(HOOK_STEP));
-        b3Mc(context, id + "mcStrike", body, name, "Latch strike", b3LatchStrikeJoint());
     });
 
 // ===========================================================================
