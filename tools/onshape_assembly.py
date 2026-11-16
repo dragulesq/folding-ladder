@@ -68,6 +68,9 @@ INSTANCES = {
     **{f"M6 fender washer {i}": "M6 fender washer" for i in range(1, 13)},
     **{f"M6 button-head screw {i}": "M6 button-head screw" for i in range(1, 15)},
     **{f"M6 flat-head screw {i}": "M6 flat-head screw" for i in range(1, 9)},
+    # The cabinet brackets' screws into the 8020, through the side panel: the same part, swapped
+    # for the longer McMaster screw below.
+    **{f"M6 x 25 flat-head screw {i}": "M6 flat-head screw" for i in range(1, 9)},
     **{f"M6 nyloc nut {i}": "M6 nyloc nut" for i in range(1, 11)},
     # Pivot stacks: lip bushings 1 to 12 in the three trays' lips, 13 to 16 in the step legs' ears.
     **{f"Lip bushing {i}": "Lip bushing" for i in range(1, 17)},
@@ -128,6 +131,10 @@ for b, row in (("Bracket 3", "top"), ("Bracket 4", "middle")):
             ((f"M6 flat-head screw {i}", "Head"), (b, f"Screw {k}")),
             ((f"M6 nyloc nut {i}", "Rail"), ("Outer rail", f"Nut, {row} {k}")),
         ]
+# Four flat-head screws through each cabinet bracket into the 8020.
+for b in (1, 2):
+    for k in range(1, 5):
+        HARDWARE.append(((f"M6 x 25 flat-head screw {4 * (b - 1) + k}", "Head"), (f"Bracket {b}", f"Screw {k}")))
 # Two button-head screws through the step clip, with a nyloc nut on the rail's outer face.
 for k in range(1, 3):
     HARDWARE += [
@@ -165,6 +172,52 @@ HARDWARE += [
     (("Panel bumper 2", "Panel"), ("REF cabinet", "Bumper, middle tread")),
 ]
 
+# Bought parts imported into the document (McMaster's models), used in place of the modeled ones:
+# instance name prefix -> import key in the state file's "imports". Each import there gives its
+# Part Studio, its part ids and a frame in its own coordinates that matches the mate connector the
+# modeled part is placed by, so the bought part lands where the modeled one would.
+SWAPS = [
+    ("M6 flat-head screw ", "92125A240"),
+    ("M6 x 25 flat-head screw ", "92125A242"),
+    *((f"M6 button-head screw {i}", "92095A226") for i in range(1, 13)),
+    *((f"M6 button-head screw {i}", "92095A238") for i in (13, 14)),
+    ("M6 fender washer ", "94316A560"),
+    ("M6 nyloc nut ", "93625A250"),
+    ("Wave washer ", "1775N12"),
+]
+# The connector each swapped part is placed by, in the modeled part's Part Studio.
+SWAP_CONNECTOR = {"M6 flat-head screw": "Head", "M6 button-head screw": "Washer", "M6 fender washer": "Axle",
+                  "M6 nyloc nut": "Rail", "Wave washer": "Axle"}
+# A second part of an import (the nut's nylon insert) -> the instance it goes with.
+EXTRA = {}
+
+
+def swap_key(name):
+    for prefix, key in SWAPS:
+        if name == prefix or (prefix.endswith(" ") and name.startswith(prefix) and name[len(prefix):].isdigit()):
+            return key
+    return None
+
+
+def swapped(instances, mcs, imports):
+    """The instances with McMaster's parts in place of the modeled hardware, where the document has them."""
+    out = {}
+    for name, inst in instances.items():
+        key = swap_key(name)
+        if key not in imports:
+            out[name] = inst
+            continue
+        imp = imports[key]
+        t = mul(mul(inst["transform"], frame(mcs[(inst["part"], SWAP_CONNECTOR[inst["part"]])])), inverse(frame(imp["frame"])))
+        for j, pid in enumerate(imp["parts"]):
+            n = name if j == 0 else f"{name}, part {j + 1}"
+            out[n] = {**inst, "part": imp["name"], "element": imp["element"], "partId": pid, "transform": t,
+                      "composite": imp.get("composite", False)}
+            if j:
+                EXTRA[n] = name
+    return out
+
+
 # Which rigid body of the fold each part belongs to (tools/b3_model.py moves the bodies). Hardware
 # goes with the part it is fixed to; everything not listed stays on the cabinet.
 BODIES = {
@@ -185,6 +238,8 @@ def lead_of():
 
     for (child, _), (parent, _) in HARDWARE:
         root[find(child)] = find(parent)
+    for extra, with_ in EXTRA.items():
+        root[find(extra)] = find(with_)
     return find
 
 
@@ -192,7 +247,7 @@ def groups():
     """The hardware's groups: [(name, [instances])], each led by the part the rest is fixed to."""
     find = lead_of()
     members = {}
-    for i in [i for (c, _), (p, _) in HARDWARE for i in (p, c)]:
+    for i in [i for (c, _), (p, _) in HARDWARE for i in (p, c)] + list(EXTRA):
         members.setdefault(find(i), [])
         if i not in members[find(i)]:
             members[find(i)].append(i)
@@ -261,6 +316,8 @@ def plan(state=None):
     unplaced = [i for i in INSTANCES if i not in instances]
     if unplaced:
         sys.exit(f"No mate places {', '.join(unplaced)}")
+    if state is not None and state.get("imports"):
+        instances = swapped(instances, mcs, state["imports"])
     return instances, mcs
 
 
@@ -329,8 +386,12 @@ def insert_groups(api, state, instances):
     out = []
     for inst in instances.values():
         ps = state["part_studios"][inst["studio"]]
-        params = {"documentId": api.did, "elementId": ps["id"], "partId": ps["parts"][inst["part"]],
+        params = {"documentId": api.did, "elementId": inst.get("element", ps["id"]),
+                  "partId": inst.get("partId") or ps["parts"][inst["part"]],
                   "isAssembly": False, "isWholePartStudio": False}
+        if inst.get("composite"):
+            # McMaster's models import as composite parts, which an insert skips unless asked for.
+            params["includePartTypes"] = ["PARTS", "COMPOSITE_PARTS"]
         if inst["fixed"]:
             params["isFixed"] = True
         out.append({"instances": [params], "transform": flat(inst["transform"])})
@@ -413,7 +474,7 @@ def build(st, instances, mcs, rebuild):
             asm["inserted"] = True
             st.save()
         # Match the new instances to the plan by part and position.
-        asm["instances"] = match(api("GET", path), instances, state)
+        asm["instances"] = match(api("GET", f"{path}?includeNonSolids=true"), instances, state)
         st.save()
     ids = asm["instances"]
 
@@ -469,7 +530,7 @@ def build(st, instances, mcs, rebuild):
 
 def moved_instances(api, path, instances, ids):
     """One call: the instances that are not where the plan put them."""
-    d = api("GET", path)
+    d = api("GET", f"{path}?includeNonSolids=true")
     where = {tuple(o["path"]): o["transform"] for o in d["rootAssembly"].get("occurrences", [])}
     moved = []
     for name, inst in instances.items():
@@ -491,7 +552,8 @@ def match(definition, instances, state):
             if name in found:
                 continue
             ps = state["part_studios"][plan_inst["studio"]]
-            if (inst.get("elementId") == ps["id"] and inst.get("partId") == ps["parts"][plan_inst["part"]]
+            if (inst.get("elementId") == plan_inst.get("element", ps["id"])
+                    and inst.get("partId") == (plan_inst.get("partId") or ps["parts"][plan_inst["part"]])
                     and t and max(abs(p - q) for p, q in zip(t, flat(plan_inst["transform"]))) < 1e-6):
                 found[name] = inst["id"]
                 break
