@@ -34,7 +34,7 @@ STUDIO_NAME = "B3 test AllInOne"
 # Part Studio key in the state file -> (tab name, the features it holds).
 PART_STUDIOS = {
     "parts": ("B3 test Part Studio", ["b3Treads", "b3CabinetBrackets", "b3OuterRail", "b3StepClip",
-                                      "b3PivotHardware", "b3BushingsAndPads", "b3FrontAngle", "b3StepLedge",
+                                      "b3PivotHardware", "b3BushingsAndPads", "b3StepLedge",
                                       "b3HookOnStep", "b3StowLocks"]),
     "surroundings": ("B3 test Surroundings", ["b3Reference"]),
 }

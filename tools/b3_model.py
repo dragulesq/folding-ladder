@@ -96,24 +96,29 @@ class Model:
 
     def rail_nut(self, n, k):
         hole = self.on_rail(n, self.bracket_screw(n, k))["origin"]
-        return self.joint((hole[0], self.RAIL_Y + self.PLATE_T, hole[2]), (0, 1, 0), (1, 0, 0))
+        return self.joint((hole[0], self.RAIL_Y + self.RAIL_T, hole[2]), (0, 1, 0), (1, 0, 0))
 
     def stop_pin(self, n, front):
         f = self.ear_faces(n)
         x = f[1] - self.PLATE_T if front else f[0] + self.PLATE_T
         return self.joint((x, self.STOP_PIN_Y, self.T(n) - self.STOP_PIN_DROP), (1 if front else -1, 0, 0), (0, 1, 0))
 
+    def clip_mount(self):
+        """The cabinet's step clip, where the part is built: the middle of its bend on the panel."""
+        return self.panel_joint(2 * self.GOING, self.CLIP_CAB_Z)
+
     def step_clip(self):
-        return self.joint((self.CLIP_X0, self.RAIL_Y, self.CLIP_Z0), (0, -1, 0), (1, 0, 0))
+        """The rail's step clip: the same point on the rail's inner face, which turns the clip upside down."""
+        return self.joint((2 * self.GOING, self.RAIL_Y, self.CLIP_RAIL_Z), (0, -1, 0), (1, 0, 0))
 
     def clip_screw(self, k):
-        return self.joint((self.CLIP_SCREW_X[k], self.RAIL_Y - self.SHEET_T, self.CLIP_SCREW_Z), (0, -1, 0), (1, 0, 0))
+        return self.joint((self.CLIP_HOLE_X, self.SHEET_T, self.CLIP_CAB_Z + (-1 if k == 0 else 1) * self.CLIP_HOLE_DZ), (0, 1, 0), (1, 0, 0))
 
     def clip_nut(self, k):
-        return self.joint((self.CLIP_SCREW_X[k], self.RAIL_Y + self.PLATE_T, self.CLIP_SCREW_Z), (0, 1, 0), (1, 0, 0))
+        return self.joint((self.CLIP_HOLE_X, self.RAIL_Y + self.RAIL_T, self.CLIP_RAIL_Z + (1 if k == 0 else -1) * self.CLIP_HOLE_DZ), (0, 1, 0), (1, 0, 0))
 
     def rail_pad(self):
-        return self.joint((self.RAIL_PAD_X0[1], self.RAIL_Y + self.PLATE_T + self.RAIL_FLANGE - self.RAIL_PAD_W, self.RAIL_FOOT_Z),
+        return self.joint((self.RAIL_PAD_X0[1], self.RAIL_Y + self.RAIL_T + self.RAIL_FLANGE - self.RAIL_PAD_W, self.RAIL_FOOT_Z),
                           (0, 0, -1), (1, 0, 0))
 
     def step_pad(self):
@@ -133,7 +138,7 @@ class Model:
         c = {
             ("REF cabinet", "Bracket, top tread"): self.bracket(top),
             ("REF cabinet", "Bracket, middle tread"): self.bracket(mid),
-            ("REF cabinet", "Front angle"): self.panel_joint(self.FA_X1, self.FA_BOTTOM_Z),
+            ("REF cabinet", "Step clip"): self.clip_mount(),
             ("REF cabinet", "Step ledge"): self.panel_joint(0, self.LEDGE_TOP_Z - self.LEDGE_LEG_H),
             ("REF cabinet", "Bumper, top tread"): self.bumper(top),
             ("REF cabinet", "Bumper, middle tread"): self.bumper(mid),
@@ -150,13 +155,14 @@ class Model:
             ("Outer rail", "Middle tread bracket"): self.on_rail(mid, self.bracket(mid)),
             ("Outer rail", "Step clip"): self.step_clip(),
             ("Outer rail", "Foot pad"): self.rail_pad(),
-            ("Step clip", "Outer rail"): self.step_clip(),
+            ("Step clip", "Mount"): self.clip_mount(),
+            ("Step clip", "Hook-on step"): self.cab_axle(step),
             ("REF cabinet", "Stow bracket"): self.panel_joint(self.STOW_HOOK_X0, self.STOW_BRACKET_Z0),
             ("Stow bracket", "Cabinet"): self.panel_joint(self.STOW_HOOK_X0, self.STOW_BRACKET_Z0),
             ("REF cabinet", "Plunger"): self.lock_plunger(),
             ("Plunger jam nut", "Ledge"): self.lock_plunger(),
             ("Stow hook, lower", "Pin"): self.joint((self.STOW_PIN_X, self.STOW_PIN_LO_Y, self.STOW_PIN_LO_Z), (1, 0, 0), (0, 0, 1)),
-            ("Outer rail", "Foot pad, back"): self.joint((self.RAIL_PAD_X0[0], self.RAIL_Y + self.PLATE_T + self.RAIL_FLANGE - self.RAIL_PAD_W, self.RAIL_FOOT_Z), (0, 0, -1), (1, 0, 0)),
+            ("Outer rail", "Foot pad, back"): self.joint((self.RAIL_PAD_X0[0], self.RAIL_Y + self.RAIL_T + self.RAIL_FLANGE - self.RAIL_PAD_W, self.RAIL_FOOT_Z), (0, 0, -1), (1, 0, 0)),
             ("REF cabinet", "Stow hook, lower"): self.panel_joint(self.STOW_HOOK_X0, self.STOW_LO_Z0),
             ("Stow hook, lower", "Cabinet"): self.panel_joint(self.STOW_HOOK_X0, self.STOW_LO_Z0),
             ("Outer rail", "Step bumper"): self.joint((self.RAIL_BUMPER_X, self.RAIL_Y, self.RAIL_BUMPER_Z), (0, -1, 0), (1, 0, 0)),
@@ -171,8 +177,6 @@ class Model:
             ("Stop pin", "Bracket"): self.stop_pin(top, False),
             ("M6 flat-head screw", "Head"): self.on_rail(top, self.bracket_screw(top, 0)),
             ("M6 nyloc nut", "Rail"): self.rail_nut(top, 0),
-            ("Front angle", "Cabinet"): self.panel_joint(self.FA_X1, self.FA_BOTTOM_Z),
-            ("Front angle", "Hook-on step"): self.cab_axle(step),
             ("Step ledge", "Cabinet"): self.panel_joint(0, self.LEDGE_TOP_Z - self.LEDGE_LEG_H),
             ("Step ledge", "Rubber strip"): self.joint((0, 0, self.LEDGE_TOP_Z), (0, 0, 1), (1, 0, 0)),
             ("Hook-on step leg", "Axle"): self.cab_axle(step),
@@ -196,7 +200,7 @@ class Model:
             c[("Bracket", f"Screw {k + 1}")] = self.bracket_screw(top, k)
             c[("Outer rail", f"Nut, top {k + 1}")] = self.rail_nut(top, k)
             c[("Outer rail", f"Nut, middle {k + 1}")] = self.rail_nut(mid, k)
-        for k in range(len(self.CLIP_SCREW_X)):
+        for k in range(2):
             c[("Outer rail", f"Nut, clip {k + 1}")] = self.clip_nut(k)
             c[("Step clip", f"Screw {k + 1}")] = self.clip_screw(k)
         return c

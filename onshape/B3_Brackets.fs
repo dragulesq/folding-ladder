@@ -8,7 +8,7 @@ import(path : "onshape/std/common.fs", version : "2641.0");
 
 /*
  * B3 Bracket, 3/16" sheet-metal part, used four times. The 5 1/8 x 2 web
- * has four M6 holes (countersinks not modeled); a hook-shaped ear is bent 90
+ * has three M6 holes (countersinks not modeled); a hook-shaped ear is bent 90
  * degrees off each end to carry a tread axle. Two sit on the cabinet panel,
  * ears toward the room, with a stop pin through each ear. The other two are
  * the same part turned to face the cabinet and bolted inside the outer rail

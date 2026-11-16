@@ -21,7 +21,6 @@ ORDER = [
     "B3_StepClip.fs",
     "B3_PivotHardware.fs",
     "B3_BushingsPads.fs",
-    "B3_FrontAngle.fs",
     "B3_StepLedge.fs",
     "B3_HookOnStep.fs",
     "B3_StowLocks.fs",

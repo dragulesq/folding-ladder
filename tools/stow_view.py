@@ -69,17 +69,18 @@ def parts(m):
             out.append(("step", body, (xs + m.TRAY_INSET + m.SHEET_T, xs + m.TRAY_INSET + m.TRAY_D - m.SHEET_T, ya, yb, z0, m.STEP_LEG_TOP_Z)))
     # Rail: flanges' outline and the plate, the step clip and the foot pad ride with it.
     top = m.T(TREAD_TOP) - m.RAIL_STEP_DROP
-    y1 = m.RAIL_Y + m.PLATE_T
+    y1 = m.RAIL_Y + m.RAIL_T
     out.append(("rail", "rail", (0, 2 * m.GOING, m.RAIL_Y, y1 + m.RAIL_FLANGE, m.RAIL_FOOT_Z, top)))
     out.append(("fixed", "rail", (m.CLIP_X0, 2 * m.GOING, m.CLIP_KEY_LEG_Y0, m.RAIL_Y, m.CLIP_Z0, m.CLIP_Z0 + m.CLIP_H)))
     out.append(("rubber", "rail", (m.RAIL_FOOT_X, 2 * m.GOING, y1 + m.RAIL_FLANGE - m.RAIL_PAD_W, y1 + m.RAIL_FLANGE,
                                    m.RAIL_FOOT_Z - m.RAIL_PAD_T, m.RAIL_FOOT_Z)))
-    # Fixed to the cabinet: the step's ledge with its rubber strip, and the front angle.
+    # Fixed to the cabinet: the step's ledge with its rubber strip, and the cabinet's step clip.
     out.append(("fixed", "cabinet", (0, m.LEDGE_LEN, 0, m.LEDGE_SHELF, m.LEDGE_TOP_Z - m.SHEET_T, m.LEDGE_TOP_Z)))
     out.append(("fixed", "cabinet", (0, m.LEDGE_LEN, 0, m.SHEET_T, m.LEDGE_TOP_Z - m.LEDGE_LEG_H, m.LEDGE_TOP_Z)))
     out.append(("rubber", "cabinet", (0, m.LEDGE_LEN, 0, m.LEDGE_SHELF, m.LEDGE_TOP_Z, m.LEDGE_TOP_Z + m.LEDGE_STRIP_T)))
-    out.append(("fixed", "cabinet", (m.FA_PANEL_LEG_X0, m.FA_X1, 0, m.SHEET_T, m.FA_BOTTOM_Z, m.FA_TOP_Z)))
-    out.append(("fixed", "cabinet", (m.FA_X1 - m.SHEET_T, m.FA_X1, 0, m.FA_OUT_LEG, m.FA_BOTTOM_Z, m.FA_TOP_Z)))
+    xf, zc = 2 * m.GOING, m.CLIP_CAB_Z
+    out.append(("fixed", "cabinet", (m.CLIP_X0, xf, 0, m.SHEET_T, zc - m.CLIP_MOUNT_H / 2, zc + m.CLIP_MOUNT_H / 2)))
+    out.append(("fixed", "cabinet", (xf - m.SHEET_T, xf, 0, m.CLIP_KEY_LEG, zc - m.CLIP_KEY_H / 2, zc + m.CLIP_KEY_H / 2)))
     return out
 
 
@@ -238,8 +239,9 @@ def rail_view(m):
     for (a0, z0), (a1, z1) in ((pts[6], pts[0]), (pts[1], pts[2]), (pts[5], pts[6]), (pts[4], pts[5]), (pts[3], pts[4])):
         v.line("bend", a0, z0, a1, z1)
     r = m.SCREW_HOLE_DIA / 2
-    holes = [m.rail_nut(n, k)["origin"] for n in (TREAD_TOP, TREAD_MIDDLE) for k in range(4)]
-    holes = [(h[0], h[2]) for h in holes] + [(x, m.CLIP_SCREW_Z) for x in m.CLIP_SCREW_X]
+    holes = [m.rail_nut(n, k)["origin"] for n in (TREAD_TOP, TREAD_MIDDLE) for k in range(len(m.SCREW_X))]
+    nb = len(holes) // 2
+    holes = [(h[0], h[2]) for h in holes] + [(m.clip_nut(k)["origin"][0], m.clip_nut(k)["origin"][2]) for k in range(2)]
     for x, z in holes:
         v.out.append(f'<circle class="hole" cx="{v.X(x):.1f}" cy="{v.Z(z):.1f}" r="{r * v.s:.1f}"/>')
     sx, sz, sl, sh = m.HAND_SLOT_X, m.HAND_SLOT_Z, m.HAND_SLOT_L, m.HAND_SLOT_H
@@ -257,10 +259,10 @@ def rail_view(m):
     v.vdim(xf + 1.2, mid, top, frac(top - mid), 1)
     v.vdim(xf + 4.6, 0, foot_z, f"{frac(foot_z)} pad", 1)
     v.text("lbl", m.GOING + 0.5, sz, f"hand slot {frac(sl)} x {frac(sh)}, center {frac(sz)} up", "start", 0, 4)
-    v.text("lbl", m.GOING + 0.5, holes[0][1], f"4 holes {m.SCREW_HOLE_DIA * 25.4:.1f} mm, 1\" apart, {frac(holes[0][1])} up", "start", 0, 4)
-    v.text("lbl", 1.5 * m.GOING, holes[4][1] - 1.2, f"4 holes, {frac(holes[4][1])} up", "middle")
-    v.text("lbl", (holes[8][0] + holes[9][0]) / 2, holes[8][1] - 1.2, f"2 clip holes, {frac(m.CLIP_SCREW_Z)} up", "middle")
-    v.text("lbl", -6.0, -2.4, f'{frac(m.PLATE_T)} 5052. Thick edges carry a {frac(f)} flange bent toward the room.', "start")
+    v.text("lbl", m.GOING + 0.5, holes[0][1], f"{nb} holes {m.SCREW_HOLE_DIA * 25.4:.1f} mm, {frac(m.SCREW_X[1] - m.SCREW_X[0])} apart, {frac(holes[0][1])} up", "start", 0, 4)
+    v.text("lbl", 1.5 * m.GOING, holes[nb][1] - 1.2, f"{nb} holes, {frac(holes[nb][1])} up", "middle")
+    v.text("lbl", holes[-1][0] - 0.5, m.CLIP_RAIL_Z, f"2 clip holes, {frac(m.CLIP_HOLE_DZ * 2)} apart, center {frac(m.CLIP_RAIL_Z)} up", "end", 0, 4)
+    v.text("lbl", -6.0, -2.4, f'{frac(m.RAIL_T)} 5052. Thick edges carry a {frac(f)} flange bent toward the room.', "start")
     return v.svg()
 
 
@@ -285,7 +287,7 @@ def plan_view(m):
         if body in ("top tread", "middle tread", "step", "rail") and cls in ("tread", "step", "rail"):
             e = moved(box, open_[body])
             R(cls, e[0], e[1], e[2], e[3], NAMES[body].split(",")[0])
-    tip = m.RAIL_Y + m.PLATE_T + m.RAIL_FLANGE
+    tip = m.RAIL_Y + m.RAIL_T + m.RAIL_FLANGE
     v.hdim(3 * m.GOING, m.DINETTE_X0, F(12.0), "")
     T("dimt", (3 * m.GOING + m.DINETTE_X0) / 2, 12.0, frac(m.DINETTE_X0 - 3 * m.GOING), "middle", 0, -5)
     v.hdim(front, m.DINETTE_X0, F(-8.0), "")

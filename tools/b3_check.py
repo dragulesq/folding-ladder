@@ -21,7 +21,7 @@ def checks(m):
     out = []
     # The door handle: the rail's flange tips, at their farthest out during the swing.
     ry, rz = m.OUT_AXLE_Y - m.CAB_AXLE_Y, m.OUT_AXLE_DROP - m.CAB_AXLE_DROP
-    tip = m.RAIL_Y + m.PLATE_T + m.RAIL_FLANGE + math.hypot(ry, rz) - ry
+    tip = m.RAIL_Y + m.RAIL_T + m.RAIL_FLANGE + math.hypot(ry, rz) - ry
     out.append(("Door handle to the rail's flange tips", m.HANDLE_Y - tip, 0.25,
                 f"tips reach {tip:.3f} out, handle starts at {m.HANDLE_Y:.3f}; 1/2 clear needs TRAY_W {m.TRAY_W - 0.5 + m.HANDLE_Y - tip:.3f}"))
     top = m.T(TREAD_TOP) - m.CAB_AXLE_DROP + m.TRAY_Y0 + m.TRAY_W - m.CAB_AXLE_Y
@@ -44,8 +44,8 @@ def checks(m):
     out.append(("Folded, the foot flange's hole on the plunger's line", -math.hypot(hole[0] - pin[0], hole[1] - pin[1]), -0.002 / MM,
                 f"hole at x {hole[0]:.4f} y {hole[1]:.4f}, plunger at x {pin[0]:.4f} y {pin[1]:.4f}"))
     gap = hole[2] - pin[2]
-    out.append(("Plunger nose through the foot flange", m.PLUNGER_NOSE - gap - m.PLATE_T, 2 / MM,
-                f"{m.PLUNGER_NOSE * MM:.0f} mm travel, {gap * MM:.2f} mm gap, {m.PLATE_T * MM:.2f} mm flange; this much stands above it"))
+    out.append(("Plunger nose through the foot flange", m.PLUNGER_NOSE - gap - m.RAIL_T, 2 / MM,
+                f"{m.PLUNGER_NOSE * MM:.0f} mm travel, {gap * MM:.2f} mm gap, {m.RAIL_T * MM:.2f} mm flange; this much stands above it"))
     flat = m.RAIL_PAD_W
     out.append(("Flange metal beside the lock hole", (flat - m.LOCK_HOLE) / 2, 0.125, "hole centered on the flange's flat"))
     thread_in = m.LOCK_BLOCK_T + m.SHEET_T
@@ -61,7 +61,7 @@ def checks(m):
     worst = 9.0
     for a10 in range(600, 901):
         r = m.body_motions(a10 / 10)["rail"]
-        y_in, y_out, z = m.RAIL_Y + r[1][3], m.RAIL_Y + m.PLATE_T + m.RAIL_FLANGE + r[1][3], m.RAIL_FOOT_Z + r[2][3]
+        y_in, y_out, z = m.RAIL_Y + r[1][3], m.RAIL_Y + m.RAIL_T + m.RAIL_FLANGE + r[1][3], m.RAIL_FOOT_Z + r[2][3]
         if y_in < pin[1] + m.LOCK_NUT_AF / 2 and y_out > pin[1] - m.LOCK_NUT_AF / 2:
             worst = min(worst, z - m.LOCK_BLOCK_TOP_Z)
         if y_in < m.LOCK_LEDGE_REACH:
@@ -69,7 +69,7 @@ def checks(m):
     out.append(("Folding, the rail's foot over the lock's block and shelf", worst, 1 / 16, "closest over the last 30 degrees"))
     web = m.T(TREAD_MIDDLE) - m.BRACKET_TOP_DROP - m.BRACKET_H
     out.append(("Lock ledge under the middle tread's cabinet bracket", web - m.LOCK_SHELF_TOP_Z, 1 / 32, ""))
-    out.append(("Lock shelf clear of the front angle's panel leg", m.FA_PANEL_LEG_X0 - (m.LOCK_LEDGE_X0 + m.LOCK_LEDGE_W), 0.125, ""))
+    out.append(("Lock shelf clear of the cabinet's step clip", m.CLIP_X0 - (m.LOCK_LEDGE_X0 + m.LOCK_LEDGE_W), 0.125, ""))
     out.append(("Rail foot pads clear of the lock ledge, either side",
                 min(m.LOCK_LEDGE_X0 - (m.RAIL_PAD_X0[0] + m.RAIL_PAD_L), m.RAIL_PAD_X0[1] - (m.LOCK_LEDGE_X0 + m.LOCK_LEDGE_W)), 0.125,
                 f"pads {m.RAIL_PAD_L:.3f} long at x {m.RAIL_PAD_X0[0]:.3f} and {m.RAIL_PAD_X0[1]:.3f}; hole at x {m.LOCK_X:.3f}"))
@@ -115,7 +115,7 @@ def checks(m):
                                                  m.STOW_PIN_LO_Z - m.STOW_SLOT_DROP - m.KEYHOLE_SLOT_W / 2 - m.STOW_LO_Z0), 0.3, ""))
     out.append(("Shelf behind the hook plate under the middle bracket and the upper pin's washer",
                 min(web, m.STOW_PIN_UP_Z - m.END_WASHER_DIA / 2) - m.LOCK_SHELF_TOP_Z, 0.03, ""))
-    out.append(("Back foot pad clear of the shelf behind the hook plate", (m.RAIL_Y + m.PLATE_T + m.RAIL_FLANGE - m.RAIL_PAD_W + m.FOLD_DY) - m.STOW_UP_D - m.STOW_SHELF_R, 0.25,
+    out.append(("Back foot pad clear of the shelf behind the hook plate", (m.RAIL_Y + m.RAIL_T + m.RAIL_FLANGE - m.RAIL_PAD_W + m.FOLD_DY) - m.STOW_UP_D - m.STOW_SHELF_R, 0.25,
                 "folded, the pads sit beyond the shelf's 2 1/4 part"))
     # The folded rail's foot in front of the stowed step's top, and its bumper on the step's face.
     rmo = mo["rail"]
@@ -126,7 +126,7 @@ def checks(m):
     out.append(("Folded, the rail's foot overlaps the stowed step along x", tread_end - m.RAIL_FOOT_X, 0.75, f"foot from x {m.RAIL_FOOT_X:.2f}, step's tread to {tread_end:.2f}"))
     bz, r = m.RAIL_BUMPER_Z + rmo[2][3], m.BUMPER_DIA / 2
     out.append(("Step bumper wholly on the stowed step's face", min(step_top - (bz + r), tread_end - (m.RAIL_BUMPER_X + r), m.RAIL_BUMPER_X - r - m.RAIL_FOOT_X), 0.03, ""))
-    out.append(("Step bumper above the foot flange's bend", m.RAIL_BUMPER_Z - r - (m.RAIL_FOOT_Z + m.BEND_R_PLATE + m.PLATE_T), 0, ""))
+    out.append(("Step bumper above the foot flange's bend", m.RAIL_BUMPER_Z - r - (m.RAIL_FOOT_Z + m.RAIL_BEND_R + m.RAIL_T), 0, ""))
     squeeze = m.BUMPER_H - (m.RAIL_Y + rmo[1][3] - m.stow_top_y())
     out.append(("Step bumper squeezed by the stowed step", squeeze, 1 / 32, "the squeeze, not a gap"))
     out.append(("Step bumper's squeeze within reason", 0.1 - squeeze, 0, ""))
@@ -141,7 +141,7 @@ def checks(m):
     out.append(("The same, leaning 25 degrees sideways", under - tall, 1.0, f"{tall:.2f} tall and {wide:.2f} wide"))
     lane = m.CLIP_KEY_LEG_Y0 - m.LOCK_LEDGE_REACH
     out.append(("Lane between the lock's shelf and the step clip, leaning", lane - wide, 1.0,
-                f"{lane:.2f} from the shelf's tip to the clip; {m.CLIP_KEY_LEG_Y0 - m.FA_OUT_LEG:.2f} from the front angle to the clip"))
+                f"{lane:.2f} from the shelf's tip to the clip; {m.CLIP_KEY_LEG_Y0 - m.CLIP_KEY_LEG:.2f} between the two step clips"))
     depth = m.T(TREAD_TOP) - m.BRACKET_TOP_DROP - m.BRACKET_H - 0.25
     out.append(("Room to stand the step up under the top tread", depth - math.hypot(length, thick), 1.0, "its diagonal under the top bracket"))
     lift = (m.STOW_LO_Z1 + m.AXLE_DIA / 2) - m.STOW_PIN_LO_Z
@@ -150,8 +150,27 @@ def checks(m):
     stop_z = m.T(TREAD_MIDDLE) - m.STOP_PIN_DROP - m.STOP_PIN_DIA / 2
     out.append(("Upper hook's top under the cabinet bracket's stop pin", stop_z - m.STOW_UP_Z1, 0.03, "the pin sticks out to the plate's face"))
     out.append(("Upper pin's washer under that stop pin as it slides in", stop_z - (m.STOW_PIN_UP_Z + m.END_WASHER_DIA / 2), 0.125, ""))
-    out.append(("Front angle's metal above and below its keyhole", min(m.FA_TOP_Z - (m.FA_KEYHOLE_Z + m.KEYHOLE_DIA / 2), m.FA_KEYHOLE_END_Z - m.KEYHOLE_SLOT_W / 2 - m.FA_BOTTOM_Z), 2.0, ""))
-    out.append(("Front angle's screws inside its ends", min(m.FA_SCREW_Z[0] - m.FA_BOTTOM_Z, m.FA_TOP_Z - m.FA_SCREW_Z[-1]), 0.75, ""))
+    # The step clip: one part on the front post and, upside down, inside the rail.
+    die = 0.63 / 2
+    line = m.BEND_R_SHEET + m.SHEET_T - (math.pi / 4) * (m.BEND_R_SHEET + m.K_SHEET * m.SHEET_T)
+    reach = m.CLIP_PIN_DROP + m.CLIP_SLOT_DROP + m.KEYHOLE_SLOT_W / 2
+    out.append(("Step clip's metal above and below its keyhole", m.CLIP_KEY_H / 2 - reach, 0.2, "the pins stand 1/8 off the slot ends: the step's weight is on its legs"))
+    out.append(("Step clip's metal beside its keyhole", min(m.CLIP_KEY_LEG - (m.CAB_AXLE_Y + m.KEYHOLE_DIA / 2), m.CAB_AXLE_Y - m.KEYHOLE_DIA / 2 - line - die), 0.06,
+                "to the leg's free edge, and to half a die width from the bend line"))
+    out.append(("Step clip's screw holes clear of its bend", m.CLIP_HOLE_IN - m.SCREW_HOLE_DIA / 2 - line - die, 0, ""))
+    relief = line + m.BEND_R_SHEET + m.SHEET_T + m.RELIEF_EXTRA
+    gap = math.hypot(m.CLIP_HOLE_IN - relief, m.CLIP_KEY_H / 2 - m.CLIP_HOLE_DZ) - m.SCREW_HOLE_DIA / 2
+    out.append(("Step clip's screw holes to its bend reliefs", gap, 0.1, ""))
+    out.append(("Step clip's screw holes inside its ends", min(m.CLIP_MOUNT_H / 2 - m.CLIP_HOLE_DZ, m.CLIP_MOUNT_L - m.CLIP_HOLE_IN) - m.SCREW_HOLE_DIA / 2, 0.4, ""))
+    out.append(("Step clip's keyhole on the step's pivot lines", -abs(m.RAIL_Y - m.CAB_AXLE_Y - m.OUT_AXLE_Y), -0.001, "15/16 from the panel and from the rail"))
+    washer_top = -m.CLIP_PIN_DROP + m.END_WASHER_DIA / 2
+    out.append(("Resting pin's washer held by the slot, below the keyhole's hole", -washer_top, 0.05, "the washer's top edge below the hole's middle"))
+    out.append(("Rail clip's nut short of the front flange's bend", (2 * m.GOING - m.RAIL_T - m.RAIL_BEND_R) - (m.CLIP_HOLE_X + m.NUT_AF / 2), -0.05,
+                "across its flats; a little over the start of the bend's radius is harmless"))
+    out.append(("Rail clip's holes clear of the front flange's bend", (2 * m.GOING - (m.RAIL_BEND_R + m.RAIL_T - (math.pi / 4) * (m.RAIL_BEND_R + m.RAIL_K * m.RAIL_T)) - m.RAIL_DIE_W / 2) - (m.CLIP_HOLE_X + m.SCREW_HOLE_DIA / 2), 0, ""))
+    folded_clip = m.RAIL_Y + mo["rail"][1][3] - m.CLIP_KEY_LEG
+    out.append(("Folded, the rail clip's keyhole leg off the panel", folded_clip, 0.25, "it stands past the middle tread's front end"))
+    out.append(("Folded, the rail clip past the middle tread's front end", (2 * m.GOING - m.SHEET_T) - (m.going_x(TREAD_MIDDLE) + m.TRAY_INSET + m.TRAY_D), 0.03, ""))
     # The stack between a lip and its ear.
     gap = m.EAR_X0 - m.TRAY_INSET - m.SHEET_T
     wave = gap - m.THRUST_T - m.BUSHING_FLANGE_T

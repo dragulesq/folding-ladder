@@ -171,13 +171,14 @@ export function b3BracketScrewJoint(n is number, k is number) returns map
 export function b3RailNutJoint(n is number, k is number) returns map
 {
     const hole = b3OnRail(n, b3BracketScrewJoint(n, k)).origin;
-    return b3Joint(vector(hole[0], RAIL_Y + PLATE_T, hole[2]), vector(0, 1, 0), vector(1, 0, 0));
+    return b3Joint(vector(hole[0], RAIL_Y + RAIL_T, hole[2]), vector(0, 1, 0), vector(1, 0, 0));
 }
 
-// Front angle on the panel: its bottom front corner.
-export function b3FrontAngleJoint() returns map
+// The cabinet's step clip on the panel: the middle of its bend, at the stair's
+// front end. The clip part is built here, and its "Mount" connector is this.
+export function b3StepClipMountJoint() returns map
 {
-    return b3PanelJoint(FA_X1, FA_BOTTOM_Z);
+    return b3PanelJoint(2 * GOING, CLIP_CAB_Z);
 }
 
 // The stow bracket on the panel: the level of its panel leg's bottom edge, under the hook plate.
@@ -260,26 +261,29 @@ export function b3StopPinJoint(n is number, front is boolean) returns map
     return b3Joint(p, vector(front ? 1 : -1, 0, 0), vector(0, 1, 0));
 }
 
-// Step clip on the rail's inner face, at the clip's bottom corner on the bed-end side.
+// The rail's step clip: the same point of the clip on the rail's inner face, z in
+// toward the cabinet, which turns the clip upside down.
 export function b3StepClipJoint() returns map
 {
-    return b3Joint(vector(CLIP_X0, RAIL_Y, CLIP_Z0), vector(0, -1, 0), vector(1, 0, 0));
+    return b3Joint(vector(2 * GOING, RAIL_Y, CLIP_RAIL_Z), vector(0, -1, 0), vector(1, 0, 0));
 }
 
-// Step clip screw k: under its head on the clip's inside face, z out of the clip.
+// Step clip screw k, on the clip as built on the panel: under its head on the
+// mounting leg's free face, z out of the leg. Screw 0 is the lower one there.
 export function b3ClipScrewJoint(k is number) returns map
 {
-    return b3Joint(vector(CLIP_SCREW_X[k], RAIL_Y - SHEET_T, CLIP_SCREW_Z), vector(0, -1, 0), vector(1, 0, 0));
+    return b3Joint(vector(CLIP_HOLE_X, SHEET_T, CLIP_CAB_Z + (k == 0 ? -1 : 1) * CLIP_HOLE_DZ), vector(0, 1, 0), vector(1, 0, 0));
 }
 
-// Its nyloc nut on the rail's outer face.
+// The rail clip's nyloc nut k on the rail's outer face. The clip is upside
+// down there, so its screw 0 is the upper one.
 export function b3ClipNutJoint(k is number) returns map
 {
-    return b3Joint(vector(CLIP_SCREW_X[k], RAIL_Y + PLATE_T, CLIP_SCREW_Z), vector(0, 1, 0), vector(1, 0, 0));
+    return b3Joint(vector(CLIP_HOLE_X, RAIL_Y + RAIL_T, CLIP_RAIL_Z + (k == 0 ? 1 : -1) * CLIP_HOLE_DZ), vector(0, 1, 0), vector(1, 0, 0));
 }
 
 // The step axle on the hook-on step's cabinet-side pivot line, at its back
-// end, which runs out through the front angle's keyhole as the hook pin. The
+// end, which runs out through the cabinet clip's keyhole as the hook pin. The
 // step's tray is the tread part, so its pivots are b3CabAxleJoint(HOOK_STEP)
 // and b3OutAxleJoint(HOOK_STEP).
 export function b3StepCabAxleJoint() returns map
@@ -308,7 +312,7 @@ export function b3LegEarBushingJoint() returns map
 // foot, on the cabinet side, z down.
 export function b3RailPadJoint(k is number) returns map
 {
-    return b3Joint(vector(RAIL_PAD_X0[k], RAIL_Y + PLATE_T + RAIL_FLANGE - RAIL_PAD_W, RAIL_FOOT_Z), vector(0, 0, -1), vector(1, 0, 0));
+    return b3Joint(vector(RAIL_PAD_X0[k], RAIL_Y + RAIL_T + RAIL_FLANGE - RAIL_PAD_W, RAIL_FOOT_Z), vector(0, 0, -1), vector(1, 0, 0));
 }
 
 // Rubber pad under a step leg's foot flange: the middle of its top face, z down.
@@ -525,18 +529,23 @@ export function b3Slot(c is Vector, l is ValueWithUnits, h is ValueWithUnits) re
         ];
 }
 
-// Keyhole: KEYHOLE_DIA hole centered (u, vHole), with a KEYHOLE_SLOT_W slot
-// running down to a round end centered at vEnd.
-export function b3Keyhole(u is ValueWithUnits, vHole is ValueWithUnits, vEnd is ValueWithUnits) returns array
+// Keyhole, the same either way up: a KEYHOLE_DIA hole centered (u, v) with a
+// KEYHOLE_SLOT_W slot running up and down from it to round ends centered
+// drop above and below.
+export function b3DoubleKeyhole(u is ValueWithUnits, v is ValueWithUnits, drop is ValueWithUnits) returns array
 {
     const big = KEYHOLE_DIA / 2;
     const h = KEYHOLE_SLOT_W / 2;
-    const meet = vHole - sqrt(big * big - h * h);
+    const meet = sqrt(big * big - h * h);
     return [
-            vector(u - h, vEnd),
-            { "mid" : vector(u, vEnd - h), "end" : vector(u + h, vEnd) },
-            vector(u + h, meet),
-            { "mid" : vector(u, vHole + big), "end" : vector(u - h, meet) }
+            vector(u - h, v - drop),
+            { "mid" : vector(u, v - drop - h), "end" : vector(u + h, v - drop) },
+            vector(u + h, v - meet),
+            { "mid" : vector(u + big, v), "end" : vector(u + h, v + meet) },
+            vector(u + h, v + drop),
+            { "mid" : vector(u, v + drop + h), "end" : vector(u - h, v + drop) },
+            vector(u - h, v + meet),
+            { "mid" : vector(u - big, v), "end" : vector(u - h, v - meet) }
         ];
 }
 
@@ -559,7 +568,7 @@ export function b3EarOutline(yRoot is ValueWithUnits, yFar is ValueWithUnits, yH
 }
 
 // Flange bent off the plate along the edge p -> q (in x, z, plate on the left
-// of travel), PLATE_T thick inward from the edge, from y0 out to yTip. Its free
+// of travel), RAIL_T thick inward from the edge, from y0 out to yTip. Its free
 // corners at p and q are rounded to rP and rQ.
 export function b3Flange(context is Context, id is Id, p is Vector, q is Vector, y0 is ValueWithUnits, yTip is ValueWithUnits,
     rP is ValueWithUnits, rQ is ValueWithUnits)
@@ -569,7 +578,7 @@ export function b3Flange(context is Context, id is Id, p is Vector, q is Vector,
     // Sketch (u, v) = (distance along the edge from p, -y), extruded into the plate.
     const edgePlane = plane(b3V(vector(p[0], 0 * inch, p[1])), vector(-d[1], 0, d[0]), vector(d[0], 0, d[1]));
     const outline = b3Rounded(b3Rect(0 * inch, -yTip, len, -y0), [rP, rQ, 0, 0]);
-    b3Prism(context, id, edgePlane, outline, [], PLATE_T);
+    b3Prism(context, id, edgePlane, outline, [], RAIL_T);
 }
 
 // ---------------------------------------------------------------------------

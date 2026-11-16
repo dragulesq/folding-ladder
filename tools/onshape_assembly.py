@@ -59,19 +59,20 @@ INSTANCES = {
     **{f"Bracket {i}": "Bracket" for i in range(1, 5)},
     # Treads 1 and 2 are the top and middle treads; tread 3 is the hook-on step's tray.
     "Tread 1": "Tread", "Tread 2": "Tread", "Tread 3": "Tread",
-    "Outer rail": "Outer rail", "Step clip": "Step clip",
-    "Front angle": "Front angle", "Step ledge": "Step ledge",
+    # Step clip 1 on the cabinet's front post, step clip 2 the same part upside down inside the rail.
+    "Outer rail": "Outer rail", "Step clip 1": "Step clip", "Step clip 2": "Step clip",
+    "Step ledge": "Step ledge",
     # Leg 1 on the cabinet side, leg 2 the same part turned to face it.
     "Hook-on step leg 1": "Hook-on step leg", "Hook-on step leg 2": "Hook-on step leg",
     **AXLES,
     **{f"Stop pin {i}": "Stop pin" for i in range(1, 5)},
     **{f"M6 fender washer {i}": "M6 fender washer" for i in range(1, 13)},
-    **{f"M6 button-head screw {i}": "M6 button-head screw" for i in range(1, 15)},
-    **{f"M6 flat-head screw {i}": "M6 flat-head screw" for i in range(1, 9)},
+    **{f"M6 button-head screw {i}": "M6 button-head screw" for i in range(1, 17)},
+    **{f"M6 flat-head screw {i}": "M6 flat-head screw" for i in range(1, 7)},
     # The cabinet brackets' screws into the 8020, through the side panel: the same part, swapped
     # for the longer McMaster screw below.
-    **{f"M6 x 25 flat-head screw {i}": "M6 flat-head screw" for i in range(1, 9)},
-    **{f"M6 nyloc nut {i}": "M6 nyloc nut" for i in range(1, 11)},
+    **{f"M6 x 25 flat-head screw {i}": "M6 flat-head screw" for i in range(1, 7)},
+    **{f"M6 nyloc nut {i}": "M6 nyloc nut" for i in range(1, 9)},
     # Pivot stacks: lip bushings 1 to 12 in the three trays' lips, 13 to 16 in the step legs' ears.
     **{f"Lip bushing {i}": "Lip bushing" for i in range(1, 17)},
     **{f"Ear bushing {i}": "Ear bushing" for i in range(1, 9)},
@@ -94,7 +95,7 @@ INSTANCES = {
 MATES = [
     ("FASTENED", ("Bracket 1", "Mounting face"), ("REF cabinet", "Bracket, top tread")),
     ("FASTENED", ("Bracket 2", "Mounting face"), ("REF cabinet", "Bracket, middle tread")),
-    ("FASTENED", ("Front angle", "Cabinet"), ("REF cabinet", "Front angle")),
+    ("FASTENED", ("Step clip 1", "Mount"), ("REF cabinet", "Step clip")),
     ("FASTENED", ("Step ledge", "Cabinet"), ("REF cabinet", "Step ledge")),
     ("REVOLUTE", ("Tread 1", "Cabinet axle"), ("Bracket 1", "Axle")),
     ("REVOLUTE", ("Tread 2", "Cabinet axle"), ("Bracket 2", "Axle")),
@@ -102,8 +103,8 @@ MATES = [
     ("FASTENED", ("Outer rail", "Top tread bracket"), ("Bracket 3", "Mounting face")),
     ("FASTENED", ("Bracket 4", "Mounting face"), ("Outer rail", "Middle tread bracket")),
     ("REVOLUTE", ("Tread 2", "Outer axle"), ("Bracket 4", "Axle, turned")),
-    ("FASTENED", ("Step clip", "Outer rail"), ("Outer rail", "Step clip")),
-    ("FASTENED", ("Tread 3", "Cabinet axle"), ("Front angle", "Hook-on step")),
+    ("FASTENED", ("Step clip 2", "Mount"), ("Outer rail", "Step clip")),
+    ("FASTENED", ("Tread 3", "Cabinet axle"), ("Step clip 1", "Hook-on step")),
     ("REVOLUTE", ("Hook-on step leg 1", "Axle"), ("Tread 3", "Cabinet axle")),
     ("REVOLUTE", ("Hook-on step leg 2", "Axle, turned"), ("Tread 3", "Outer axle")),
 ]
@@ -128,23 +129,25 @@ for i, (axle, end) in enumerate((a, e) for a in AXLES for e in ("Back end", "Fro
         ((f"M6 fender washer {i + 1}", "Axle"), (axle, end)),
         ((f"M6 button-head screw {i + 1}", "Washer"), (f"M6 fender washer {i + 1}", "Screw")),
     ]
-# Four flat-head screws through each rail bracket, with a nyloc nut on the rail's outer face.
+# Three flat-head screws through each rail bracket, with a nyloc nut on the rail's outer face.
 for b, row in (("Bracket 3", "top"), ("Bracket 4", "middle")):
-    for k in range(1, 5):
-        i = k + (4 if row == "middle" else 0)
+    for k in range(1, 4):
+        i = k + (3 if row == "middle" else 0)
         HARDWARE += [
             ((f"M6 flat-head screw {i}", "Head"), (b, f"Screw {k}")),
             ((f"M6 nyloc nut {i}", "Rail"), ("Outer rail", f"Nut, {row} {k}")),
         ]
-# Four flat-head screws through each cabinet bracket into the 8020.
+# Three flat-head screws through each cabinet bracket into the 8020.
 for b in (1, 2):
-    for k in range(1, 5):
-        HARDWARE.append(((f"M6 x 25 flat-head screw {4 * (b - 1) + k}", "Head"), (f"Bracket {b}", f"Screw {k}")))
-# Two button-head screws through the step clip, with a nyloc nut on the rail's outer face.
+    for k in range(1, 4):
+        HARDWARE.append(((f"M6 x 25 flat-head screw {3 * (b - 1) + k}", "Head"), (f"Bracket {b}", f"Screw {k}")))
+# Two button-head screws through each step clip: into the front post on the cabinet, and with a
+# nyloc nut on the rail's outer face.
 for k in range(1, 3):
     HARDWARE += [
-        ((f"M6 button-head screw {12 + k}", "Washer"), ("Step clip", f"Screw {k}")),
-        ((f"M6 nyloc nut {8 + k}", "Rail"), ("Outer rail", f"Nut, clip {k}")),
+        ((f"M6 button-head screw {12 + k}", "Washer"), ("Step clip 2", f"Screw {k}")),
+        ((f"M6 nyloc nut {6 + k}", "Rail"), ("Outer rail", f"Nut, clip {k}")),
+        ((f"M6 button-head screw {14 + k}", "Washer"), ("Step clip 1", f"Screw {k}")),
     ]
 
 # Pivot stacks. At both ends of both axles, each tray has a bushing in its lip and a thrust washer
@@ -190,7 +193,7 @@ SWAPS = [
     ("M6 flat-head screw ", "92125A240"),
     ("M6 x 25 flat-head screw ", "92125A242"),
     *((f"M6 button-head screw {i}", "92095A226") for i in range(1, 13)),
-    *((f"M6 button-head screw {i}", "92095A238") for i in (13, 14)),
+    *((f"M6 button-head screw {i}", "92095A238") for i in (13, 14, 15, 16)),
     ("M6 fender washer ", "94316A560"),
     ("M6 nyloc nut ", "93625A250"),
     ("Wave washer ", "1775N12"),
@@ -249,7 +252,7 @@ def swapped(instances, mcs, imports):
 # goes with the part it is fixed to; everything not listed stays on the cabinet.
 BODIES = {
     "Tread 1": "top tread", "Tread 2": "middle tread",
-    "Bracket 3": "rail", "Bracket 4": "rail", "Outer rail": "rail", "Step clip": "rail",
+    "Bracket 3": "rail", "Bracket 4": "rail", "Outer rail": "rail", "Step clip 2": "rail",
     "Tread 3": "step", "Hook-on step leg 1": "cabinet-side leg", "Hook-on step leg 2": "outer leg",
 }
 

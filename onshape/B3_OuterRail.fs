@@ -7,11 +7,11 @@ import(path : "onshape/std/common.fs", version : "2641.0");
 // </B3-IMPORT>
 
 /*
- * B3 Outer Rail, 3/16" sheet-metal part: stepped plate whose lower edge runs
+ * B3 Outer Rail, 1/8" sheet-metal part: stepped plate whose lower edge runs
  * in one straight line from the bottom of the bed-side edge to the foot, 1"
  * flanges turned outward (+y) along the bed-side edge, the riser between the
  * steps, the long lower edge, the foot and the front edge, a hand slot, the
- * step clip's M6 holes, and two rows of M6 holes for the rail brackets (the
+ * step clip's two M6 holes, and two rows of three M6 holes for the rail brackets (the
  * bracket part, turned to face the cabinet). The stair is narrow enough that
  * the rail and its flanges stay inside the cab door handle, so there is no
  * notch around it. The riser flange runs up to the top edge and stops a
@@ -34,7 +34,7 @@ export const b3OuterRail = defineFeature(function(context is Context, id is Id, 
     }
     {
         const y0 = RAIL_Y;
-        const y1 = RAIL_Y + PLATE_T;
+        const y1 = RAIL_Y + RAIL_T;
         const fy1 = y1 + RAIL_FLANGE;
         const xm = GOING;
         const xf = 2 * GOING;
@@ -60,9 +60,10 @@ export const b3OuterRail = defineFeature(function(context is Context, id is Id, 
             ];
         // The hand slot.
         var holes = [b3Slot(vector(HAND_SLOT_X, HAND_SLOT_Z), HAND_SLOT_L, HAND_SLOT_H)];
-        for (var k = 0; k < size(CLIP_SCREW_X); k += 1)
+        for (var k = 0; k < 2; k += 1)
         {
-            holes = append(holes, b3Hole(CLIP_SCREW_X[k], CLIP_SCREW_Z, SCREW_HOLE_DIA));
+            const nut = b3ClipNutJoint(k).origin;
+            holes = append(holes, b3Hole(nut[0], nut[2], SCREW_HOLE_DIA));
         }
         for (var n in [TREAD_TOP, TREAD_MIDDLE])
         {
@@ -80,7 +81,7 @@ export const b3OuterRail = defineFeature(function(context is Context, id is Id, 
         // ends of the foot), the tips stay square beside the corner relief. The
         // bed-side, long, foot and front ones run from corner to corner; the riser
         // one from a relief's width above the middle step up to the top edge.
-        const riserBottom = vector(xm, midStep + RELIEF_W_SCALE * PLATE_T);
+        const riserBottom = vector(xm, midStep + RELIEF_W_SCALE * RAIL_T);
         const tip = RAIL_FLANGE_TIP_R;
         const flanges = [
                 [vector(0 * inch, topStep), back, tip, 0 * inch],
@@ -89,7 +90,7 @@ export const b3OuterRail = defineFeature(function(context is Context, id is Id, 
                 [foot, vector(xf, RAIL_FOOT_Z), 0 * inch, 0 * inch],
                 [vector(xf, RAIL_FOOT_Z), vector(xf, midStep), 0 * inch, tip]
             ];
-        var outside = [vector(xm + GOING / 2, y0, CLIP_SCREW_Z + 2.5 * inch)];
+        var outside = [vector(xm + GOING / 2, y0, CLIP_RAIL_Z + 2.5 * inch)];
         for (var i = 0; i < size(flanges); i += 1)
         {
             const f = flanges[i];
@@ -102,7 +103,7 @@ export const b3OuterRail = defineFeature(function(context is Context, id is Id, 
 
         // Bend relief, cut into the plate below the riser flange, down to the
         // middle step, so the flange's flat pattern clears the plate below it.
-        b3PrismXZ(context, id + "riserRelief", b3ReliefPath(riserBottom, vector(0, -1), vector(-1, 0), PLATE_T, BEND_R_PLATE, K_PLATE,
+        b3PrismXZ(context, id + "riserRelief", b3ReliefPath(riserBottom, vector(0, -1), vector(-1, 0), RAIL_T, RAIL_BEND_R, RAIL_K,
                 0 * inch), [], y0 - 0.05 * inch, y1 + 0.05 * inch);
         const reliefs = b3Solids(id + "riserRelief");
         b3Subtract(context, id + "cutRelief", qSubtraction(b3Solids(id), reliefs), reliefs);
@@ -110,12 +111,12 @@ export const b3OuterRail = defineFeature(function(context is Context, id is Id, 
         // The travel lock's hole in the foot flange: the plunger's nose comes up
         // through it when the stair is folded.
         b3Cyl(context, id + "lockHole", vector(LOCK_X, LOCK_Y, RAIL_FOOT_Z - 1 * millimeter),
-            vector(LOCK_X, LOCK_Y, RAIL_FOOT_Z + PLATE_T + 1 * millimeter), LOCK_HOLE);
+            vector(LOCK_X, LOCK_Y, RAIL_FOOT_Z + RAIL_T + 1 * millimeter), LOCK_HOLE);
         const lockHole = b3Solids(id + "lockHole");
         b3Subtract(context, id + "cutLock", qSubtraction(b3Solids(id), lockHole), lockHole);
 
 
-        b3SheetMetal(context, id + "sm", b3Solids(id), outside, PLATE_T, BEND_R_PLATE, K_PLATE);
+        b3SheetMetal(context, id + "sm", b3Solids(id), outside, RAIL_T, RAIL_BEND_R, RAIL_K);
 
         const rail = b3Solids(id);
         const name = "Outer rail";
@@ -126,7 +127,7 @@ export const b3OuterRail = defineFeature(function(context is Context, id is Id, 
         b3Mc(context, id + "mcPad", rail, name, "Foot pad", b3RailPadJoint(1));
         b3Mc(context, id + "mcPadBack", rail, name, "Foot pad, back", b3RailPadJoint(0));
         b3Mc(context, id + "mcBumper", rail, name, "Step bumper", b3RailBumperJoint());
-        for (var k = 0; k < size(CLIP_SCREW_X); k += 1)
+        for (var k = 0; k < 2; k += 1)
         {
             b3Mc(context, id + ("mcNutClip" ~ k), rail, name, "Nut, clip " ~ (k + 1), b3ClipNutJoint(k));
         }
