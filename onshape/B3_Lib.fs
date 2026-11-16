@@ -23,6 +23,9 @@ export const RGB_STEP = [0.62, 0.56, 0.77];
 export const RGB_STEEL = [0.36, 0.41, 0.44];
 export const RGB_TUBE = [0.70, 0.72, 0.76];
 export const RGB_REF = [0.85, 0.75, 0.57];
+export const RGB_BUSHING = [0.90, 0.72, 0.20];
+export const RGB_PTFE = [0.96, 0.96, 0.94];
+export const RGB_RUBBER = [0.16, 0.17, 0.18];
 
 // ---------------------------------------------------------------------------
 // Derived positions
@@ -97,6 +100,25 @@ export function b3OutAxleJoint(n is number) returns map
     return b3AxleJoint(b3GoingX(n) + TREAD_AXLE_X0, OUT_AXLE_Y, b3T(n) - OUT_AXLE_DROP);
 }
 
+// An axle seen from its front tip, z along +x. A part built on the back end
+// of an axle line and mated here is turned half a turn about a vertical axis,
+// which puts it on the front end facing the other way: a bushing's flange
+// stays on the same side of its lip or ear.
+export function b3AxleTurnedJoint(x is ValueWithUnits, y is ValueWithUnits, z is ValueWithUnits) returns map
+{
+    return b3Joint(vector(x, y, z), vector(1, 0, 0), vector(0, -1, 0));
+}
+
+export function b3CabAxleTurnedJoint(n is number) returns map
+{
+    return b3AxleTurnedJoint(b3GoingX(n) + GOING - TREAD_AXLE_X0, CAB_AXLE_Y, b3T(n) - CAB_AXLE_DROP);
+}
+
+export function b3OutAxleTurnedJoint(n is number) returns map
+{
+    return b3AxleTurnedJoint(b3GoingX(n) + GOING - TREAD_AXLE_X0, OUT_AXLE_Y, b3T(n) - OUT_AXLE_DROP);
+}
+
 // Bracket n on the panel: the web's bottom corner at the bed end.
 export function b3BracketJoint(n is number) returns map
 {
@@ -136,8 +158,7 @@ export function b3RailBracketJoint(n is number) returns map
 // b3OutAxleJoint(n).
 export function b3BracketAxleTurnedJoint(n is number) returns map
 {
-    return b3Joint(vector(b3GoingX(n) + GOING - TREAD_AXLE_X0, CAB_AXLE_Y, b3T(n) - CAB_AXLE_DROP),
-        vector(1, 0, 0), vector(0, -1, 0));
+    return b3CabAxleTurnedJoint(n);
 }
 
 // Screw hole k in bracket n's web, on the ear side, z along the screw.
@@ -198,6 +219,49 @@ export function b3ClipNutJoint(k is number) returns map
 export function b3StepCabAxleJoint() returns map
 {
     return b3AxleJoint(STEP_AXLE_X0, CAB_AXLE_Y, b3T(HOOK_STEP) - CAB_AXLE_DROP);
+}
+
+// The step leg's lower hole, at its bed-end tip: the outer leg's pivot, seen
+// from the back. Its front is the leg's "Axle, turned" connector.
+export function b3StepLegLowerJoint() returns map
+{
+    return b3AxleJoint(b3GoingX(HOOK_STEP) + TREAD_AXLE_X0, CAB_AXLE_Y, b3T(HOOK_STEP) - OUT_AXLE_DROP);
+}
+
+// A lip bushing is built in the top tread's back lip. In a step leg's ear it
+// sits EAR_X0 - TRAY_INSET further along the axle, so this connector is that
+// far back from the axle's tip: mated to a leg's axle connector, the bushing
+// lands in the leg's ear.
+export function b3LegEarBushingJoint() returns map
+{
+    const tip = b3CabAxleJoint(TREAD_TOP).origin;
+    return b3AxleJoint(tip[0] - (EAR_X0 - TRAY_INSET), tip[1], tip[2]);
+}
+
+// Rubber pad under the rail's foot flange: its top corner at the back of the
+// foot, on the cabinet side, z down.
+export function b3RailPadJoint() returns map
+{
+    return b3Joint(vector(RAIL_FOOT_X, RAIL_Y + PLATE_T + RAIL_FLANGE - RAIL_PAD_W, RAIL_FOOT_Z), vector(0, 0, -1), vector(1, 0, 0));
+}
+
+// Rubber pad under a step leg's foot flange: the middle of its top face, z down.
+export function b3StepPadJoint() returns map
+{
+    return b3Joint(vector(b3GoingX(HOOK_STEP) + GOING / 2, STEP_LEG_Y0 + STEP_LEG_FLANGE / 2, STEP_LEG_BOTTOM_Z),
+        vector(0, 0, -1), vector(1, 0, 0));
+}
+
+// Rubber strip on the step ledge's shelf: its bottom corner on the panel at the bed end.
+export function b3LedgeStripJoint() returns map
+{
+    return b3Joint(vector(0 * inch, 0 * inch, LEDGE_TOP_Z), vector(0, 0, 1), vector(1, 0, 0));
+}
+
+// Rubber bumper on the panel behind folded tread n.
+export function b3BumperJoint(n is number) returns map
+{
+    return b3PanelJoint(b3GoingX(n) + GOING / 2, b3T(n) - CAB_AXLE_DROP + BUMPER_UP);
 }
 
 // A mate connector named mcName on the part partName (the bodies in owner),
@@ -596,6 +660,21 @@ export function b3FinishSteel(context is Context, bodies is Query, partName is s
 export function b3FinishTube(context is Context, bodies is Query, partName is string)
 {
     b3Part(context, bodies, partName, material("Aluminum 6061", TUBE_DENSITY), RGB_TUBE);
+}
+
+export function b3FinishBushing(context is Context, bodies is Query, partName is string)
+{
+    b3Part(context, bodies, partName, material("iglide G", BUSHING_DENSITY), RGB_BUSHING);
+}
+
+export function b3FinishPtfe(context is Context, bodies is Query, partName is string)
+{
+    b3Part(context, bodies, partName, material("PTFE", PTFE_DENSITY), RGB_PTFE);
+}
+
+export function b3FinishRubber(context is Context, bodies is Query, partName is string)
+{
+    b3Part(context, bodies, partName, material("Neoprene", RUBBER_DENSITY), RGB_RUBBER);
 }
 
 function b3Part(context is Context, bodies is Query, partName is string, mat is Material, rgb is array)

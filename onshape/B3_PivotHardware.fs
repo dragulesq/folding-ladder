@@ -21,7 +21,7 @@ import(path : "onshape/std/common.fs", version : "2641.0");
  * step's cabinet-side axle, the washer and screw on the top tread's cabinet
  * axle at the bed end, the top cabinet bracket's back stop pin, and the
  * first screw of the top rail bracket with its nut.
- * Bushings, thrust washers and wave washers aren't modeled.
+ * The bushings, thrust washers and wave washers are in B3 Bushings and Pads.
  */
 annotation { "Feature Type Name" : "B3 Pivot Hardware" }
 export const b3PivotHardware = defineFeature(function(context is Context, id is Id, definition is map)

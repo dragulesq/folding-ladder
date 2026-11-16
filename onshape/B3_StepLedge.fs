@@ -41,4 +41,5 @@ export const b3StepLedge = defineFeature(function(context is Context, id is Id, 
         const body = b3Solids(id);
         b3Finish(context, body, "Step ledge", RGB_ALU_DARK);
         b3Mc(context, id + "mcCabinet", body, "Step ledge", "Cabinet", b3StepLedgeJoint());
+        b3Mc(context, id + "mcStrip", body, "Step ledge", "Rubber strip", b3LedgeStripJoint());
     });

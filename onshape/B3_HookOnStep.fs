@@ -17,8 +17,8 @@ import(path : "onshape/std/common.fs", version : "2641.0");
  * flanges run to the top edge, so their bends need no relief; where they meet
  * the foot flange, Onshape cuts round corner reliefs and the flanges' tips stay
  * square. The top edge is the open stop against the tray's skin. Built where
- * the cabinet-side leg sits, open.
- * Not modeled: the rubber pad under the foot.
+ * the cabinet-side leg sits, open. The rubber pad under the foot is its own
+ * part (B3 Bushings and Pads).
  */
 annotation { "Feature Type Name" : "B3 Hook-on Step Leg" }
 export const b3HookOnStep = defineFeature(function(context is Context, id is Id, definition is map)
@@ -75,4 +75,8 @@ export const b3HookOnStep = defineFeature(function(context is Context, id is Id,
         b3Finish(context, leg, name, RGB_STEP);
         b3Mc(context, id + "mcAxle", leg, name, "Axle", b3CabAxleJoint(n));
         b3Mc(context, id + "mcAxleTurned", leg, name, "Axle, turned", b3TurnInGoing(n, b3OutAxleJoint(n), 0 * inch));
+        // The other end of each hole, for the bushing in the second ear, and the pad's seat.
+        b3Mc(context, id + "mcAxleFront", leg, name, "Axle, front", b3CabAxleTurnedJoint(n));
+        b3Mc(context, id + "mcAxleLower", leg, name, "Lower axle", b3StepLegLowerJoint());
+        b3Mc(context, id + "mcPad", leg, name, "Foot pad", b3StepPadJoint());
     });

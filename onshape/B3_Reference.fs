@@ -12,7 +12,7 @@ import(path : "onshape/std/common.fs", version : "2641.0");
  * door handle and the floor. Their names start with "REF". Add this feature
  * in a Part Studio of its own ("Surroundings"), so the stair's Part Studio
  * holds only the parts to make. The cabinet carries the mate connectors for
- * the brackets, the front angle and the step ledge.
+ * the brackets, the front angle, the step ledge and the two panel bumpers.
  */
 annotation { "Feature Type Name" : "B3 Reference" }
 export const b3Reference = defineFeature(function(context is Context, id is Id, definition is map)
@@ -33,6 +33,8 @@ export const b3Reference = defineFeature(function(context is Context, id is Id, 
         b3Mc(context, id + "mcBracketMiddle", cabinet, "REF cabinet", "Bracket, middle tread", b3BracketJoint(TREAD_MIDDLE));
         b3Mc(context, id + "mcFrontAngle", cabinet, "REF cabinet", "Front angle", b3FrontAngleJoint());
         b3Mc(context, id + "mcLedge", cabinet, "REF cabinet", "Step ledge", b3StepLedgeJoint());
+        b3Mc(context, id + "mcBumperTop", cabinet, "REF cabinet", "Bumper, top tread", b3BumperJoint(TREAD_TOP));
+        b3Mc(context, id + "mcBumperMiddle", cabinet, "REF cabinet", "Bumper, middle tread", b3BumperJoint(TREAD_MIDDLE));
     });
 
 function b3Ref(context is Context, id is Id, lo is Vector, hi is Vector, partName is string)

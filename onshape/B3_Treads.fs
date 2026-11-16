@@ -7,7 +7,7 @@ import(path : "onshape/std/common.fs", version : "2641.0");
 // </B3-IMPORT>
 
 /*
- * B3 Tread, 1/8" sheet-metal part: 18 x 5 5/8 skin with 2" lips bent down
+ * B3 Tread, 1/8" sheet-metal part: 17 x 5 5/8 skin with 2" lips bent down
  * at the x ends, bushing holes through both lips for the cabinet and outer
  * axles, and a 1/2" radius on both bottom corners of each lip (at the outer
  * end it keeps the lip clear of the rail bracket's web as it swings). The
@@ -34,4 +34,7 @@ export const b3Treads = defineFeature(function(context is Context, id is Id, def
         b3Finish(context, body, "Tread", RGB_ALU);
         b3Mc(context, id + "mcCab", body, "Tread", "Cabinet axle", b3CabAxleJoint(n));
         b3Mc(context, id + "mcOut", body, "Tread", "Outer axle", b3OutAxleJoint(n));
+        // The same two axles from the front, for the bushings and washers at the front lip.
+        b3Mc(context, id + "mcCabTurned", body, "Tread", "Cabinet axle, turned", b3CabAxleTurnedJoint(n));
+        b3Mc(context, id + "mcOutTurned", body, "Tread", "Outer axle, turned", b3OutAxleTurnedJoint(n));
     });

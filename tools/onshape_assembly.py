@@ -16,6 +16,11 @@ fixed), and puts them together:
 Each instance is inserted where its mates will put it, worked out from the
 mate connectors, so the mates find everything already in place.
 
+--stowed builds a second assembly, "B3 test Stowed", in two calls: every
+part fixed where it sits when the stair is folded against the cabinet and
+the folded hook-on step stands on its ledge. It has no mates, so it is a
+picture of the stowed stair to look at and measure in, not a mechanism.
+
 The Onshape plan allows a limited number of API calls a year. Building the
 assembly costs about 25 calls, so the script does it once and records what
 it made in the state file; a rerun picks up where it stopped and costs
@@ -25,17 +30,21 @@ this. When the parts themselves are replaced (their ids change, as when they
 became sheet metal), --rebuild deletes the old assembly and builds a new one.
 
 Usage:
-  python3 tools/onshape_assembly.py [--state FILE] [--dry-run] [--rebuild]
+  python3 tools/onshape_assembly.py [--state FILE] [--dry-run [--offline]] [--rebuild] [--stowed]
 
 --dry-run prints the instances, mates and groups without calling the API.
+With --offline it plans from tools/b3_model.py instead of the state file, so
+it works before the Part Studios have been rebuilt, and needs no Onshape keys.
 """
 from urllib.parse import quote
 import argparse
 import sys
 
-from onshape_api import State
+from b3_model import Model, mul, to_onshape
 
 NAME = "B3 test Assembly"
+STOWED_NAME = "B3 test Stowed"
+REF_PARTS = ["REF floor", "REF cabinet", "REF bed-end wall", "REF mattress", "REF door handle"]
 
 # Instances: key -> part name. The reference blocks are added separately, one
 # fixed instance of each part in the Surroundings Part Studio.
@@ -59,6 +68,15 @@ INSTANCES = {
     **{f"M6 button-head screw {i}": "M6 button-head screw" for i in range(1, 15)},
     **{f"M6 flat-head screw {i}": "M6 flat-head screw" for i in range(1, 9)},
     **{f"M6 nyloc nut {i}": "M6 nyloc nut" for i in range(1, 11)},
+    # Pivot stacks: lip bushings 1 to 12 in the three trays' lips, 13 to 16 in the step legs' ears.
+    **{f"Lip bushing {i}": "Lip bushing" for i in range(1, 17)},
+    **{f"Ear bushing {i}": "Ear bushing" for i in range(1, 9)},
+    **{f"Thrust washer {i}": "Thrust washer" for i in range(1, 13)},
+    **{f"Wave washer {i}": "Wave washer" for i in range(1, 7)},
+    "Neoprene washer 1": "Neoprene washer", "Neoprene washer 2": "Neoprene washer",
+    # Rubber.
+    "Rail foot pad": "Rail foot pad", "Step leg pad 1": "Step leg pad", "Step leg pad 2": "Step leg pad",
+    "Ledge strip": "Ledge strip", "Panel bumper 1": "Panel bumper", "Panel bumper 2": "Panel bumper",
 }
 
 # Mates between the main parts: (type, (instance, its mate connector), (instance it goes on, that one's
@@ -116,9 +134,47 @@ for k in range(1, 3):
         ((f"M6 nyloc nut {8 + k}", "Rail"), ("Outer rail", f"Nut, clip {k}")),
     ]
 
+# Pivot stacks. At both ends of both axles, each tray has a bushing in its lip and a thrust washer
+# inside the lip. One wave washer per axle, in the back gap.
+for t in (1, 2, 3):
+    for e, end in enumerate(("Cabinet axle", "Cabinet axle, turned", "Outer axle", "Outer axle, turned")):
+        i = 4 * (t - 1) + e + 1
+        HARDWARE += [
+            ((f"Lip bushing {i}", "Axle"), (f"Tread {t}", end)),
+            ((f"Thrust washer {i}", "Axle"), (f"Tread {t}", end)),
+        ]
+    for e, end in enumerate(("Cabinet axle", "Outer axle")):
+        HARDWARE.append(((f"Wave washer {2 * (t - 1) + e + 1}", "Axle"), (f"Tread {t}", end)))
+# A bushing in each bracket ear.
+for b in range(1, 5):
+    for e, end in enumerate(("Axle", "Axle, turned")):
+        HARDWARE.append(((f"Ear bushing {2 * (b - 1) + e + 1}", "Axle"), (f"Bracket {b}", end)))
+# The step legs' ears take lip bushings: the cabinet-side leg in its upper holes, the outer leg in its lower ones.
+for i, (leg, end) in enumerate((("Hook-on step leg 1", "Axle"), ("Hook-on step leg 1", "Axle, front"),
+                                ("Hook-on step leg 2", "Lower axle"), ("Hook-on step leg 2", "Axle, turned"))):
+    HARDWARE.append(((f"Lip bushing {13 + i}", "Leg ear"), (leg, end)))
+HARDWARE += [
+    (("Neoprene washer 1", "Tread"), ("Tread 3", "Cabinet axle")),
+    (("Neoprene washer 2", "Tread"), ("Tread 3", "Outer axle")),
+    (("Rail foot pad", "Rail"), ("Outer rail", "Foot pad")),
+    (("Step leg pad 1", "Leg"), ("Hook-on step leg 1", "Foot pad")),
+    (("Step leg pad 2", "Leg"), ("Hook-on step leg 2", "Foot pad")),
+    (("Ledge strip", "Ledge"), ("Step ledge", "Rubber strip")),
+    (("Panel bumper 1", "Panel"), ("REF cabinet", "Bumper, top tread")),
+    (("Panel bumper 2", "Panel"), ("REF cabinet", "Bumper, middle tread")),
+]
 
-def groups():
-    """The hardware's groups: [(name, [instances])], each led by the part the rest is fixed to."""
+# Which rigid body of the fold each part belongs to (tools/b3_model.py moves the bodies). Hardware
+# goes with the part it is fixed to; everything not listed stays on the cabinet.
+BODIES = {
+    "Tread 1": "top tread", "Tread 2": "middle tread",
+    "Bracket 3": "rail", "Bracket 4": "rail", "Outer rail": "rail", "Step clip": "rail",
+    "Tread 3": "step", "Hook-on step leg 1": "cabinet-side leg", "Hook-on step leg 2": "outer leg",
+}
+
+
+def lead_of():
+    """Instance -> the part it is fixed to, directly or through other hardware."""
     root = {}
 
     def find(i):
@@ -128,6 +184,12 @@ def groups():
 
     for (child, _), (parent, _) in HARDWARE:
         root[find(child)] = find(parent)
+    return find
+
+
+def groups():
+    """The hardware's groups: [(name, [instances])], each led by the part the rest is fixed to."""
+    find = lead_of()
     members = {}
     for i in [i for (c, _), (p, _) in HARDWARE for i in (p, c)]:
         members.setdefault(find(i), [])
@@ -160,20 +222,29 @@ def flat(m):
     return [round(v, 12) + 0.0 for row in m for v in row]
 
 
-def plan(state):
-    """Every instance's part, Part Studio and transform, and the mate connectors by (part, name)."""
-    studios = state["part_studios"]
-    for key in ("parts", "surroundings"):
-        if "parts" not in studios.get(key, {}):
-            sys.exit("Run tools/onshape_check.py first; the state file has no parts for the assembly.")
-    mcs = {(m["part"], m["name"]): m for key in ("parts", "surroundings") for m in studios[key]["mate_connectors"]}
+def plan(state=None):
+    """Every instance's part, Part Studio and transform, and the mate connectors by (part, name).
+
+    Without a state, the plan comes from tools/b3_model.py: the same placing,
+    before the Part Studios have been rebuilt.
+    """
+    if state is None:
+        mcs = {(m["part"], m["name"]): m for m in Model().onshape_connectors()}
+        ref_parts, made = REF_PARTS, {part for part, _ in mcs}
+    else:
+        studios = state["part_studios"]
+        for key in ("parts", "surroundings"):
+            if "parts" not in studios.get(key, {}):
+                sys.exit("Run tools/onshape_check.py first; the state file has no parts for the assembly.")
+        mcs = {(m["part"], m["name"]): m for key in ("parts", "surroundings") for m in studios[key]["mate_connectors"]}
+        ref_parts, made = studios["surroundings"]["parts"], studios["parts"]["parts"]
     part_of = dict(INSTANCES)
     instances = {}
-    for name in studios["surroundings"]["parts"]:
+    for name in ref_parts:
         part_of[name] = name
         instances[name] = {"part": name, "studio": "surroundings", "fixed": True, "transform": IDENTITY}
     links = [ends for _, *ends in MATES] + HARDWARE
-    missing = sorted({p for p in INSTANCES.values() if p not in studios["parts"]["parts"]}
+    missing = sorted({p for p in INSTANCES.values() if p not in made}
                      | {f"{part_of.get(i, i)} / {n}" for ends in links for i, n in ends
                         if (part_of.get(i, i), n) not in mcs})
     if missing:
@@ -192,21 +263,43 @@ def plan(state):
     return instances, mcs
 
 
+def stowed(instances):
+    """The same instances where they sit with the stair folded and the step on its ledge, all fixed."""
+    motions = {body: to_onshape(m) for body, m in Model().body_motions().items()}
+    find = lead_of()
+    return {name: {**inst, "fixed": True, "transform": mul(motions[BODIES.get(find(name), "cabinet")], inst["transform"])}
+            for name, inst in instances.items()}
+
+
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--state", help="state file (default: the project's shared folder if present)")
     ap.add_argument("--dry-run", action="store_true", help="print the plan without calling the API")
+    ap.add_argument("--offline", action="store_true", help="with --dry-run: plan from tools/b3_model.py, not the state file")
+    ap.add_argument("--stowed", action="store_true", help="build B3 test Stowed: every part fixed in its stowed place (2 calls)")
     ap.add_argument("--rebuild", action="store_true", help="delete the assembly in the state file and build a new one")
     ap.add_argument("--no-groups", action="store_true", help="fasten the hardware with mates instead of groups")
     args = ap.parse_args()
 
-    st = State(args.state)
-    instances, mcs = plan(st.data)
+    if args.offline and not args.dry_run:
+        sys.exit("--offline only plans; use it with --dry-run.")
+    if args.offline:
+        st = None
+        instances, mcs = plan()
+    else:
+        from onshape_api import State
+        st = State(args.state)
+        instances, mcs = plan(st.data)
+    if args.stowed:
+        instances = stowed(instances)
     if args.dry_run:
         for name, inst in instances.items():
             t = inst["transform"]
             print(f"{name:34} {inst['part']:32} at ({t[0][3] / 0.0254:7.3f}, {t[1][3] / 0.0254:7.3f}, {t[2][3] / 0.0254:7.3f}) in"
                   + ("  fixed" if inst["fixed"] else ""))
+        if args.stowed:
+            print(f"{len(instances)} instances, all fixed, in {STOWED_NAME}")
+            return
         for kind, (a, an), (b, bn) in MATES:
             print(f"{kind:9} {a} ({an}) to {b} ({bn})")
         for name, members in groups():
@@ -214,11 +307,65 @@ def main():
         print(f"{len(instances)} instances, {len(MATES)} mates, {len(groups())} groups")
         return
     try:
+        if args.stowed:
+            build_stowed(st, instances, args.rebuild)
+            return
         if args.no_groups:
             st.data.setdefault("assembly", {})["no_groups"] = True
         build(st, instances, mcs, args.rebuild)
     finally:
         st.close()
+
+
+def next_name(old, base):
+    """The name for an assembly that replaces one whose tab the API key could not delete."""
+    last = old.rsplit(" ", 1)[-1]
+    return f"{base} {int(last) + 1 if last.isdigit() else 2}"
+
+
+def insert_groups(api, state, instances):
+    """The body of one transformedinstances call: every instance in its own transform group."""
+    out = []
+    for inst in instances.values():
+        ps = state["part_studios"][inst["studio"]]
+        params = {"documentId": api.did, "elementId": ps["id"], "partId": ps["parts"][inst["part"]],
+                  "isAssembly": False, "isWholePartStudio": False}
+        if inst["fixed"]:
+            params["isFixed"] = True
+        out.append({"instances": [params], "transform": flat(inst["transform"])})
+    return out
+
+
+def build_stowed(st, instances, rebuild):
+    """Two calls: create the assembly, then insert every instance, fixed, where it sits stowed."""
+    api, state = st.api, st.data
+    asm = state.setdefault("stowed", {})
+    if asm.get("inserted") and not rebuild:
+        print(f"{asm['name']} is already built; --rebuild makes a new one after the FeatureScript's numbers change.")
+        return
+    if asm.get("inserted"):
+        # As in build(): a key that may not delete tabs leaves the old one to delete by hand.
+        code, _ = api("DELETE", f"/elements{api.dw}/e/{asm['id']}", check=False)
+        old, old_id = asm["name"], asm["id"]
+        asm.clear()
+        if code < 300:
+            print(f"deleted the old assembly, {old}")
+            asm["name"] = old
+        else:
+            print(f"could not delete the old assembly ({code}); delete the tab \"{old}\" by hand")
+            asm["name"] = next_name(old, STOWED_NAME)
+            state.setdefault("abandoned_assemblies", []).append(old_id)
+        st.save()
+    if "id" not in asm:
+        asm.setdefault("name", STOWED_NAME)
+        asm["id"] = api("POST", f"/assemblies{api.dw}", {"name": asm["name"]})["id"]
+        print(f"created the assembly {asm['name']}")
+        st.save()
+    api("POST", f"/assemblies{api.dw}/e/{asm['id']}/transformedinstances",
+        {"transformGroups": insert_groups(api, state, instances)})
+    asm["inserted"] = True
+    st.save()
+    print(f"{asm['name']}: {len(instances)} instances, all fixed in their stowed places")
 
 
 def build(st, instances, mcs, rebuild):
@@ -235,8 +382,7 @@ def build(st, instances, mcs, rebuild):
             keep["name"] = old
         else:
             print(f"could not delete the old assembly ({code}); delete the tab \"{old}\" by hand")
-            n = int(old.rsplit(" ", 1)[1]) + 1 if old.rsplit(" ", 1)[-1].isdigit() else 2
-            keep["name"] = f"{NAME} {n}"
+            keep["name"] = next_name(old, NAME)
             state.setdefault("abandoned_assemblies", []).append(asm["id"])
         asm.clear()
         asm.update(keep)
@@ -253,14 +399,7 @@ def build(st, instances, mcs, rebuild):
     # All instances in one call, each in its own transform group.
     if "instances" not in asm:
         if not asm.get("inserted"):
-            transform_groups = []
-            for name, inst in instances.items():
-                ps = state["part_studios"][inst["studio"]]
-                params = {"documentId": api.did, "elementId": ps["id"], "partId": ps["parts"][inst["part"]],
-                          "isAssembly": False, "isWholePartStudio": False}
-                if inst["fixed"]:
-                    params["isFixed"] = True
-                transform_groups.append({"instances": [params], "transform": flat(inst["transform"])})
+            transform_groups = insert_groups(api, state, instances)
             code, r = api("POST", f"{path}/transformedinstances", {"transformGroups": transform_groups}, check=False)
             if code >= 400 and any(i["fixed"] for i in instances.values()):
                 print(f"insert with isFixed refused ({code}: {str(r)[:500]}); inserting without it")
