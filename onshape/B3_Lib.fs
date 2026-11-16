@@ -269,17 +269,19 @@ export function b3StepClipJoint() returns map
 }
 
 // Step clip screw k, on the clip as built on the panel: under its head on the
-// mounting leg's free face, z out of the leg. Screw 0 is the lower one there.
+// mounting leg's free face, z out of the leg. Screws 0 and 1 are the front
+// pair (cabinet), 2 and 3 the rear pair (rail); the even one is the lower.
 export function b3ClipScrewJoint(k is number) returns map
 {
-    return b3Joint(vector(CLIP_HOLE_X, SHEET_T, CLIP_CAB_Z + (k == 0 ? -1 : 1) * CLIP_HOLE_DZ), vector(0, 1, 0), vector(1, 0, 0));
+    return b3Joint(vector(CLIP_HOLE_X - (k < 2 ? 0 : 1) * CLIP_HOLE_BACK, SHEET_T, CLIP_CAB_Z + (k % 2 == 0 ? -1 : 1) * CLIP_HOLE_DZ),
+        vector(0, 1, 0), vector(1, 0, 0));
 }
 
-// The rail clip's nyloc nut k on the rail's outer face. The clip is upside
-// down there, so its screw 0 is the upper one.
+// The rail clip's nyloc nut k on the rail's outer face, behind the clip's rear
+// pair of holes. The clip is upside down there, so nut 0 is the upper one.
 export function b3ClipNutJoint(k is number) returns map
 {
-    return b3Joint(vector(CLIP_HOLE_X, RAIL_Y + RAIL_T, CLIP_RAIL_Z + (k == 0 ? 1 : -1) * CLIP_HOLE_DZ), vector(0, 1, 0), vector(1, 0, 0));
+    return b3Joint(vector(CLIP_HOLE_X - CLIP_HOLE_BACK, RAIL_Y + RAIL_T, CLIP_RAIL_Z + (k == 0 ? 1 : -1) * CLIP_HOLE_DZ), vector(0, 1, 0), vector(1, 0, 0));
 }
 
 // The step axle on the hook-on step's cabinet-side pivot line, at its back

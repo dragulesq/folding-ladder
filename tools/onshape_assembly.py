@@ -145,7 +145,7 @@ for b in (1, 2):
 # nyloc nut on the rail's outer face.
 for k in range(1, 3):
     HARDWARE += [
-        ((f"M6 button-head screw {12 + k}", "Washer"), ("Step clip 2", f"Screw {k}")),
+        ((f"M6 button-head screw {12 + k}", "Washer"), ("Step clip 2", f"Screw {k + 2}")),
         ((f"M6 nyloc nut {6 + k}", "Rail"), ("Outer rail", f"Nut, clip {k}")),
         ((f"M6 button-head screw {14 + k}", "Washer"), ("Step clip 1", f"Screw {k}")),
     ]

@@ -74,7 +74,7 @@ The rail brackets are the same part as the cabinet brackets, turned to face the 
 | Bracket 3, Bracket 4 | Tread axle (1 each) | Back end | Axle, turned |
 | | M6 flat-head screw (3 each) | Head | Screw 1 to 3 |
 | Outer rail | M6 nyloc nut (8) | Rail | Nut, top 1 to 3 / Nut, middle 1 to 3 / Nut, clip 1 and 2 |
-| Step clip 1 and 2 | M6 button-head screw (2 each) | Washer | Screw 1 and 2 |
+| Step clip 1 and 2 | M6 button-head screw (2 each) | Washer | Screw 1 and 2 (the front pair, on the cabinet) / Screw 3 and 4 (the rear pair, on the rail) |
 | Tread 3 | Step axle (2) | Tread | Cabinet axle / Outer axle |
 | Tread 1, 2, 3 | Lip bushing (4 each) | Axle | Cabinet axle / Cabinet axle, turned / Outer axle / Outer axle, turned |
 | | Thrust washer (4 each) | Axle | the same four |
@@ -95,7 +95,7 @@ To fold the stair, drag the top tread up toward the cabinet: the treads, the rai
 
 ## Flat patterns
 
-The bent parts are Onshape sheet-metal parts: the tread, the step leg, the step clip, the step ledge, the stow bracket, the lower stow hook and the outer rail on 1/8" sheet; the bracket on 3/16". The rail's sheet is set by `RAIL_T` and the three constants beside it in `B3_Parameters.fs`. Each is modeled to the outside of its bends, then converted with the thickness going inward, so the outside sizes match the B3 page.
+The bent parts are Onshape sheet-metal parts: the tread, the step leg, the step clip, the step ledge, the stow bracket and the lower stow hook on 1/8" sheet; the bracket and the outer rail on 3/16". The rail's sheet is set by `RAIL_T` and the three constants beside it in `B3_Parameters.fs`; 3/16" is for stiffness (1/8" is about 30% as stiff as a plate, and steel of equal stiffness is 3.3 mm and twice the weight). Each is modeled to the outside of its bends, then converted with the thickness going inward, so the outside sizes match the B3 page.
 
 - **Bends** use SendCutSend's bending specs for 5052: `BEND_R_SHEET` 0.125" with `K_SHEET` 0.44 on .125" sheet, `BEND_R_PLATE` 0.250" with `K_PLATE` 0.43 on .187". They don't do custom radii, so the tread lips bend at 0.125" too. Their bend deductions (0.216" and 0.356") match.
 - **Reliefs** follow SendCutSend's rule: at least half the thickness wide (these are a full thickness) and reaching the bend radius plus the thickness plus 0.020" past the bend line on the flat pattern (0.270" on .125", 0.457" on .187"). Past a relief, the bare edge sits 1/16" inside the bend line, so no material lies on the bend line where the flange stops. There are two places: below the rail's riser flange, where the middle step carries on past it, and at both ends of the step clip's bend, where the taller mounting leg carries on past the keyhole leg. On the stow bracket, a notch in the shelf's corner keeps its two bends apart instead. Where two flanges meet (the rail's at the foot, and each step leg's side flanges and foot), Onshape cuts a round corner relief of the same radius. Every other bend runs to an edge at both ends, so it needs none: the tread lips, the bracket ears, the step leg's side flanges at the top, the step clip, the ledge, and the rail's bed-side and front flanges.

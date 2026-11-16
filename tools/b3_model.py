@@ -112,10 +112,11 @@ class Model:
         return self.joint((2 * self.GOING, self.RAIL_Y, self.CLIP_RAIL_Z), (0, -1, 0), (1, 0, 0))
 
     def clip_screw(self, k):
-        return self.joint((self.CLIP_HOLE_X, self.SHEET_T, self.CLIP_CAB_Z + (-1 if k == 0 else 1) * self.CLIP_HOLE_DZ), (0, 1, 0), (1, 0, 0))
+        return self.joint((self.CLIP_HOLE_X - (0 if k < 2 else 1) * self.CLIP_HOLE_BACK, self.SHEET_T,
+                           self.CLIP_CAB_Z + (-1 if k % 2 == 0 else 1) * self.CLIP_HOLE_DZ), (0, 1, 0), (1, 0, 0))
 
     def clip_nut(self, k):
-        return self.joint((self.CLIP_HOLE_X, self.RAIL_Y + self.RAIL_T, self.CLIP_RAIL_Z + (1 if k == 0 else -1) * self.CLIP_HOLE_DZ), (0, 1, 0), (1, 0, 0))
+        return self.joint((self.CLIP_HOLE_X - self.CLIP_HOLE_BACK, self.RAIL_Y + self.RAIL_T, self.CLIP_RAIL_Z + (1 if k == 0 else -1) * self.CLIP_HOLE_DZ), (0, 1, 0), (1, 0, 0))
 
     def rail_pad(self):
         return self.joint((self.RAIL_PAD_X0[1], self.RAIL_Y + self.RAIL_T + self.RAIL_FLANGE - self.RAIL_PAD_W, self.RAIL_FOOT_Z),
@@ -202,6 +203,7 @@ class Model:
             c[("Outer rail", f"Nut, middle {k + 1}")] = self.rail_nut(mid, k)
         for k in range(2):
             c[("Outer rail", f"Nut, clip {k + 1}")] = self.clip_nut(k)
+        for k in range(4):
             c[("Step clip", f"Screw {k + 1}")] = self.clip_screw(k)
         return c
 

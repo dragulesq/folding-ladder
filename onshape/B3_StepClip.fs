@@ -9,8 +9,10 @@ import(path : "onshape/std/common.fs", version : "2641.0");
 /*
  * B3 Step Clip, 1/8" sheet-metal part, used twice: on the cabinet's front
  * post, and upside down inside the outer rail. A 3 1/8" tall mounting leg
- * with two M6 holes, one above the other on the middle of the front post's
- * slot, and a 2 1/8" tall keyhole leg bent out at the stair's front end. The
+ * with two pairs of M6 holes, and a 2 1/8" tall keyhole leg bent out at the
+ * stair's front end. The front pair, on the middle of the front post's slot,
+ * is for the cabinet; the rear pair, 1/2" behind, is for the rail, where the
+ * front pair would sit in the front flange's bend. The
  * keyhole takes the hook pin on the back end of one of the hook-on step's
  * axles; it has a slot above and below its hole, so the part is the same
  * either way up. The mounting leg runs 1/2" past the bend at each end, with a
@@ -30,8 +32,13 @@ export const b3StepClip = defineFeature(function(context is Context, id is Id, d
         const kh = CLIP_KEY_H / 2;
         const r = CLIP_CORNER_R;
 
-        // Mounting leg, on the panel, with the two screw holes.
-        const screws = [b3Hole(CLIP_HOLE_X, zc - CLIP_HOLE_DZ, SCREW_HOLE_DIA), b3Hole(CLIP_HOLE_X, zc + CLIP_HOLE_DZ, SCREW_HOLE_DIA)];
+        // Mounting leg, on the panel, with the two pairs of screw holes.
+        var screws = [];
+        for (var k = 0; k < 4; k += 1)
+        {
+            const at = b3ClipScrewJoint(k).origin;
+            screws = append(screws, b3Hole(at[0], at[2], SCREW_HOLE_DIA));
+        }
         b3PrismXZ(context, id + "mountLeg", b3Rounded(b3Rect(x0, zc - mh, x1, zc + mh), [r, 0, 0, r]), screws, 0 * inch, SHEET_T);
 
         // Keyhole leg, outer face flush with the stair's front end.
@@ -57,7 +64,7 @@ export const b3StepClip = defineFeature(function(context is Context, id is Id, d
         b3Finish(context, clip, "Step clip", RGB_ALU_DARK);
         b3Mc(context, id + "mcMount", clip, "Step clip", "Mount", b3StepClipMountJoint());
         b3Mc(context, id + "mcStep", clip, "Step clip", "Hook-on step", b3CabAxleJoint(HOOK_STEP));
-        for (var k = 0; k < 2; k += 1)
+        for (var k = 0; k < 4; k += 1)
         {
             b3Mc(context, id + ("mcScrew" ~ k), clip, "Step clip", "Screw " ~ (k + 1), b3ClipScrewJoint(k));
         }

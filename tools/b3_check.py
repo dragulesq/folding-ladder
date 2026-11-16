@@ -161,13 +161,14 @@ def checks(m):
     relief = line + m.BEND_R_SHEET + m.SHEET_T + m.RELIEF_EXTRA
     gap = math.hypot(m.CLIP_HOLE_IN - relief, m.CLIP_KEY_H / 2 - m.CLIP_HOLE_DZ) - m.SCREW_HOLE_DIA / 2
     out.append(("Step clip's screw holes to its bend reliefs", gap, 0.1, ""))
-    out.append(("Step clip's screw holes inside its ends", min(m.CLIP_MOUNT_H / 2 - m.CLIP_HOLE_DZ, m.CLIP_MOUNT_L - m.CLIP_HOLE_IN) - m.SCREW_HOLE_DIA / 2, 0.4, ""))
+    out.append(("Step clip's screw holes inside its ends", min(m.CLIP_MOUNT_H / 2 - m.CLIP_HOLE_DZ, m.CLIP_MOUNT_L - m.CLIP_HOLE_IN - m.CLIP_HOLE_BACK) - m.SCREW_HOLE_DIA / 2, 0.4, ""))
     out.append(("Step clip's keyhole on the step's pivot lines", -abs(m.RAIL_Y - m.CAB_AXLE_Y - m.OUT_AXLE_Y), -0.001, "15/16 from the panel and from the rail"))
     washer_top = -m.CLIP_PIN_DROP + m.END_WASHER_DIA / 2
     out.append(("Resting pin's washer held by the slot, below the keyhole's hole", -washer_top, 0.05, "the washer's top edge below the hole's middle"))
-    out.append(("Rail clip's nut short of the front flange's bend", (2 * m.GOING - m.RAIL_T - m.RAIL_BEND_R) - (m.CLIP_HOLE_X + m.NUT_AF / 2), -0.05,
+    out.append(("Rail clip's nut short of the front flange's bend", (2 * m.GOING - m.RAIL_T - m.RAIL_BEND_R) - (m.CLIP_HOLE_X - m.CLIP_HOLE_BACK + m.NUT_AF / 2), 0.05,
                 "across its flats; a little over the start of the bend's radius is harmless"))
-    out.append(("Rail clip's holes clear of the front flange's bend", (2 * m.GOING - (m.RAIL_BEND_R + m.RAIL_T - (math.pi / 4) * (m.RAIL_BEND_R + m.RAIL_K * m.RAIL_T)) - m.RAIL_DIE_W / 2) - (m.CLIP_HOLE_X + m.SCREW_HOLE_DIA / 2), 0, ""))
+    out.append(("Rail clip's holes clear of the front flange's bend", (2 * m.GOING - (m.RAIL_BEND_R + m.RAIL_T - (math.pi / 4) * (m.RAIL_BEND_R + m.RAIL_K * m.RAIL_T)) - m.RAIL_DIE_W / 2) - (m.CLIP_HOLE_X - m.CLIP_HOLE_BACK + m.SCREW_HOLE_DIA / 2), 0, "the rear pair"))
+    out.append(("Metal between the step clip's two hole pairs", m.CLIP_HOLE_BACK - m.SCREW_HOLE_DIA, 0.2, ""))
     folded_clip = m.RAIL_Y + mo["rail"][1][3] - m.CLIP_KEY_LEG
     out.append(("Folded, the rail clip's keyhole leg off the panel", folded_clip, 0.25, "it stands past the middle tread's front end"))
     out.append(("Folded, the rail clip past the middle tread's front end", (2 * m.GOING - m.SHEET_T) - (m.going_x(TREAD_MIDDLE) + m.TRAY_INSET + m.TRAY_D), 0.03, ""))
