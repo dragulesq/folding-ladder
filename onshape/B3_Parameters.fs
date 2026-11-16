@@ -140,7 +140,7 @@ export const END_HEAD_H = 3.3 * millimeter;
 // ---------------------------------------------------------------------------
 export const BUSHING_FLANGE_DIA = AXLE_DIA + 8 * millimeter;   // 20 mm flange (McMaster 2705T142 has 18 mm)
 export const BUSHING_FLANGE_T = 1 * millimeter;
-export const LIP_BUSHING_LEN = 4 * millimeter;     // overall, flange included: PFM-1214-04, in the 1/8" lips and step leg ears
+export const LIP_BUSHING_LEN = 4 * millimeter;     // overall, flange included: igus JFM-1214-04 (iglide J), in the 1/8" lips and step leg ears
 export const EAR_BUSHING_LEN = 6 * millimeter;     // overall: GFM-1214-06, in the brackets' 3/16" ears
 export const THRUST_OD = AXLE_DIA + 6 * millimeter;    // 18 mm PTFE washer; the most that sits flat inside a lip at a cabinet-side hole
 export const THRUST_T = 1.5 * millimeter;
