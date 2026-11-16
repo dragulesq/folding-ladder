@@ -15,9 +15,10 @@ Every bent part is an Onshape sheet-metal part, with the bend radius and K-facto
 | `onshape/B3_Reference.fs` | B3 Reference | Floor, cabinet, bed-end wall, mattress, door handle (parts named `REF ...`), for a Part Studio of their own |
 | `onshape/B3_Treads.fs` | B3 Tread | The tread (used three times: the top and middle treads and the hook-on step's tray) |
 | `onshape/B3_Brackets.fs` | B3 Bracket | The bracket with its two bent pivot ears (used four times: two on the cabinet, two bolted inside the rail) |
-| `onshape/B3_OuterRail.fs` | B3 Outer Rail | Stepped rail with flanges, the door handle notch, hand slot and the rail brackets' and step clip's screw holes |
+| `onshape/B3_OuterRail.fs` | B3 Outer Rail | Stepped rail with flanges, a straight lower edge (the 17" treads keep it inside the door handle, so it has no notch), hand slot and the rail brackets' and step clip's screw holes |
 | `onshape/B3_StepClip.fs` | B3 Step Clip | Clip bolted inside the outer rail with the outer keyhole |
 | `onshape/B3_PivotHardware.fs` | B3 Pivot Hardware | Tread axle (used 4 times) and step axle (2), 12 mm tube; M6 fender washer (12, one per axle end); M6 button-head screw (14: one per axle end, two for the step clip); stop pin (4); M6 x 20 flat-head screw (8, for the rail brackets); M6 nyloc nut (10, for the rail brackets and the step clip) |
+| `onshape/B3_BushingsPads.fs` | B3 Bushings and Pads | The bought-in soft parts, one of each: lip bushing (16 used), ear bushing (8), PTFE thrust washer (12), wave washer (6), neoprene washer (2), rail foot pad (1), step leg pad (2), ledge strip (1), panel bumper (2) |
 | `onshape/B3_FrontAngle.fs` | B3 Front Angle | Angle on the cabinet's front post |
 | `onshape/B3_StepLedge.fs` | B3 Step Ledge | Ledge that holds the folded step |
 | `onshape/B3_HookOnStep.fs` | B3 Hook-on Step Leg | The hook-on step's folding leg (used twice, the outer one turned to face the cabinet) |
@@ -75,23 +76,33 @@ The rail brackets are the same part as the cabinet brackets, turned to face the 
 | Outer rail | M6 nyloc nut (10) | Rail | Nut, top 1 to 4 / Nut, middle 1 to 4 / Nut, clip 1 and 2 |
 | Step clip | M6 button-head screw (2) | Washer | Screw 1 and 2 |
 | Tread 3 | Step axle (2) | Tread | Cabinet axle / Outer axle |
+| Tread 1, 2, 3 | Lip bushing (4 each) | Axle | Cabinet axle / Cabinet axle, turned / Outer axle / Outer axle, turned |
+| | Thrust washer (4 each) | Axle | the same four |
+| Tread 1, 2, 3 | Wave washer (2 each, at the back) | Axle | Cabinet axle / Outer axle |
+| Tread 3 | Neoprene washer (2) | Tread | Cabinet axle / Outer axle |
+| Bracket 1 to 4 | Ear bushing (2 each) | Axle | Axle / Axle, turned |
+| Hook-on step leg 1, 2 | Lip bushing (2 each) | Leg ear | Axle / Axle, front (Lower axle / Axle, turned on the outer leg) |
+| | Step leg pad (1 each) | Leg | Foot pad |
+| Outer rail | Rail foot pad | Rail | Foot pad |
+| Step ledge | Ledge strip | Ledge | Rubber strip |
+| REF cabinet | Panel bumper (2) | Panel | Bumper, top tread / Bumper, middle tread |
 | With its axle | M6 fender washer (one per axle end, 12) | Axle | The axle: Back end / Front end |
 | | M6 button-head screw (12) | Washer | Its washer: Screw |
 
 To fold the stair, drag the top tread up toward the cabinet: the treads, the rail brackets and the rail move as a parallelogram on the four revolute mates. Lift the hook-on step off first, as on the stair itself; in the assembly it stays on the front angle, so suppress or hide it to see the folded stair clearly. The legs fold on their own revolute mates, the cabinet-side leg first.
 
-`tools/onshape_assembly.py` builds this assembly through the API (see below).
+`tools/onshape_assembly.py` builds this assembly through the API (see below); its own `HARDWARE` table is the exact list of which connector goes on which. `--stowed` builds a second assembly, `B3 test Stowed`, with every part fixed where it sits folded: the treads up against the panel, the rail lifted with them, and the hook-on step standing on its ledge, cabinet-side end down and tread face to the room.
 
 ## Flat patterns
 
 The bent parts are Onshape sheet-metal parts: the tread, the step leg, the step clip, the front angle and the step ledge on 1/8" sheet; the bracket and the outer rail on 3/16". Each is modeled to the outside of its bends, then converted with the thickness going inward, so the outside sizes match the B3 page.
 
 - **Bends** use SendCutSend's bending specs for 5052: `BEND_R_SHEET` 0.125" with `K_SHEET` 0.44 on .125" sheet, `BEND_R_PLATE` 0.250" with `K_PLATE` 0.43 on .187". They don't do custom radii, so the tread lips bend at 0.125" too. Their bend deductions (0.216" and 0.356") match.
-- **Reliefs** follow SendCutSend's rule: at least half the thickness wide (these are a full thickness) and reaching the bend radius plus the thickness plus 0.020" past the bend line on the flat pattern (0.270" on .125", 0.457" on .187"). Past a relief, the bare edge sits 1/16" inside the bend line, so no material lies on the bend line where the flange stops. There are three places: where the rail's long flange stops short of the handle notch, below the rail's riser flange, where the middle step carries on past it, and where the front angle's panel leg stops, which is a step in the outward leg. Where two flanges meet (the rail's at the foot, and each step leg's side flanges and foot), Onshape cuts a round corner relief of the same radius. Every other bend runs to an edge at both ends, so it needs none: the tread lips, the bracket ears, the step leg's side flanges at the top, the step clip, the ledge, and the rail's bed-side and front flanges.
+- **Reliefs** follow SendCutSend's rule: at least half the thickness wide (these are a full thickness) and reaching the bend radius plus the thickness plus 0.020" past the bend line on the flat pattern (0.270" on .125", 0.457" on .187"). Past a relief, the bare edge sits 1/16" inside the bend line, so no material lies on the bend line where the flange stops. There are two places: below the rail's riser flange, where the middle step carries on past it, and where the front angle's panel leg stops, which is a step in the outward leg. Where two flanges meet (the rail's at the foot, and each step leg's side flanges and foot), Onshape cuts a round corner relief of the same radius. Every other bend runs to an edge at both ends, so it needs none: the tread lips, the bracket ears, the step leg's side flanges at the top, the step clip, the ledge, and the rail's bed-side and front flanges.
 - **Cut features** sit at least half SendCutSend's die width from a bend line (0.315" on .125", 0.492" on .187"), except the bushing holes (see Limitations).
 - **Export:** open the flat view with the sheet-metal table button in the Part Studio, or right-click the part in the parts list and export its flat pattern as DXF for SendCutSend.
 
-Estimated flat sizes: tread about 18 x 9 3/16, bracket about 7 3/16 x 3 7/16, outer rail about 13 11/16 x 29 1/16, step leg about 6 13/16 x 10 7/16, all within SendCutSend's 44 x 30.
+Estimated flat sizes: tread about 17 x 9 3/16, bracket about 7 3/16 x 3 7/16, outer rail about 13 11/16 x 29 1/16, step leg about 6 13/16 x 10 7/16, all within SendCutSend's 44 x 30.
 
 ## Checking the code
 
@@ -99,13 +110,15 @@ Estimated flat sizes: tread about 18 x 9 3/16, bracket about 7 3/16 x 3 7/16, ou
 
 ```
 git clone --filter=blob:none https://github.com/javawizard/onshape-std-library-mirror std
-git -C std checkout "$(git -C std log --format=%h --grep='^Version 2641.0$')"
+git -C std checkout "$(git -C std log --format=%h --grep='Version 2641.0$')"
 python3 tools/fs_lint.py std
 ```
 
+Three more tools work offline, from `B3_Parameters.fs` alone, and cost no API calls. `tools/b3_model.py` repeats the joints of `B3_Lib.fs` in Python: where every part and mate connector sits, open and stowed. `tools/b3_check.py` prints the clearances the hardware and the stowed stair depend on (door handle, wave washer room, the folded step under the folded stair) and fails if one runs out. `tools/stow_view.py` draws the stowed stair to scale into `drawings/`. Run the last two after changing a number.
+
 `tools/onshape_check.py` runs the lint, then loads `B3_AllInOne.fs` into a test Onshape document through the API, adds the features to two Part Studios (`B3 test Part Studio` and `B3 test Surroundings`) and reports what rebuilds, each part's size, and their mate connectors. `tools/onshape_assembly.py` then builds the assembly from them: it inserts every copy in one call, placed where its mates will hold it, then adds the groups and the mates. Both need `ONSHAPE_ACCESS_KEY`, `ONSHAPE_SECRET_KEY` and `ONSHAPE_DOC_URL` (a workspace URL of a document used only for testing), and touch only the `B3 test` tabs they create there.
 
-API calls are limited, so the scripts keep the ids of what they made in a state file and reuse them. The first check costs about 16 calls, each rerun 4, and `--report` 2. The assembly costs about 25 calls (one per group and per mate), once: it follows the Part Studios by itself, so after changing the FeatureScript only the check needs rerunning. When the parts are replaced rather than changed (their ids change, as when they became sheet metal), `--rebuild` starts a new assembly; if the API key can't delete tabs, the new one gets a numbered name and the old tab is left to delete by hand. `python3 tools/onshape_assembly.py --dry-run` prints the plan without calling the API.
+API calls are limited, so the scripts keep the ids of what they made in a state file and reuse them. The first check costs about 16 calls, each rerun 4, and `--report` 2. The check also compares Onshape's mate connectors with the offline model's, so a joint changed in one and not the other shows up. The assembly costs about 31 calls (one per group and per mate), once, and the stowed one 2: it follows the Part Studios by itself, so after changing the FeatureScript only the check needs rerunning. When the parts are replaced rather than changed (their ids change, as when they became sheet metal), `--rebuild` starts a new assembly; if the API key can't delete tabs, the new one gets a numbered name and the old tab is left to delete by hand. `python3 tools/onshape_assembly.py --dry-run` prints the plan without calling the API, and with `--offline` it plans from the offline model, before the Part Studios exist.
 
 ## Changing dimensions
 
@@ -125,6 +138,8 @@ The page's y runs along Onshape's -Y so that the model isn't mirrored: facing th
 
 ## Limitations
 
-- **Not modeled:** countersinks, which are picked in SendCutSend's configurator when ordering (the bracket's screw holes and the step ledge's are plain holes, so in the assembly each flat-head screw's head overlaps the rail bracket's web), the rail's latch holes and foot pad, the front angle's keeper holes, bushings, thrust and wave washers, the step clip screws' shanks, and rubber parts (the step legs' pads among them). Each axle screw therefore sits about 1.2 mm off its lip, where the bushing flange goes.
+- **Not modeled:** countersinks, which are picked in SendCutSend's configurator when ordering (the bracket's screw holes and the step ledge's are plain holes, so in the assembly each flat-head screw's head overlaps the rail bracket's web), the rail's latch holes, the front angle's keeper holes and the step clip screws' shanks. The wave washer is a flat ring squeezed to its gap.
+- **Bushings** are the igus sizes the page calls for (14 mm bore, 1 mm flange, 4 mm long in a lip and 6 mm in an ear), and follow `AXLE_DIA` and `BUSHING_WALL`. McMaster's nearest, 2705T142, is 4.5 mm long: its sleeve would stand 0.3 mm proud inside a 1/8" lip and take half the wave washer's room.
+- **Not yet rebuilt in Onshape:** the 17" treads, the rail's straight lower edge and the bushings and pads are checked by the lint and the offline tools only. The rail's long flange now meets the bed-side flange at a 20 degree corner, which relies on Onshape's corner relief and may need a relief of its own.
 - **Bushing holes** are modeled at their finished 14 mm. The page cuts them as 3/8" pilots, then reams them after bending, because most of them sit closer to a bend than SendCutSend's die-width rule allows; a flat pattern exported from the model has the finished size.
 - **Flange corners:** every free flange corner is rounded. Where two flanges meet at a corner relief (the rail's foot, and each step leg's bottom corners, where the side flanges meet the foot flange), their tips stay square: Onshape's corner relief takes most of the short edge between them, and rounding the tips as well leaves it nothing to meet. Where a step leg's ear steps back to its flange, the outside corner is rounded 1/4" and the inside one 1/8"; the ear's top outer corner is 3/8", as the page's leg table gives it.
