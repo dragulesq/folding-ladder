@@ -22,6 +22,7 @@ Every bent part is an Onshape sheet-metal part, with the bend radius and K-facto
 | `onshape/B3_FrontAngle.fs` | B3 Front Angle | Angle on the cabinet's front post |
 | `onshape/B3_StepLedge.fs` | B3 Step Ledge | Ledge that holds the folded step |
 | `onshape/B3_HookOnStep.fs` | B3 Hook-on Step Leg | The hook-on step's folding leg (used twice, the outer one turned to face the cabinet) |
+| `onshape/B3_StowLocks.fs` | B3 Stow Locks | The travel lock's ledge and tapped block, and the hook plates and turn tab for the stowed hook-on step |
 | `onshape/B3_AllInOne.fs` | all of the above | Everything joined into one file, no imports needed |
 
 ## Quick start: one Feature Studio
