@@ -10,7 +10,7 @@ Two views, to scale, as SVG:
 Parts are drawn as their bounding boxes (the rail's plate as its outline), so
 bends, radii and hardware are left out; the sizes and positions are the model's.
 
-  python3 tools/stow_view.py            # writes drawings/stowed_end.svg and drawings/stowed_face.svg
+  python3 tools/stow_view.py            # writes drawings/stowed_end.svg, stowed_face.svg and rail_outline.svg
   python3 tools/stow_view.py --dir DIR  # somewhere else
 """
 import argparse
@@ -24,7 +24,7 @@ STYLE = """
 .bg{fill:#fff}.panel{fill:#d9d4c7;stroke:#8a8473}.floor{stroke:#555;stroke-width:1.5}
 .tread{fill:#c9d6e8;stroke:#34506f}.rail{fill:#e3e7ec;stroke:#3d4650}.step{fill:#f2d9a6;stroke:#7a5a12}
 .fixed{fill:#b9bec6;stroke:#3d4650}.rubber{fill:#444;stroke:#111}.handle{fill:#e9b7ae;stroke:#8f2f1e}
-.ghost{fill:none;stroke:#8a8f98;stroke-dasharray:4 3}.dim{stroke:#b3261e;fill:none;stroke-width:1}
+.ghost{fill:none;stroke:#8a8f98;stroke-dasharray:4 3}.bend{stroke:#3d4650;stroke-width:4}.hole{fill:#fff;stroke:#3d4650}.dim{stroke:#b3261e;fill:none;stroke-width:1}
 .dimt{fill:#b3261e;font:600 11px system-ui,sans-serif}.lbl{fill:#333;font:11px system-ui,sans-serif}
 .ttl{fill:#111;font:600 13px system-ui,sans-serif}rect,polygon,circle{stroke-width:1}
 """
@@ -76,8 +76,8 @@ def parts(m):
                                    m.RAIL_FOOT_Z - m.RAIL_PAD_T, m.RAIL_FOOT_Z)))
     # Fixed to the cabinet: the step's ledge with its rubber strip, and the front angle.
     out.append(("fixed", "cabinet", (0, m.LEDGE_LEN, 0, m.LEDGE_SHELF, m.LEDGE_TOP_Z - m.SHEET_T, m.LEDGE_TOP_Z)))
-    out.append(("fixed", "cabinet", (0, m.LEDGE_LEN, 0, m.SHEET_T, m.LEDGE_TOP_Z - m.LEDGE_LEG_H, m.LEDGE_TOP_Z)))
-    out.append(("rubber", "cabinet", (0, m.LEDGE_LEN, 0, m.LEDGE_SHELF, m.LEDGE_TOP_Z, m.LEDGE_TOP_Z + m.LEDGE_STRIP_T)))
+    out.append(("fixed", "cabinet", (0, m.LEDGE_LEN, 0, m.SHEET_T, m.LEDGE_TOP_Z - m.SHEET_T, m.LEDGE_TOP_Z - m.SHEET_T + m.LEDGE_LEG_H)))
+    out.append(("rubber", "cabinet", (0, m.LEDGE_LEN, m.SHEET_T, m.LEDGE_SHELF, m.LEDGE_TOP_Z, m.LEDGE_TOP_Z + m.LEDGE_STRIP_T)))
     out.append(("fixed", "cabinet", (m.FA_PANEL_LEG_X0, m.FA_X1, 0, m.SHEET_T, m.FA_BOTTOM_Z, m.FA_PANEL_LEG_TOP)))
     out.append(("fixed", "cabinet", (m.FA_X1 - m.SHEET_T, m.FA_X1, 0, m.FA_OUT_LEG, m.FA_BOTTOM_Z, m.FA_TOP_Z)))
     return out
@@ -100,24 +100,24 @@ def moved(box, motion):
 class View:
     """One orthographic view: axis 0 is x (face view) or y (end view) across, z up."""
 
-    def __init__(self, across, lo, hi, zmax, title):
-        self.a, self.lo, self.hi, self.zmax = across, lo, hi, zmax
-        self.pad_l, self.pad_t, self.pad_b = 14, 30, 36
-        self.w = (hi - lo) * S + 2 * self.pad_l
-        self.h = zmax * S + self.pad_t + self.pad_b
+    def __init__(self, across, lo, hi, zmax, title, scale=S):
+        self.a, self.lo, self.hi, self.zmax, self.s = across, lo, hi, zmax, scale
+        self.pad_l, self.pad_t, self.pad_b = 14, 30, 56
+        self.w = (hi - lo) * self.s + 2 * self.pad_l
+        self.h = zmax * self.s + self.pad_t + self.pad_b
         self.out = [f'<rect class="bg" width="{self.w:.0f}" height="{self.h:.0f}"/>',
                     f'<text class="ttl" x="{self.pad_l}" y="18">{title}</text>']
 
     def X(self, v):
-        return self.pad_l + (v - self.lo) * S
+        return self.pad_l + (v - self.lo) * self.s
 
     def Z(self, z):
-        return self.pad_t + (self.zmax - z) * S
+        return self.pad_t + (self.zmax - z) * self.s
 
     def rect(self, cls, a0, a1, z0, z1, title=""):
         tip = f"<title>{title}</title>" if title else ""
-        self.out.append(f'<rect class="{cls}" x="{self.X(a0):.1f}" y="{self.Z(z1):.1f}" width="{(a1 - a0) * S:.1f}" '
-                        f'height="{(z1 - z0) * S:.1f}">{tip}</rect>')
+        self.out.append(f'<rect class="{cls}" x="{self.X(a0):.1f}" y="{self.Z(z1):.1f}" width="{(a1 - a0) * self.s:.1f}" '
+                        f'height="{(z1 - z0) * self.s:.1f}">{tip}</rect>')
 
     def box(self, cls, ext, title=""):
         i = 2 * self.a
@@ -219,10 +219,48 @@ def face_view(m):
     v.vdim(13.2, 0, n["top"], f'{frac(n["top"])} folded top', 1)
     v.vdim(-0.9, s[4], s[5], "", 1)
     v.text("dimt", s[0], s[5], f'step {frac(s[5] - s[4])} tall, {frac(s[1] - s[0])} wide', "start", 2, -6)
-    v.hdim(0, 12.0, -1.0, '12" along the cabinet')
+    v.hdim(0, 2 * m.GOING, -1.0, f'{frac(2 * m.GOING)} along the cabinet')
     v.text("lbl", -m.WALL_GAP, 49.0, "bed-end wall", "start", 4)
     v.text("lbl", front, 48.6, "cabinet front edge", "end", -2)
-    v.text("lbl", 15.0, 11.2, "step, open", "middle")
+    v.text("lbl", 2.5 * m.GOING, 11.2, "step, open", "middle")
+    return v.svg()
+
+
+def rail_view(m):
+    """The outer rail's plate, seen from the room: outline, holes and the flanges bent toward the room."""
+    v = View(0, -6.5, 2 * m.GOING + 8.5, 31.5, "Outer rail, seen from the room (bends toward you)", 20.0)
+    pts = rail_outline(m)
+    top, mid = pts[0][1], pts[2][1]
+    foot_x, foot_z, back_z, xf = m.RAIL_FOOT_X, m.RAIL_FOOT_Z, m.RAIL_BACK_Z, 2 * m.GOING
+    v.poly("rail", pts)
+    # Flanges: a 1" band inside each bent edge. The middle step's top edge stays flat.
+    f = m.RAIL_FLANGE
+    for (a0, z0), (a1, z1) in ((pts[6], pts[0]), (pts[1], pts[2]), (pts[5], pts[6]), (pts[4], pts[5]), (pts[3], pts[4])):
+        v.line("bend", a0, z0, a1, z1)
+    r = m.SCREW_HOLE_DIA / 2
+    holes = [m.rail_nut(n, k)["origin"] for n in (TREAD_TOP, TREAD_MIDDLE) for k in range(4)]
+    holes = [(h[0], h[2]) for h in holes] + [(x, m.CLIP_SCREW_Z) for x in m.CLIP_SCREW_X]
+    for x, z in holes:
+        v.out.append(f'<circle class="hole" cx="{v.X(x):.1f}" cy="{v.Z(z):.1f}" r="{r * v.s:.1f}"/>')
+    sx, sz, sl, sh = m.HAND_SLOT_X, m.HAND_SLOT_Z, m.HAND_SLOT_L, m.HAND_SLOT_H
+    v.out.append(f'<rect class="hole" x="{v.X(sx - sl / 2):.1f}" y="{v.Z(sz + sh / 2):.1f}" width="{sl * v.s:.1f}" '
+                 f'height="{sh * v.s:.1f}" rx="{sh * v.s / 2:.1f}"/>')
+    v.line("floor", -6.5, 0, xf + 8.5, 0)
+    v.hdim(0, m.GOING, top + 1.0, "")
+    v.text("dimt", m.GOING / 2, top + 1.0, frac(m.GOING), "middle", 0, -5)
+    v.hdim(m.GOING, xf, mid + 1.0, "")
+    v.text("dimt", 1.5 * m.GOING, mid + 1.0, frac(m.GOING), "middle", 0, -5)
+    v.hdim(foot_x, xf, -1.0, f"{frac(xf - foot_x)} foot")
+    v.vdim(-1.2, back_z, top, frac(top - back_z), -1)
+    v.vdim(-3.6, 0, top, f"{frac(top)}", -1)
+    v.vdim(xf + 1.2, foot_z, mid, frac(mid - foot_z), 1)
+    v.vdim(xf + 1.2, mid, top, frac(top - mid), 1)
+    v.vdim(xf + 4.6, 0, foot_z, f"{frac(foot_z)} pad", 1)
+    v.text("lbl", m.GOING + 0.5, sz, f"hand slot {frac(sl)} x {frac(sh)}, center {frac(sz)} up", "start", 0, 4)
+    v.text("lbl", m.GOING + 0.5, holes[0][1], f"4 holes {m.SCREW_HOLE_DIA * 25.4:.1f} mm, 1\" apart, {frac(holes[0][1])} up", "start", 0, 4)
+    v.text("lbl", 1.5 * m.GOING, holes[4][1] - 1.2, f"4 holes, {frac(holes[4][1])} up", "middle")
+    v.text("lbl", (holes[8][0] + holes[9][0]) / 2, holes[8][1] - 1.2, f"2 clip holes, {frac(m.CLIP_SCREW_Z)} up", "middle")
+    v.text("lbl", -6.0, -2.4, f'{frac(m.PLATE_T)} 5052. Thick edges carry a {frac(f)} flange bent toward the room.', "start")
     return v.svg()
 
 
@@ -237,7 +275,7 @@ def main():
     m = Model()
     out = Path(args.dir)
     out.mkdir(parents=True, exist_ok=True)
-    for name, svg in (("stowed_end.svg", end_view(m)), ("stowed_face.svg", face_view(m))):
+    for name, svg in (("stowed_end.svg", end_view(m)), ("stowed_face.svg", face_view(m)), ("rail_outline.svg", rail_view(m))):
         (out / name).write_text(with_style(svg) + "\n")
         print("wrote", out / name)
     n = numbers(m)

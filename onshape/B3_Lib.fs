@@ -36,7 +36,7 @@ export function b3T(n is number) returns ValueWithUnits
     return (n + 1) * RISE;
 }
 
-// Start of the tread's going along x: top 0, middle 6, step 12.
+// Start of the tread's going along x: top 0, middle GOING, step 2 GOING.
 export function b3GoingX(n is number) returns ValueWithUnits
 {
     return (2 - n) * GOING;
@@ -180,10 +180,10 @@ export function b3FrontAngleJoint() returns map
     return b3PanelJoint(FA_X1, FA_BOTTOM_Z);
 }
 
-// Step ledge on the panel: the leg's bottom corner at the bed end.
+// Step ledge on the panel: its bottom corner at the bed end, under the shelf.
 export function b3StepLedgeJoint() returns map
 {
-    return b3PanelJoint(0 * inch, LEDGE_TOP_Z - LEDGE_LEG_H);
+    return b3PanelJoint(0 * inch, LEDGE_TOP_Z - SHEET_T);
 }
 
 // Tread n's stop pins, on the bracket ear's inside face, z along the pin.

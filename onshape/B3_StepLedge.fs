@@ -8,10 +8,11 @@ import(path : "onshape/std/common.fs", version : "2641.0");
 
 /*
  * B3 Step Ledge, 1/8" sheet-metal part: 6" angle on the panel at the bed
- * end. The folded hook-on step stands on end on its 2 1/2" shelf. Two #8
- * screws through the back leg (countersinks not modeled). The shelf's front
- * corners, at ankle height, are rounded 1/2"; the back leg's bottom corners
- * 1/4".
+ * end. The folded hook-on step stands on end on its 2 1/2" shelf. The back
+ * leg runs up the panel from the shelf, behind the folded step, with two #8
+ * screws through it above the shelf (countersinks not modeled). The shelf's
+ * front corners, at ankle height, are rounded 1/2"; the back leg's top
+ * corners 1/4".
  */
 annotation { "Feature Type Name" : "B3 Step Ledge" }
 export const b3StepLedge = defineFeature(function(context is Context, id is Id, definition is map)
@@ -26,16 +27,17 @@ export const b3StepLedge = defineFeature(function(context is Context, id is Id, 
         var screws = [];
         for (var i = 0; i < size(LEDGE_SCREW_X); i += 1)
         {
-            screws = append(screws, b3Hole(LEDGE_SCREW_X[i], LEDGE_SCREW_Z, LEDGE_SCREW_DIA));
+            screws = append(screws, b3Hole(LEDGE_SCREW_X[i], top + LEDGE_SCREW_Z, LEDGE_SCREW_DIA));
         }
-        const leg = b3Rounded(b3Rect(0 * inch, top - LEDGE_LEG_H, LEDGE_LEN, top), [LEDGE_LEG_R, LEDGE_LEG_R, 0, 0]);
+        const bottom = top - SHEET_T;
+        const leg = b3Rounded(b3Rect(0 * inch, bottom, LEDGE_LEN, bottom + LEDGE_LEG_H), [0, 0, LEDGE_LEG_R, LEDGE_LEG_R]);
         b3PrismXZ(context, id + "leg", leg, screws, 0 * inch, SHEET_T);
         b3Union(context, id + "join", b3Solids(id));
 
-        // Sheet metal: the back leg's face on the panel, then the shelf's top.
+        // Sheet metal: the back leg's face on the panel, then the shelf's underside.
         b3SheetMetal(context, id + "sm", b3Solids(id), [
-                    vector(LEDGE_LEN / 2, 0 * inch, LEDGE_SCREW_Z),
-                    vector(LEDGE_LEN / 2, LEDGE_SHELF / 2, top)
+                    vector(LEDGE_LEN / 2, 0 * inch, top + LEDGE_SCREW_Z),
+                    vector(LEDGE_LEN / 2, LEDGE_SHELF / 2, bottom)
                 ], SHEET_T, BEND_R_SHEET, K_SHEET);
 
         const body = b3Solids(id);

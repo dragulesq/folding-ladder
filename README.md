@@ -20,7 +20,7 @@ Every bent part is an Onshape sheet-metal part, with the bend radius and K-facto
 | `onshape/B3_PivotHardware.fs` | B3 Pivot Hardware | Tread axle (used 4 times) and step axle (2), 12 mm tube; M6 fender washer (12, one per axle end); M6 button-head screw (14: one per axle end, two for the step clip); stop pin (4); M6 x 20 flat-head screw (8, for the rail brackets); M6 nyloc nut (10, for the rail brackets and the step clip) |
 | `onshape/B3_BushingsPads.fs` | B3 Bushings and Pads | The bought-in soft parts, one of each: lip bushing (16 used), ear bushing (8), PTFE thrust washer (12), wave washer (6), neoprene washer (2), rail foot pad (1), step leg pad (2), ledge strip (1), panel bumper (2) |
 | `onshape/B3_FrontAngle.fs` | B3 Front Angle | Angle on the cabinet's front post |
-| `onshape/B3_StepLedge.fs` | B3 Step Ledge | Ledge that holds the folded step |
+| `onshape/B3_StepLedge.fs` | B3 Step Ledge | Ledge that holds the folded step: shelf 1 1/8" off the floor, back leg up the panel behind the step |
 | `onshape/B3_HookOnStep.fs` | B3 Hook-on Step Leg | The hook-on step's folding leg (used twice, the outer one turned to face the cabinet) |
 | `onshape/B3_AllInOne.fs` | all of the above | Everything joined into one file, no imports needed |
 
@@ -130,7 +130,7 @@ To check clearances through the fold, use the assembly: drag the tread, or anima
 
 Same datum as the B3 page. The origin is on the floor, at the side panel's face, at the stair's bed end. Each part is built once, where its first copy sits when the stair is open (the top tread's bracket, axle and so on).
 
-- **x** along the cabinet toward its front edge; the stair spans x = 0 to 12 (Onshape's X)
+- **x** along the cabinet toward its front edge; the stair spans x = 0 to 11 1/2 (Onshape's X)
 - **y** out from the panel face into the room (Onshape's **-Y**)
 - **z** up from the floor (Onshape's Z)
 
@@ -140,7 +140,6 @@ The page's y runs along Onshape's -Y so that the model isn't mirrored: facing th
 
 - **Not modeled:** countersinks, which are picked in SendCutSend's configurator when ordering (the bracket's screw holes and the step ledge's are plain holes, so in the assembly each flat-head screw's head overlaps the rail bracket's web), the rail's latch holes, the front angle's keeper holes and the step clip screws' shanks. The wave washer is a flat ring squeezed to its gap.
 - **Bushings** are the igus sizes the page calls for (14 mm bore, 1 mm flange, 4 mm long in a lip and 6 mm in an ear), and follow `AXLE_DIA` and `BUSHING_WALL`. McMaster's nearest, 2705T142, is 4.5 mm long: its sleeve would stand 0.3 mm proud inside a 1/8" lip and take half the wave washer's room.
-- **Cabinet depth:** the entry cabinet's frame measures 12" from the bed-end wall, and the stair starts 1/2" off the wall and runs 12", so its front end and the front angle stand 1/2" past the frame. `tools/b3_check.py` fails on this until it is decided.
-- **Not yet rebuilt in Onshape:** the 16 3/4" treads, the rail's straight lower edge and the bushings and pads are checked by the lint and the offline tools only. The rail's long flange now meets the bed-side flange at a 20 degree corner, which relies on Onshape's corner relief and may need a relief of its own.
+- **Not yet rebuilt in Onshape:** the 16 3/4" treads, the 5 3/4" goings, the rail's straight lower edge, the ledge with its leg up the panel, and the bushings and pads are checked by the lint and the offline tools only. The rail's long flange now meets the bed-side flange at a 20 degree corner, which relies on Onshape's corner relief and may need a relief of its own.
 - **Bushing holes** are modeled at their finished 14 mm. The page cuts them as 3/8" pilots, then reams them after bending, because most of them sit closer to a bend than SendCutSend's die-width rule allows; a flat pattern exported from the model has the finished size.
 - **Flange corners:** every free flange corner is rounded. Where two flanges meet at a corner relief (the rail's foot, and each step leg's bottom corners, where the side flanges meet the foot flange), their tips stay square: Onshape's corner relief takes most of the short edge between them, and rounding the tips as well leaves it nothing to meet. Where a step leg's ear steps back to its flange, the outside corner is rounded 1/4" and the inside one 1/8"; the ear's top outer corner is 3/8", as the page's leg table gives it.

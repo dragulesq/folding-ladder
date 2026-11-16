@@ -17,7 +17,7 @@ import(path : "onshape/std/sheetMetalStart.fs", version : "2641.0");
  *
  * Datum (same as the B3 page). Origin on the floor, at the side panel's face,
  * at the stair's bed end (the end the top tread is on).
- *   x  along the cabinet toward its front edge; the stair spans x = 0 to 12
+ *   x  along the cabinet toward its front edge; the stair spans x = 0 to 11 1/2
  *   y  out from the panel face into the room (Onshape's -Y)
  *   z  up from the floor
  * Each part is built once, where its first use sits when the stair is open;
@@ -37,7 +37,8 @@ export const MATTRESS_THICK = 4 * inch;
 export const WALL_GAP = 0.5 * inch;                // bed-end wall to the stair's bed end
 export const CABINET_DEPTH = 12 * inch;            // measured, along x, wall to the front of the 8020 frame
 export const CABINET_WIDTH = 29.25 * inch;         // measured, behind the side panel
-export const HANDLE_Y = 19.125 * inch;             // cab door handle's closest point to the panel (measured 19 5/8 from the 8020, less the 1/2 panel)
+export const PANEL_T = 0.25 * inch;                 // Plyboo side panel over the 8020 frame
+export const HANDLE_Y = (157 / 8) * inch - PANEL_T; // cab door handle's closest point to the panel: measured 19 5/8 from the 8020, so 19 3/8
 export const HANDLE_Z = 22 * inch;                 // measured, taken as the center
 export const HANDLE_W = 4.25 * inch;               // measured, along y
 export const HANDLE_H = 0.75 * inch;               // measured, along z
@@ -47,7 +48,7 @@ export const HANDLE_PROJECTION = 2 * inch;         // out from the bed-end wall,
 // Layout and material
 // ---------------------------------------------------------------------------
 export const RISE = 10.25 * inch;                  // tread tops T1, T2, T3 = 1x, 2x, 3x RISE
-export const GOING = 6 * inch;                     // top tread x 0-6, middle 6-12, step 12-18
+export const GOING = 5.75 * inch;                  // top tread x 0 to 5 3/4, middle to 11 1/2, step to 17 1/4; two goings and WALL_GAP make CABINET_DEPTH
 export const SHEET_T = (1 / 8) * inch;             // treads, front angle, step clip, ledge, step legs
 export const PLATE_T = (3 / 16) * inch;            // outer rail, brackets
 
@@ -93,7 +94,7 @@ export const RUBBER_DENSITY = 1.3 * gram / (centimeter ^ 3);     // neoprene
 // the stair (the outer axle line, the rail, the step clip) follows TRAY_W.
 export const TRAY_W = 16.75 * inch;                   // along y
 export const TRAY_Y0 = (3 / 8) * inch;             // tray's cabinet-side edge
-export const TRAY_D = (45 / 8) * inch;             // 5 5/8 along x
+export const TRAY_D = GOING - 2 * (3 / 16) * inch;  // 5 3/8 along x
 export const TRAY_INSET = (3 / 16) * inch;         // tray starts this far into its going
 export const LIP = 2 * inch;                       // lips bent down at the x ends
 export const LIP_CORNER_R = R_OUTSIDE_LARGE;       // both bottom corners of each lip
@@ -118,8 +119,8 @@ export const EAR_X0 = (7 / 16) * inch;             // ear outer faces at EAR_X0 
 export const EAR_HOOK_R = (7 / 16) * inch;         // round top of every hook, on its axle hole
 export const EAR_W = (19 / 16) * inch;             // bracket ear reach, u 0 to 1 3/16
 export const HOOK_U0 = (5 / 16) * inch;            // hook part of each ear starts at u = 5/16
-export const TREAD_AXLE_LEN = 145.2 * millimeter;  // 5.72
-export const TREAD_AXLE_X0 = (GOING - TREAD_AXLE_LEN) / 2;   // centered: x 0.14 to 5.86 in each going
+export const TREAD_AXLE_LEN = 138.85 * millimeter; // 5.47
+export const TREAD_AXLE_X0 = (GOING - TREAD_AXLE_LEN) / 2;   // centered: x 0.14 to 5.61 in each going
 // Each axle end: an M6 fender washer and an M6 button-head screw (ISO 7380).
 export const END_WASHER_DIA = 18 * millimeter;
 export const END_WASHER_T = 1.6 * millimeter;
@@ -149,7 +150,7 @@ export const NEO_T = (1 / 8) * inch;
 // ---------------------------------------------------------------------------
 export const BRACKET_TOP_DROP = (13 / 8) * inch;   // web top at T - 1 5/8
 export const BRACKET_H = 2 * inch;                 // web bottom at T - 3 5/8
-export const SCREW_X = [1.5 * inch, 2.5 * inch, 3.5 * inch, 4.5 * inch];   // within the going
+export const SCREW_X = [GOING / 2 - 1.5 * inch, GOING / 2 - 0.5 * inch, GOING / 2 + 0.5 * inch, GOING / 2 + 1.5 * inch];   // within the going, 1" apart about its middle
 export const SCREW_DROP = (17 / 8) * inch;         // screw row at T - 2 1/8
 export const SCREW_HOLE_DIA = 6.6 * millimeter;    // M6 clearance
 export const SCREW_CSK_DIA = 12.4 * millimeter;    // 90 degree countersink, ear side (not modeled)
@@ -177,17 +178,17 @@ export const NUT_H = 6 * millimeter;
 export const RAIL_Y = OUT_AXLE_Y + CAB_AXLE_Y;     // 17 11/16, inner face (outer face 17 7/8)
 export const RAIL_STEP_DROP = 2 * inch;            // step edges at T - 2 (28 3/4 and 18 1/2)
 export const RAIL_BACK_Z = 23.5 * inch;            // bottom of the bed-side edge; the long lower edge runs from here straight to the foot
-export const RAIL_FOOT_X = 8.25 * inch;            // foot runs x 8 1/4 to 12
+export const RAIL_FOOT_X = 2 * GOING - 3.75 * inch; // foot runs x 7 3/4 to 11 1/2
 export const RAIL_FOOT_Z = 0.5 * inch;
 export const RAIL_FLANGE = 1 * inch;               // outward, beyond the plate (out to y 18 7/8)
 export const RAIL_FLANGE_TIP_R = R_OUTSIDE_LARGE;  // every flange's free corners
-export const HAND_SLOT_X = 3 * inch;
+export const HAND_SLOT_X = GOING / 2;              // centered under the top tread
 export const HAND_SLOT_Z = 25 * inch;
 export const HAND_SLOT_L = 4 * inch;               // along x
 export const HAND_SLOT_H = 1.25 * inch;
 // Step clip screws, M6 (SCREW_HOLE_DIA) through the clip and the rail. 11 1/8 is
 // as close to the front flange as half a die width from its bend allows.
-export const CLIP_SCREW_X = [(83 / 8) * inch, (89 / 8) * inch];   // 10 3/8 and 11 1/8
+export const CLIP_SCREW_X = [2 * GOING - (13 / 8) * inch, 2 * GOING - (7 / 8) * inch];   // 9 7/8 and 10 5/8
 export const CLIP_SCREW_Z = 9 * inch;
 // Foot pad: rubber, glued under the foot flange's flat, standing on the floor.
 export const RAIL_PAD_W = 0.75 * inch;             // the flange's flat width past its bend
@@ -202,13 +203,13 @@ export const KEYHOLE_SLOT_W = AXLE_DIA + 1 * millimeter;      // 13 mm, clears t
 // ---------------------------------------------------------------------------
 // Front angle
 // ---------------------------------------------------------------------------
-export const FA_X1 = 12 * inch;                    // flush with the cabinet's front edge
-export const FA_PANEL_LEG_X0 = (85 / 8) * inch;    // 10 5/8
+export const FA_X1 = 2 * GOING;                    // 11 1/2, flush with the cabinet's front edge
+export const FA_PANEL_LEG_X0 = FA_X1 - (11 / 8) * inch;    // 10 1/8
 export const FA_PANEL_LEG_TOP = 16.5 * inch;
 export const FA_OUT_LEG = 2 * inch;                // along y
 export const FA_BOTTOM_Z = 1 * inch;
 export const FA_TOP_Z = 18 * inch;
-export const FA_SCREW_X = (365 / 32) * inch;       // 11 13/32, front post centerline
+export const FA_SCREW_X = FA_X1 - (19 / 32) * inch;  // 10 29/32, front post centerline (15 mm in from the frame's front)
 export const FA_SCREW_Z = [4.5 * inch, 12.25 * inch, 15.5 * inch];
 export const FA_SCREW_HOLE_DIA = (17 / 64) * inch;
 export const FA_KEYHOLE_Y = CAB_AXLE_Y;            // 15/16, on the step's cabinet-side pivot line
@@ -220,7 +221,7 @@ export const FA_ENTRY_R = R_OUTSIDE_LARGE;         // outward leg's top outer co
 // ---------------------------------------------------------------------------
 // Step clip (bolted inside the outer rail with M6 button heads and nyloc nuts)
 // ---------------------------------------------------------------------------
-export const CLIP_X0 = (79 / 8) * inch;            // 9 7/8; outer face at x 12
+export const CLIP_X0 = 2 * GOING - (17 / 8) * inch; // 9 3/8; outer face at x 11 1/2
 export const CLIP_Z0 = (63 / 8) * inch;            // 7 7/8
 export const CLIP_H = (17 / 8) * inch;             // up to z 10
 export const CLIP_KEY_LEG = (37 / 16) * inch;      // keyhole leg's reach in from the rail's inner face
@@ -233,17 +234,17 @@ export const CLIP_CORNER_R = R_OUTSIDE_SMALL;      // the free corners of both l
 // ---------------------------------------------------------------------------
 // Step ledge
 // ---------------------------------------------------------------------------
-export const LEDGE_LEN = 6 * inch;                 // x 0 to 6
+export const LEDGE_LEN = GOING;                    // x 0 to 5 3/4
 export const LEDGE_SHELF = 2.5 * inch;             // along y
 export const LEDGE_TOP_Z = (9 / 8) * inch;
-export const LEDGE_LEG_H = 1 * inch;
-export const LEDGE_SCREW_X = [1.5 * inch, 4.5 * inch];
-export const LEDGE_SCREW_Z = 0.5 * inch;           // 1/2 rather than the page's 5/8 keeps the countersinks half a die width from the bend
+export const LEDGE_LEG_H = 1 * inch;               // back leg, up the panel from the shelf's underside
+export const LEDGE_SCREW_X = [GOING / 2 - 1.5 * inch, GOING / 2 + 1.5 * inch];
+export const LEDGE_SCREW_Z = 0.5 * inch;           // above the shelf's top face; keeps the countersinks half a die width from the bend
 export const LEDGE_SCREW_DIA = 0.177 * inch;       // #8 clearance (countersink not modeled)
 export const LEDGE_SHELF_R = R_OUTSIDE_LARGE;      // the shelf's front corners, at ankle height
-export const LEDGE_LEG_R = R_OUTSIDE_SMALL;        // the back leg's bottom corners
+export const LEDGE_LEG_R = R_OUTSIDE_SMALL;        // the back leg's top corners
 export const LEDGE_STRIP_T = (1 / 8) * inch;       // rubber strip on the shelf; the folded step stands on it
-export const STOW_PANEL_GAP = (1 / 8) * inch;      // the folded step's back stands this far off the panel (drawings and the stowed assembly)
+export const STOW_PANEL_GAP = (3 / 16) * inch;     // the folded step's back stands this far off the panel, 1/16 clear of the ledge's leg
 
 // ---------------------------------------------------------------------------
 // Bumpers: rubber, stuck to the panel behind each folded tread. The folded
@@ -267,9 +268,9 @@ export const STEP_LEG_FLANGE = (5 / 8) * inch;     // side and foot flanges, out
 export const STEP_LEG_EAR = (17 / 16) * inch;      // ears, out from the web's outer face
 export const STEP_LEG_EAR_Z = (133 / 16) * inch;   // 8 5/16, where each side flange widens into its ear
 export const STEP_LEG_EAR_R = (3 / 8) * inch;      // the ear's top outer corner
-export const STEP_AXLE_X0 = 11.87 * inch;          // back end is the hook pin, through the keyhole
-export const STEP_AXLE_X1 = 17.86 * inch;          // 152.1 mm (5.99) long
-export const STEP_PAD_L = (39 / 8) * inch;         // 4 7/8 rubber pad under each leg's foot flange, as wide as the flange
+export const STEP_AXLE_X0 = 2 * GOING - 0.13 * inch;  // 11.37; back end is the hook pin, through the keyhole
+export const STEP_AXLE_X1 = 3 * GOING - 0.14 * inch;  // 17.11; 145.8 mm (5.74) long
+export const STEP_PAD_L = GOING - (9 / 8) * inch;   // 4 5/8 rubber pad under each leg's foot flange, as wide as the flange
 export const STEP_PAD_T = STEP_LEG_BOTTOM_Z;       // 1/8, down to the floor
 
 // ===========================================================================
@@ -304,7 +305,7 @@ export function b3T(n is number) returns ValueWithUnits
     return (n + 1) * RISE;
 }
 
-// Start of the tread's going along x: top 0, middle 6, step 12.
+// Start of the tread's going along x: top 0, middle GOING, step 2 GOING.
 export function b3GoingX(n is number) returns ValueWithUnits
 {
     return (2 - n) * GOING;
@@ -448,10 +449,10 @@ export function b3FrontAngleJoint() returns map
     return b3PanelJoint(FA_X1, FA_BOTTOM_Z);
 }
 
-// Step ledge on the panel: the leg's bottom corner at the bed end.
+// Step ledge on the panel: its bottom corner at the bed end, under the shelf.
 export function b3StepLedgeJoint() returns map
 {
-    return b3PanelJoint(0 * inch, LEDGE_TOP_Z - LEDGE_LEG_H);
+    return b3PanelJoint(0 * inch, LEDGE_TOP_Z - SHEET_T);
 }
 
 // Tread n's stop pins, on the bracket ear's inside face, z along the pin.
@@ -1452,8 +1453,8 @@ export const b3BushingsAndPads = defineFeature(function(context is Context, id i
         b3FinishRubber(context, b3Solids(id + "stepPad"), "Step leg pad");
         b3Mc(context, id + "mcStepPad", b3Solids(id + "stepPad"), "Step leg pad", "Leg", stepPad);
 
-        // Rubber strip covering the step ledge's shelf.
-        const shelf = b3Rounded(b3Rect(0 * inch, 0 * inch, LEDGE_LEN, LEDGE_SHELF), [0, 0, LEDGE_SHELF_R, LEDGE_SHELF_R]);
+        // Rubber strip covering the step ledge's shelf, in front of its back leg.
+        const shelf = b3Rounded(b3Rect(0 * inch, SHEET_T, LEDGE_LEN, LEDGE_SHELF), [0, 0, LEDGE_SHELF_R, LEDGE_SHELF_R]);
         b3PrismXY(context, id + "ledgeStrip", shelf, [], LEDGE_TOP_Z, LEDGE_TOP_Z + LEDGE_STRIP_T);
         b3FinishRubber(context, b3Solids(id + "ledgeStrip"), "Ledge strip");
         b3Mc(context, id + "mcLedgeStrip", b3Solids(id + "ledgeStrip"), "Ledge strip", "Ledge", b3LedgeStripJoint());
@@ -1541,10 +1542,11 @@ export const b3FrontAngle = defineFeature(function(context is Context, id is Id,
 // ===========================================================================
 /*
  * B3 Step Ledge, 1/8" sheet-metal part: 6" angle on the panel at the bed
- * end. The folded hook-on step stands on end on its 2 1/2" shelf. Two #8
- * screws through the back leg (countersinks not modeled). The shelf's front
- * corners, at ankle height, are rounded 1/2"; the back leg's bottom corners
- * 1/4".
+ * end. The folded hook-on step stands on end on its 2 1/2" shelf. The back
+ * leg runs up the panel from the shelf, behind the folded step, with two #8
+ * screws through it above the shelf (countersinks not modeled). The shelf's
+ * front corners, at ankle height, are rounded 1/2"; the back leg's top
+ * corners 1/4".
  */
 annotation { "Feature Type Name" : "B3 Step Ledge" }
 export const b3StepLedge = defineFeature(function(context is Context, id is Id, definition is map)
@@ -1559,16 +1561,17 @@ export const b3StepLedge = defineFeature(function(context is Context, id is Id, 
         var screws = [];
         for (var i = 0; i < size(LEDGE_SCREW_X); i += 1)
         {
-            screws = append(screws, b3Hole(LEDGE_SCREW_X[i], LEDGE_SCREW_Z, LEDGE_SCREW_DIA));
+            screws = append(screws, b3Hole(LEDGE_SCREW_X[i], top + LEDGE_SCREW_Z, LEDGE_SCREW_DIA));
         }
-        const leg = b3Rounded(b3Rect(0 * inch, top - LEDGE_LEG_H, LEDGE_LEN, top), [LEDGE_LEG_R, LEDGE_LEG_R, 0, 0]);
+        const bottom = top - SHEET_T;
+        const leg = b3Rounded(b3Rect(0 * inch, bottom, LEDGE_LEN, bottom + LEDGE_LEG_H), [0, 0, LEDGE_LEG_R, LEDGE_LEG_R]);
         b3PrismXZ(context, id + "leg", leg, screws, 0 * inch, SHEET_T);
         b3Union(context, id + "join", b3Solids(id));
 
-        // Sheet metal: the back leg's face on the panel, then the shelf's top.
+        // Sheet metal: the back leg's face on the panel, then the shelf's underside.
         b3SheetMetal(context, id + "sm", b3Solids(id), [
-                    vector(LEDGE_LEN / 2, 0 * inch, LEDGE_SCREW_Z),
-                    vector(LEDGE_LEN / 2, LEDGE_SHELF / 2, top)
+                    vector(LEDGE_LEN / 2, 0 * inch, top + LEDGE_SCREW_Z),
+                    vector(LEDGE_LEN / 2, LEDGE_SHELF / 2, bottom)
                 ], SHEET_T, BEND_R_SHEET, K_SHEET);
 
         const body = b3Solids(id);
