@@ -44,7 +44,8 @@ from b3_model import Model, mul, to_onshape
 
 NAME = "B3 test Assembly"
 STOWED_NAME = "B3 test Stowed"
-REF_PARTS = ["REF floor", "REF cabinet", "REF bed-end wall", "REF mattress", "REF door handle"]
+REF_PARTS = ["REF floor", "REF cabinet", "REF bed-end wall", "REF mattress", "REF door handle",
+             "REF side wall", "REF dinette seat", "REF shower wall"]
 
 # Instances: key -> part name. The reference blocks are added separately, one
 # fixed instance of each part in the Surroundings Part Studio.

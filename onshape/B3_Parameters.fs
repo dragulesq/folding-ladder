@@ -24,17 +24,31 @@ import(path : "onshape/std/common.fs", version : "2641.0");
 // ---------------------------------------------------------------------------
 // Room and cabinet (reference only)
 // ---------------------------------------------------------------------------
-export const CABINET_TOP_Z = 47 * inch;            // measured, top of the 8020 frame; folded stair tops out at 46 5/16
-export const BED_PLATFORM_Z = 47.75 * inch;
+export const CABINET_TOP_Z = 47 * inch;            // measured, top of the 8020 frame; folded stair tops out at 46 9/16
+export const BED_PLATFORM_Z = 47 * inch;           // measured, cabover floor; the mattress lies on it
 export const MATTRESS_THICK = 4 * inch;
 export const WALL_GAP = 0.5 * inch;                // bed-end wall to the stair's bed end
 export const CABINET_DEPTH = 12 * inch;            // measured, along x, wall to the front of the 8020 frame
-export const CABINET_WIDTH = 29.25 * inch;         // measured, behind the side panel
+export const CABINET_WIDTH = 29.25 * inch;         // measured, the 8020 frame behind the side panel, out to the camper's side wall
 export const PANEL_T = 0.25 * inch;                 // Plyboo side panel over the 8020 frame
 export const HANDLE_Y = (157 / 8) * inch - PANEL_T; // cab door handle's closest point to the panel: measured 19 5/8 from the 8020, so 19 3/8
 export const HANDLE_Z = 22 * inch;                 // measured, taken as the center
 export const HANDLE_W = 4.25 * inch;               // measured, along y
 export const HANDLE_H = 0.75 * inch;               // measured, along z
+// The room around the stair, for mock-up. The entrance aisle runs from the
+// camper door, past the cabinet's front, to the middle aisle; the dinette is
+// across it from the cabinet. The middle aisle runs along the camper between
+// the dinette and the shower. The side wall is taken to be right behind the
+// cabinet's frame.
+export const ENTRY_AISLE_W = (221 / 8) * inch;     // measured 27 5/8, cabinet front to the dinette, along x
+export const DINETTE_DEPTH = 35.25 * inch;         // measured, side wall to the middle aisle, along y
+export const DINETTE_H = 47 * inch;                // measured, dinette seat's height at the entrance aisle
+export const DINETTE_T = 4.5 * inch;               // measured, its thickness along x
+export const HANDLE_TO_SHOWER = 8.75 * inch;       // measured, handle's far end to the shower door across the middle aisle
+export const SIDE_WALL_Y = -(PANEL_T + CABINET_WIDTH);                // -29 1/2
+export const DINETTE_Y1 = SIDE_WALL_Y + DINETTE_DEPTH;                // 5 3/4: the middle aisle's near edge
+export const SHOWER_Y = HANDLE_Y + HANDLE_W + HANDLE_TO_SHOWER;       // 32 3/8: the middle aisle's far edge
+export const DINETTE_X0 = CABINET_DEPTH - WALL_GAP + ENTRY_AISLE_W;   // 39 1/8
 export const HANDLE_PROJECTION = 2 * inch;         // out from the bed-end wall, to x 1 1/2
 
 // ---------------------------------------------------------------------------
@@ -81,11 +95,11 @@ export const RUBBER_DENSITY = 1.3 * gram / (centimeter ^ 3);     // neoprene
 // ---------------------------------------------------------------------------
 // Treads (three: top, middle, and the hook-on step's tray)
 // ---------------------------------------------------------------------------
-// 16 3/4" wide keeps the open stair inside the cab door handle: the rail's
-// flange tips reach TRAY_W + 1 7/8 out from the panel (18 5/8), 1/2" short of
+// 17" wide keeps the open stair inside the cab door handle: the rail's flange
+// tips reach TRAY_W + 1 7/8 out from the panel (18 7/8), 1/2" short of
 // HANDLE_Y, so the rail needs no notch around the handle. Everything across
 // the stair (the outer axle line, the rail, the step clip) follows TRAY_W.
-export const TRAY_W = 16.75 * inch;                   // along y
+export const TRAY_W = 17 * inch;                   // along y
 export const TRAY_Y0 = (3 / 8) * inch;             // tray's cabinet-side edge
 export const TRAY_D = GOING - 2 * (3 / 16) * inch;  // 5 3/8 along x
 export const TRAY_INSET = (3 / 16) * inch;         // tray starts this far into its going
@@ -230,14 +244,14 @@ export const CLIP_CORNER_R = R_OUTSIDE_SMALL;      // the free corners of both l
 export const LEDGE_LEN = GOING;                    // x 0 to 5 3/4
 export const LEDGE_SHELF = 2.5 * inch;             // along y
 export const LEDGE_TOP_Z = (9 / 8) * inch;
-export const LEDGE_LEG_H = 1 * inch;               // back leg, up the panel from the shelf's underside
+export const LEDGE_LEG_H = 1 * inch;
 export const LEDGE_SCREW_X = [GOING / 2 - 1.5 * inch, GOING / 2 + 1.5 * inch];
-export const LEDGE_SCREW_Z = 0.5 * inch;           // above the shelf's top face; keeps the countersinks half a die width from the bend
+export const LEDGE_SCREW_Z = 0.5 * inch;           // 1/2 rather than the page's 5/8 keeps the countersinks half a die width from the bend
 export const LEDGE_SCREW_DIA = 0.177 * inch;       // #8 clearance (countersink not modeled)
 export const LEDGE_SHELF_R = R_OUTSIDE_LARGE;      // the shelf's front corners, at ankle height
-export const LEDGE_LEG_R = R_OUTSIDE_SMALL;        // the back leg's top corners
+export const LEDGE_LEG_R = R_OUTSIDE_SMALL;        // the back leg's bottom corners
 export const LEDGE_STRIP_T = (1 / 8) * inch;       // rubber strip on the shelf; the folded step stands on it
-export const STOW_PANEL_GAP = (3 / 16) * inch;     // the folded step's back stands this far off the panel, 1/16 clear of the ledge's leg
+export const STOW_PANEL_GAP = (1 / 8) * inch;      // the folded step's back stands this far off the panel (drawings and the stowed assembly)
 
 // ---------------------------------------------------------------------------
 // Bumpers: rubber, stuck to the panel behind each folded tread. The folded

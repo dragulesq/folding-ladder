@@ -180,10 +180,10 @@ export function b3FrontAngleJoint() returns map
     return b3PanelJoint(FA_X1, FA_BOTTOM_Z);
 }
 
-// Step ledge on the panel: its bottom corner at the bed end, under the shelf.
+// Step ledge on the panel: the leg's bottom corner at the bed end.
 export function b3StepLedgeJoint() returns map
 {
-    return b3PanelJoint(0 * inch, LEDGE_TOP_Z - SHEET_T);
+    return b3PanelJoint(0 * inch, LEDGE_TOP_Z - LEDGE_LEG_H);
 }
 
 // Tread n's stop pins, on the bracket ear's inside face, z along the pin.

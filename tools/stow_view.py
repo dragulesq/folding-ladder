@@ -10,7 +10,7 @@ Two views, to scale, as SVG:
 Parts are drawn as their bounding boxes (the rail's plate as its outline), so
 bends, radii and hardware are left out; the sizes and positions are the model's.
 
-  python3 tools/stow_view.py            # writes drawings/stowed_end.svg, stowed_face.svg and rail_outline.svg
+  python3 tools/stow_view.py            # writes drawings/stowed_end.svg, stowed_face.svg, rail_outline.svg and plan_open.svg
   python3 tools/stow_view.py --dir DIR  # somewhere else
 """
 import argparse
@@ -76,8 +76,8 @@ def parts(m):
                                    m.RAIL_FOOT_Z - m.RAIL_PAD_T, m.RAIL_FOOT_Z)))
     # Fixed to the cabinet: the step's ledge with its rubber strip, and the front angle.
     out.append(("fixed", "cabinet", (0, m.LEDGE_LEN, 0, m.LEDGE_SHELF, m.LEDGE_TOP_Z - m.SHEET_T, m.LEDGE_TOP_Z)))
-    out.append(("fixed", "cabinet", (0, m.LEDGE_LEN, 0, m.SHEET_T, m.LEDGE_TOP_Z - m.SHEET_T, m.LEDGE_TOP_Z - m.SHEET_T + m.LEDGE_LEG_H)))
-    out.append(("rubber", "cabinet", (0, m.LEDGE_LEN, m.SHEET_T, m.LEDGE_SHELF, m.LEDGE_TOP_Z, m.LEDGE_TOP_Z + m.LEDGE_STRIP_T)))
+    out.append(("fixed", "cabinet", (0, m.LEDGE_LEN, 0, m.SHEET_T, m.LEDGE_TOP_Z - m.LEDGE_LEG_H, m.LEDGE_TOP_Z)))
+    out.append(("rubber", "cabinet", (0, m.LEDGE_LEN, 0, m.LEDGE_SHELF, m.LEDGE_TOP_Z, m.LEDGE_TOP_Z + m.LEDGE_STRIP_T)))
     out.append(("fixed", "cabinet", (m.FA_PANEL_LEG_X0, m.FA_X1, 0, m.SHEET_T, m.FA_BOTTOM_Z, m.FA_PANEL_LEG_TOP)))
     out.append(("fixed", "cabinet", (m.FA_X1 - m.SHEET_T, m.FA_X1, 0, m.FA_OUT_LEG, m.FA_BOTTOM_Z, m.FA_TOP_Z)))
     return out
@@ -264,6 +264,41 @@ def rail_view(m):
     return v.svg()
 
 
+def plan_view(m):
+    """The room from above with the stair open: x along the cabinet to the right, y out from the panel upward."""
+    y0 = m.SIDE_WALL_Y - 1.5
+    v = View(0, -3.0, m.DINETTE_X0 + m.DINETTE_T + 3.0, m.SHOWER_Y + 2.5 - y0, "Plan, stair open", 9.0)
+    R = lambda cls, x0, x1, ya, yb, tip="": v.rect(cls, x0, x1, ya - y0, yb - y0, tip)
+    T = lambda cls, x, y, s, anchor="middle", dx=0, dy=0: v.text(cls, x, y - y0, s, anchor, dx, dy)
+    wall, far = -m.WALL_GAP, m.DINETTE_X0 + m.DINETTE_T + 3.0
+    front = m.CABINET_DEPTH - m.WALL_GAP
+    R("panel", wall - 1, wall, m.SIDE_WALL_Y, m.SHOWER_Y, "Bed-end wall")
+    R("panel", wall - 1, far, m.SIDE_WALL_Y - 1, m.SIDE_WALL_Y, "Camper side wall")
+    R("panel", wall, far, m.SHOWER_Y, m.SHOWER_Y + 1, "Shower wall")
+    R("fixed", wall, front, m.SIDE_WALL_Y, 0, "Entry cabinet")
+    R("fixed", m.DINETTE_X0, m.DINETTE_X0 + m.DINETTE_T, m.SIDE_WALL_Y, m.DINETTE_Y1, "Dinette seat")
+    R("handle", wall, wall + m.HANDLE_PROJECTION, m.HANDLE_Y, m.HANDLE_Y + m.HANDLE_W, "Cab door handle")
+    open_ = m.body_motions(0)
+    for cls, body, box in parts(m):
+        if body in ("top tread", "middle tread", "step", "rail") and cls in ("tread", "step", "rail"):
+            e = moved(box, open_[body])
+            R(cls, e[0], e[1], e[2], e[3], NAMES[body].split(",")[0])
+    tip = m.RAIL_Y + m.PLATE_T + m.RAIL_FLANGE
+    v.hdim(3 * m.GOING, m.DINETTE_X0, 12.0 - y0, "")
+    T("dimt", (3 * m.GOING + m.DINETTE_X0) / 2, 12.0, frac(m.DINETTE_X0 - 3 * m.GOING), "middle", 0, -5)
+    v.hdim(front, m.DINETTE_X0, -8.0 - y0, "")
+    T("dimt", (front + m.DINETTE_X0) / 2, -8.0, f"{frac(m.ENTRY_AISLE_W)} entrance aisle", "middle", 0, -5)
+    v.vdim(8.0, tip - y0, m.SHOWER_Y - y0, frac(m.SHOWER_Y - tip), 1)
+    v.vdim(far - 2.0, m.DINETTE_Y1 - y0, m.SHOWER_Y - y0, f"{frac(m.SHOWER_Y - m.DINETTE_Y1)} middle aisle", -1)
+    T("lbl", (wall + front) / 2, m.SIDE_WALL_Y / 2, "entry cabinet")
+    T("lbl", m.DINETTE_X0 + m.DINETTE_T / 2, m.SIDE_WALL_Y + 3, "dinette", "middle")
+    T("lbl", (front + m.DINETTE_X0) / 2, m.SIDE_WALL_Y + 3, "camper door side")
+    T("lbl", 20, m.SHOWER_Y, "shower", "middle", 0, -3)
+    T("lbl", wall, m.HANDLE_Y + m.HANDLE_W, "handle", "start", 22, 12)
+    T("lbl", 2.5 * m.GOING, 9, "first tread")
+    return v.svg()
+
+
 def with_style(svg):
     return svg.replace(">", f"><style>{STYLE}</style>", 1)
 
@@ -275,7 +310,8 @@ def main():
     m = Model()
     out = Path(args.dir)
     out.mkdir(parents=True, exist_ok=True)
-    for name, svg in (("stowed_end.svg", end_view(m)), ("stowed_face.svg", face_view(m)), ("rail_outline.svg", rail_view(m))):
+    for name, svg in (("stowed_end.svg", end_view(m)), ("stowed_face.svg", face_view(m)), ("rail_outline.svg", rail_view(m)),
+                      ("plan_open.svg", plan_view(m))):
         (out / name).write_text(with_style(svg) + "\n")
         print("wrote", out / name)
     n = numbers(m)

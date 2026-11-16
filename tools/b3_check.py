@@ -30,6 +30,12 @@ def checks(m):
     over = m.CABINET_DEPTH - m.WALL_GAP - 2 * m.GOING
     out.append(("Cabinet front edge past the stair's front end", over, 0,
                 f"cabinet is {m.CABINET_DEPTH:.3f} deep, the stair starts {m.WALL_GAP:.3f} off the wall and runs {2 * m.GOING:.3f}"))
+    # The room: the open hook-on step in the entrance aisle, the open rail in the middle aisle.
+    step_end = 3 * m.GOING + m.END_WASHER_T + m.END_HEAD_H
+    out.append(("Entrance aisle left beside the open hook-on step", m.DINETTE_X0 - step_end, 18,
+                f"aisle is {m.ENTRY_AISLE_W:.3f}, the step reaches {step_end - 2 * m.GOING:.3f} into it"))
+    out.append(("Open rail to the shower wall, across the middle aisle", m.SHOWER_Y - tip, 12,
+                f"middle aisle runs y {m.DINETTE_Y1:.3f} to {m.SHOWER_Y:.3f}"))
     # The stack between a lip and its ear.
     gap = m.EAR_X0 - m.TRAY_INSET - m.SHEET_T
     wave = gap - m.THRUST_T - m.BUSHING_FLANGE_T

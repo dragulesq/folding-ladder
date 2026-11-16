@@ -31,17 +31,31 @@ import(path : "onshape/std/sheetMetalStart.fs", version : "2641.0");
 // ---------------------------------------------------------------------------
 // Room and cabinet (reference only)
 // ---------------------------------------------------------------------------
-export const CABINET_TOP_Z = 47 * inch;            // measured, top of the 8020 frame; folded stair tops out at 46 5/16
-export const BED_PLATFORM_Z = 47.75 * inch;
+export const CABINET_TOP_Z = 47 * inch;            // measured, top of the 8020 frame; folded stair tops out at 46 9/16
+export const BED_PLATFORM_Z = 47 * inch;           // measured, cabover floor; the mattress lies on it
 export const MATTRESS_THICK = 4 * inch;
 export const WALL_GAP = 0.5 * inch;                // bed-end wall to the stair's bed end
 export const CABINET_DEPTH = 12 * inch;            // measured, along x, wall to the front of the 8020 frame
-export const CABINET_WIDTH = 29.25 * inch;         // measured, behind the side panel
+export const CABINET_WIDTH = 29.25 * inch;         // measured, the 8020 frame behind the side panel, out to the camper's side wall
 export const PANEL_T = 0.25 * inch;                 // Plyboo side panel over the 8020 frame
 export const HANDLE_Y = (157 / 8) * inch - PANEL_T; // cab door handle's closest point to the panel: measured 19 5/8 from the 8020, so 19 3/8
 export const HANDLE_Z = 22 * inch;                 // measured, taken as the center
 export const HANDLE_W = 4.25 * inch;               // measured, along y
 export const HANDLE_H = 0.75 * inch;               // measured, along z
+// The room around the stair, for mock-up. The entrance aisle runs from the
+// camper door, past the cabinet's front, to the middle aisle; the dinette is
+// across it from the cabinet. The middle aisle runs along the camper between
+// the dinette and the shower. The side wall is taken to be right behind the
+// cabinet's frame.
+export const ENTRY_AISLE_W = (221 / 8) * inch;     // measured 27 5/8, cabinet front to the dinette, along x
+export const DINETTE_DEPTH = 35.25 * inch;         // measured, side wall to the middle aisle, along y
+export const DINETTE_H = 47 * inch;                // measured, dinette seat's height at the entrance aisle
+export const DINETTE_T = 4.5 * inch;               // measured, its thickness along x
+export const HANDLE_TO_SHOWER = 8.75 * inch;       // measured, handle's far end to the shower door across the middle aisle
+export const SIDE_WALL_Y = -(PANEL_T + CABINET_WIDTH);                // -29 1/2
+export const DINETTE_Y1 = SIDE_WALL_Y + DINETTE_DEPTH;                // 5 3/4: the middle aisle's near edge
+export const SHOWER_Y = HANDLE_Y + HANDLE_W + HANDLE_TO_SHOWER;       // 32 3/8: the middle aisle's far edge
+export const DINETTE_X0 = CABINET_DEPTH - WALL_GAP + ENTRY_AISLE_W;   // 39 1/8
 export const HANDLE_PROJECTION = 2 * inch;         // out from the bed-end wall, to x 1 1/2
 
 // ---------------------------------------------------------------------------
@@ -88,11 +102,11 @@ export const RUBBER_DENSITY = 1.3 * gram / (centimeter ^ 3);     // neoprene
 // ---------------------------------------------------------------------------
 // Treads (three: top, middle, and the hook-on step's tray)
 // ---------------------------------------------------------------------------
-// 16 3/4" wide keeps the open stair inside the cab door handle: the rail's
-// flange tips reach TRAY_W + 1 7/8 out from the panel (18 5/8), 1/2" short of
+// 17" wide keeps the open stair inside the cab door handle: the rail's flange
+// tips reach TRAY_W + 1 7/8 out from the panel (18 7/8), 1/2" short of
 // HANDLE_Y, so the rail needs no notch around the handle. Everything across
 // the stair (the outer axle line, the rail, the step clip) follows TRAY_W.
-export const TRAY_W = 16.75 * inch;                   // along y
+export const TRAY_W = 17 * inch;                   // along y
 export const TRAY_Y0 = (3 / 8) * inch;             // tray's cabinet-side edge
 export const TRAY_D = GOING - 2 * (3 / 16) * inch;  // 5 3/8 along x
 export const TRAY_INSET = (3 / 16) * inch;         // tray starts this far into its going
@@ -237,14 +251,14 @@ export const CLIP_CORNER_R = R_OUTSIDE_SMALL;      // the free corners of both l
 export const LEDGE_LEN = GOING;                    // x 0 to 5 3/4
 export const LEDGE_SHELF = 2.5 * inch;             // along y
 export const LEDGE_TOP_Z = (9 / 8) * inch;
-export const LEDGE_LEG_H = 1 * inch;               // back leg, up the panel from the shelf's underside
+export const LEDGE_LEG_H = 1 * inch;
 export const LEDGE_SCREW_X = [GOING / 2 - 1.5 * inch, GOING / 2 + 1.5 * inch];
-export const LEDGE_SCREW_Z = 0.5 * inch;           // above the shelf's top face; keeps the countersinks half a die width from the bend
+export const LEDGE_SCREW_Z = 0.5 * inch;           // 1/2 rather than the page's 5/8 keeps the countersinks half a die width from the bend
 export const LEDGE_SCREW_DIA = 0.177 * inch;       // #8 clearance (countersink not modeled)
 export const LEDGE_SHELF_R = R_OUTSIDE_LARGE;      // the shelf's front corners, at ankle height
-export const LEDGE_LEG_R = R_OUTSIDE_SMALL;        // the back leg's top corners
+export const LEDGE_LEG_R = R_OUTSIDE_SMALL;        // the back leg's bottom corners
 export const LEDGE_STRIP_T = (1 / 8) * inch;       // rubber strip on the shelf; the folded step stands on it
-export const STOW_PANEL_GAP = (3 / 16) * inch;     // the folded step's back stands this far off the panel, 1/16 clear of the ledge's leg
+export const STOW_PANEL_GAP = (1 / 8) * inch;      // the folded step's back stands this far off the panel (drawings and the stowed assembly)
 
 // ---------------------------------------------------------------------------
 // Bumpers: rubber, stuck to the panel behind each folded tread. The folded
@@ -449,10 +463,10 @@ export function b3FrontAngleJoint() returns map
     return b3PanelJoint(FA_X1, FA_BOTTOM_Z);
 }
 
-// Step ledge on the panel: its bottom corner at the bed end, under the shelf.
+// Step ledge on the panel: the leg's bottom corner at the bed end.
 export function b3StepLedgeJoint() returns map
 {
-    return b3PanelJoint(0 * inch, LEDGE_TOP_Z - SHEET_T);
+    return b3PanelJoint(0 * inch, LEDGE_TOP_Z - LEDGE_LEG_H);
 }
 
 // Tread n's stop pins, on the bracket ear's inside face, z along the pin.
@@ -959,8 +973,10 @@ function b3Part(context is Context, bodies is Query, partName is string, mat is 
 // ===========================================================================
 /*
  * B3 Reference: simple blocks for the surroundings, to check clearances.
- * The cabinet with its side panel, the bed-end wall, the mattress, the cab
- * door handle and the floor. Their names start with "REF". Add this feature
+ * The cabinet with its side panel, the bed-end wall, the mattress on the
+ * cabover floor, the cab door handle, the floor, and the room: the camper's
+ * side wall, the dinette seat across the entrance aisle and the shower wall
+ * across the middle aisle. Their names start with "REF". Add this feature
  * in a Part Studio of its own ("Surroundings"), so the stair's Part Studio
  * holds only the parts to make. The cabinet carries the mate connectors for
  * the brackets, the front angle, the step ledge and the two panel bumpers.
@@ -971,12 +987,16 @@ export const b3Reference = defineFeature(function(context is Context, id is Id, 
     {
     }
     {
-        const far = 30 * inch;
+        const far = DINETTE_X0 + DINETTE_T + 6 * inch;
+        const back = SIDE_WALL_Y;
         const wallX = -WALL_GAP;
-        b3Ref(context, id + "floor", vector(-far, -CABINET_WIDTH, -0.5 * inch), vector(far, far, 0 * inch), "REF floor");
-        b3Ref(context, id + "cabinet", vector(wallX, -CABINET_WIDTH, 0 * inch), vector(wallX + CABINET_DEPTH, 0 * inch, CABINET_TOP_Z), "REF cabinet");
-        b3Ref(context, id + "wall", vector(wallX - 1 * inch, 0 * inch, 0 * inch), vector(wallX, far, BED_PLATFORM_Z), "REF bed-end wall");
-        b3Ref(context, id + "mattress", vector(-far, -CABINET_WIDTH, BED_PLATFORM_Z), vector(wallX, far, BED_PLATFORM_Z + MATTRESS_THICK), "REF mattress");
+        b3Ref(context, id + "floor", vector(wallX, back, -0.5 * inch), vector(far, SHOWER_Y, 0 * inch), "REF floor");
+        b3Ref(context, id + "cabinet", vector(wallX, back, 0 * inch), vector(wallX + CABINET_DEPTH, 0 * inch, CABINET_TOP_Z), "REF cabinet");
+        b3Ref(context, id + "wall", vector(wallX - 1 * inch, 0 * inch, 0 * inch), vector(wallX, SHOWER_Y, BED_PLATFORM_Z), "REF bed-end wall");
+        b3Ref(context, id + "mattress", vector(wallX - 30 * inch, back, BED_PLATFORM_Z), vector(wallX, SHOWER_Y, BED_PLATFORM_Z + MATTRESS_THICK), "REF mattress");
+        b3Ref(context, id + "sideWall", vector(wallX, back - 1 * inch, 0 * inch), vector(far, back, BED_PLATFORM_Z), "REF side wall");
+        b3Ref(context, id + "dinette", vector(DINETTE_X0, back, 0 * inch), vector(DINETTE_X0 + DINETTE_T, DINETTE_Y1, DINETTE_H), "REF dinette seat");
+        b3Ref(context, id + "shower", vector(wallX, SHOWER_Y, 0 * inch), vector(far, SHOWER_Y + 1 * inch, BED_PLATFORM_Z), "REF shower wall");
         b3Ref(context, id + "handle", vector(wallX, HANDLE_Y, HANDLE_Z - HANDLE_H / 2), vector(wallX + HANDLE_PROJECTION, HANDLE_Y + HANDLE_W, HANDLE_Z + HANDLE_H / 2), "REF door handle");
 
         const cabinet = b3Solids(id + "cabinet");
@@ -1453,8 +1473,8 @@ export const b3BushingsAndPads = defineFeature(function(context is Context, id i
         b3FinishRubber(context, b3Solids(id + "stepPad"), "Step leg pad");
         b3Mc(context, id + "mcStepPad", b3Solids(id + "stepPad"), "Step leg pad", "Leg", stepPad);
 
-        // Rubber strip covering the step ledge's shelf, in front of its back leg.
-        const shelf = b3Rounded(b3Rect(0 * inch, SHEET_T, LEDGE_LEN, LEDGE_SHELF), [0, 0, LEDGE_SHELF_R, LEDGE_SHELF_R]);
+        // Rubber strip covering the step ledge's shelf.
+        const shelf = b3Rounded(b3Rect(0 * inch, 0 * inch, LEDGE_LEN, LEDGE_SHELF), [0, 0, LEDGE_SHELF_R, LEDGE_SHELF_R]);
         b3PrismXY(context, id + "ledgeStrip", shelf, [], LEDGE_TOP_Z, LEDGE_TOP_Z + LEDGE_STRIP_T);
         b3FinishRubber(context, b3Solids(id + "ledgeStrip"), "Ledge strip");
         b3Mc(context, id + "mcLedgeStrip", b3Solids(id + "ledgeStrip"), "Ledge strip", "Ledge", b3LedgeStripJoint());
@@ -1542,11 +1562,10 @@ export const b3FrontAngle = defineFeature(function(context is Context, id is Id,
 // ===========================================================================
 /*
  * B3 Step Ledge, 1/8" sheet-metal part: 6" angle on the panel at the bed
- * end. The folded hook-on step stands on end on its 2 1/2" shelf. The back
- * leg runs up the panel from the shelf, behind the folded step, with two #8
- * screws through it above the shelf (countersinks not modeled). The shelf's
- * front corners, at ankle height, are rounded 1/2"; the back leg's top
- * corners 1/4".
+ * end. The folded hook-on step stands on end on its 2 1/2" shelf. Two #8
+ * screws through the back leg (countersinks not modeled). The shelf's front
+ * corners, at ankle height, are rounded 1/2"; the back leg's bottom corners
+ * 1/4".
  */
 annotation { "Feature Type Name" : "B3 Step Ledge" }
 export const b3StepLedge = defineFeature(function(context is Context, id is Id, definition is map)
@@ -1561,17 +1580,16 @@ export const b3StepLedge = defineFeature(function(context is Context, id is Id, 
         var screws = [];
         for (var i = 0; i < size(LEDGE_SCREW_X); i += 1)
         {
-            screws = append(screws, b3Hole(LEDGE_SCREW_X[i], top + LEDGE_SCREW_Z, LEDGE_SCREW_DIA));
+            screws = append(screws, b3Hole(LEDGE_SCREW_X[i], LEDGE_SCREW_Z, LEDGE_SCREW_DIA));
         }
-        const bottom = top - SHEET_T;
-        const leg = b3Rounded(b3Rect(0 * inch, bottom, LEDGE_LEN, bottom + LEDGE_LEG_H), [0, 0, LEDGE_LEG_R, LEDGE_LEG_R]);
+        const leg = b3Rounded(b3Rect(0 * inch, top - LEDGE_LEG_H, LEDGE_LEN, top), [LEDGE_LEG_R, LEDGE_LEG_R, 0, 0]);
         b3PrismXZ(context, id + "leg", leg, screws, 0 * inch, SHEET_T);
         b3Union(context, id + "join", b3Solids(id));
 
-        // Sheet metal: the back leg's face on the panel, then the shelf's underside.
+        // Sheet metal: the back leg's face on the panel, then the shelf's top.
         b3SheetMetal(context, id + "sm", b3Solids(id), [
-                    vector(LEDGE_LEN / 2, 0 * inch, top + LEDGE_SCREW_Z),
-                    vector(LEDGE_LEN / 2, LEDGE_SHELF / 2, bottom)
+                    vector(LEDGE_LEN / 2, 0 * inch, LEDGE_SCREW_Z),
+                    vector(LEDGE_LEN / 2, LEDGE_SHELF / 2, top)
                 ], SHEET_T, BEND_R_SHEET, K_SHEET);
 
         const body = b3Solids(id);
