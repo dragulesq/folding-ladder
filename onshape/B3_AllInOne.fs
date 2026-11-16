@@ -151,8 +151,15 @@ export const LIP_BUSHING_LEN = 4 * millimeter;     // overall, flange included: 
 export const EAR_BUSHING_LEN = 6 * millimeter;     // overall: GFM-1214-06, in the brackets' 3/16" ears
 export const THRUST_OD = AXLE_DIA + 6 * millimeter;    // 18 mm PTFE washer; the most that sits flat inside a lip at a cabinet-side hole
 export const THRUST_T = 1.5 * millimeter;
-export const WAVE_OD = AXLE_DIA + 6 * millimeter;      // wave spring washer, one per axle, drawn squeezed to the gap it fills
-export const WAVE_ID = AXLE_DIA + 0.5 * millimeter;
+// Wave washer: McMaster 1775N12, split wave disc spring, one per axle at the
+// back. It pushes the tread toward the front until the front lip's stack is
+// solid, so it sits in both lip-to-ear gaps' worth of room. Drawn as a flat
+// ring squeezed to the back gap with the tread centered.
+export const WAVE_OD = 0.625 * inch;
+export const WAVE_ID = 0.48 * inch;
+export const WAVE_T = 0.01 * inch;                 // spring steel, doubled at the split's overlap
+export const WAVE_FREE_H = 0.095 * inch;
+export const WAVE_WORK_H = 0.05 * inch;            // at its rated 10 lb
 // Step pins: a neoprene washer behind the back lip's bushing flange.
 export const NEO_ID = 0.5 * inch;
 export const NEO_OD = (7 / 8) * inch;

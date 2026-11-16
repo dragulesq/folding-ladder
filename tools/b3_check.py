@@ -41,6 +41,12 @@ def checks(m):
     wave = gap - m.THRUST_T - m.BUSHING_FLANGE_T
     out.append(("Wave washer's room in a lip-to-ear gap", wave, 0.4 / MM,
                 f"{gap * MM:.2f} mm gap less {m.THRUST_T * MM:.1f} thrust washer and {m.BUSHING_FLANGE_T * MM:.1f} flange"))
+    work = 2 * wave
+    out.append(("Wave washer's working room, front gap closed", work - 2 * m.WAVE_T, 0,
+                f"sits at {work * MM:.2f} mm ({work:.3f} in); rated 10 lb at {m.WAVE_WORK_H:.3f}, free {m.WAVE_FREE_H:.3f}, overlap {2 * m.WAVE_T:.3f}"))
+    out.append(("Wave washer's deflection left before its rated limit", (m.WAVE_FREE_H - m.WAVE_WORK_H) - (m.WAVE_FREE_H - work), 0,
+                f"deflects {(m.WAVE_FREE_H - work):.3f} of {(m.WAVE_FREE_H - m.WAVE_WORK_H):.3f} rated, about {10 * (m.WAVE_FREE_H - work) / (m.WAVE_FREE_H - m.WAVE_WORK_H):.0f} lb"))
+    out.append(("Wave washer's ID over the unsanded tube (12.16 mm)", m.WAVE_ID - 12.16 / MM, 0, ""))
     out.append(("Lip bushing's sleeve short of the lip's inside face", m.SHEET_T - (m.LIP_BUSHING_LEN - m.BUSHING_FLANGE_T), 0,
                 "a longer sleeve holds the thrust washer off the lip and eats the wave washer's room"))
     out.append(("Ear bushing's sleeve in the 3/16 ear", m.EAR_BUSHING_LEN - m.BUSHING_FLANGE_T, 0.6 * m.PLATE_T,
