@@ -37,5 +37,4 @@ export const b3Treads = defineFeature(function(context is Context, id is Id, def
         // The same two axles from the front, for the bushings and washers at the front lip.
         b3Mc(context, id + "mcCabTurned", body, "Tread", "Cabinet axle, turned", b3CabAxleTurnedJoint(n));
         b3Mc(context, id + "mcOutTurned", body, "Tread", "Outer axle, turned", b3OutAxleTurnedJoint(n));
-        b3Mc(context, id + "mcPlunger", body, "Tread", "Plunger", b3PlungerTreadJoint(n));
     });

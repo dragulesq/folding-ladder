@@ -180,18 +180,63 @@ export function b3FrontAngleJoint() returns map
     return b3PanelJoint(FA_X1, FA_BOTTOM_Z);
 }
 
-// The travel lock's pin line. On tread n (built where the top tread sits): at the
-// bottom edge of the block inside the front lip, z up into the block's hole.
-export function b3PlungerTreadJoint(n is number) returns map
+// The travel lock's ledge on the panel: its panel leg's bottom corner at the bed end.
+export function b3LockLedgeJoint() returns map
 {
-    return b3Joint(vector(b3GoingX(n) + PLUNGER_GOING_X, PLUNGER_Y, b3T(n) - LIP), vector(0, 0, 1), vector(1, 0, 0));
+    return b3PanelJoint(LOCK_LEDGE_X0, LOCK_SHELF_TOP_Z - LOCK_LEDGE_LEG);
 }
 
-// On the outer rail: on the plate's outer face, z along the nose (in toward the
-// cabinet), x along the stair.
-export function b3PlungerRailJoint() returns map
+// The plunger's line: on top of the ledge's tapped block, z up along the nose.
+export function b3LockPlungerJoint() returns map
 {
-    return b3Joint(vector(GOING + PLUNGER_GOING_X, RAIL_Y + PLATE_T, PLUNGER_RAIL_Z), vector(0, -1, 0), vector(1, 0, 0));
+    return b3Joint(vector(LOCK_X, LOCK_FOLD_Y, LOCK_BLOCK_TOP_Z), vector(0, 0, 1), vector(1, 0, 0));
+}
+
+// The stowed step's hook plates on the panel: the plate's bottom corner at the panel.
+export function b3StowHookJoint(upper is boolean) returns map
+{
+    return b3PanelJoint(STOW_HOOK_X0, upper ? STOW_UP_Z0 : STOW_LO_Z0);
+}
+
+// The turn tab on the upper hook plate's bed-side face, at its pivot screw.
+export function b3StowTabJoint() returns map
+{
+    return b3Joint(vector(STOW_HOOK_X0, (STOW_TAB_Y0 + STOW_TAB_Y1) / 2, STOW_PIN_UP_Z + STOW_TAB_PIVOT_UP), vector(-1, 0, 0), vector(0, 1, 0));
+}
+
+// Plate outline in (y, z) from the panel out to d, z0 to z1, with a slot
+// KEYHOLE_SLOT_W wide on z = pinZ, open at the plate's outer edge and running
+// in toward the panel to a round end centered yEnd.
+export function b3SideSlottedPlate(d is ValueWithUnits, z0 is ValueWithUnits, z1 is ValueWithUnits, pinZ is ValueWithUnits, yEnd is ValueWithUnits) returns array
+{
+    const h = KEYHOLE_SLOT_W / 2;
+    return [
+            vector(0 * inch, z0),
+            vector(d, z0),
+            vector(d, pinZ - h),
+            vector(yEnd, pinZ - h),
+            { "mid" : vector(yEnd - h, pinZ), "end" : vector(yEnd, pinZ + h) },
+            vector(d, pinZ + h),
+            vector(d, z1),
+            vector(0 * inch, z1)
+        ];
+}
+
+// Plate outline in (y, z) from the panel out to d, z0 to z1, with an open-top
+// slot KEYHOLE_SLOT_W wide on y = pinY, down to a round end centered zEnd.
+export function b3SlottedPlate(d is ValueWithUnits, z0 is ValueWithUnits, z1 is ValueWithUnits, pinY is ValueWithUnits, zEnd is ValueWithUnits) returns array
+{
+    const h = KEYHOLE_SLOT_W / 2;
+    return [
+            vector(0 * inch, z0),
+            vector(d, z0),
+            vector(d, z1),
+            vector(pinY + h, z1),
+            vector(pinY + h, zEnd),
+            { "mid" : vector(pinY, zEnd - h), "end" : vector(pinY - h, zEnd) },
+            vector(pinY - h, z1),
+            vector(0 * inch, z1)
+        ];
 }
 
 // Step ledge on the panel: the leg's bottom corner at the bed end.
@@ -256,7 +301,7 @@ export function b3LegEarBushingJoint() returns map
 // foot, on the cabinet side, z down.
 export function b3RailPadJoint() returns map
 {
-    return b3Joint(vector(RAIL_FOOT_X, RAIL_Y + PLATE_T + RAIL_FLANGE - RAIL_PAD_W, RAIL_FOOT_Z), vector(0, 0, -1), vector(1, 0, 0));
+    return b3Joint(vector(RAIL_PAD_X0, RAIL_Y + PLATE_T + RAIL_FLANGE - RAIL_PAD_W, RAIL_FOOT_Z), vector(0, 0, -1), vector(1, 0, 0));
 }
 
 // Rubber pad under a step leg's foot flange: the middle of its top face, z down.

@@ -249,28 +249,33 @@ export const CLIP_CORNER_R = R_OUTSIDE_SMALL;      // the free corners of both l
 // Travel lock
 // ---------------------------------------------------------------------------
 // Travel lock: McMaster 8501A58 twist-lock spring plunger (M10, 6 mm nose,
-// 14 mm travel), threaded through the outer rail's plate and a tapped spacer
-// block inside it, handle on the rail's outer face (the room side when
-// folded). Folded, the middle tread's front lip lies with its bottom edge
-// 7/16 off the rail's inner face, and the nose drops into a hole in a block
-// inside that lip. The rail and the tread turn 90 degrees to each other as
-// the stair folds, so the pin locks the fold.
+// 14 mm travel), pointing up through a small ledge on the panel, under where
+// the rail's foot flange lands when the stair is folded. The folded rail's
+// first move on the way open is straight out from the panel, square to the
+// pin, so the pin in the flange's hole locks the fold. The handle hangs under
+// the ledge.
 export const FOLD_DY = -(CAB_AXLE_DROP - OUT_AXLE_DROP) - (OUT_AXLE_Y - CAB_AXLE_Y);   // the rail's move when folded: -14 15/16
 export const FOLD_DZ = (OUT_AXLE_Y - CAB_AXLE_Y) - (CAB_AXLE_DROP - OUT_AXLE_DROP);    // +16 11/16
-export const PLUNGER_BLOCK_T = (5 / 4) * inch;     // tread block: along x, against the lip's inner face; long enough that the
-                                                   // pin line, and the jam nut on the rail, clear the rail's front flange bend
-export const PLUNGER_BLOCK_W = 1 * inch;           // along the tread's y
-export const PLUNGER_BLOCK_H = (5 / 8) * inch;     // up from the lip's bottom edge
-export const PLUNGER_GOING_X = TRAY_INSET + TRAY_D - SHEET_T - PLUNGER_BLOCK_T / 2;   // pin line in its going: 4 13/16 (x 10 9/16 on the rail)
-export const PLUNGER_FOLD_Z = 30 * inch;           // pin height, folded
-export const PLUNGER_RAIL_Z = PLUNGER_FOLD_Z - FOLD_DZ;   // the same line on the open rail: 13 5/16, between the clip and the bracket
-export const PLUNGER_Y = CAB_AXLE_Y + PLUNGER_FOLD_Z - (2 * RISE - CAB_AXLE_DROP);  // and on the open middle tread: 11 1/16 out
-export const PLUNGER_HOLE = 6.5 * millimeter;      // in the tread block, for the nose
-export const PLUNGER_RAIL_HOLE = 10.5 * millimeter; // M10 clearance in the rail plate
-export const PLUNGER_TAP = 8.5 * millimeter;       // M10 x 1.5 tap drill
+export const LOCK_X = RAIL_FOOT_X + 1 * inch;      // pin line: 8 3/4 along the cabinet
+export const LOCK_Y = RAIL_Y + PLATE_T + RAIL_FLANGE - RAIL_PAD_W / 2;   // on the open rail: mid-flat of the foot flange, 18 1/2
+export const LOCK_FOLD_Y = LOCK_Y + FOLD_DY;       // folded: 3 9/16 off the panel
+export const LOCK_HOLE = 6.5 * millimeter;         // in the rail's foot flange, for the nose
+export const LOCK_SHELF_HOLE = 10.5 * millimeter;  // M10 clearance in the ledge's shelf
+export const PLUNGER_TAP = 8.5 * millimeter;       // M10 x 1.5 tap drill, in the block
 export const PLUNGER_NOSE = 14 * millimeter;       // nose travel past the plunger's thread
-export const PLUNGER_SPACER_T = (3 / 8) * inch;    // rail spacer: along y, against the rail's inner face
-export const PLUNGER_SPACER_W = (3 / 4) * inch;    // along x and z
+export const PLUNGER_THREAD = 33 * millimeter;     // threaded length
+export const LOCK_GAP = (3 / 16) * inch;           // block top to the folded flange; the foot comes in about 0.09 low
+export const LOCK_BLOCK_T = (3 / 16) * inch;       // tapped block on the shelf
+export const LOCK_BLOCK_W = 1 * inch;              // along x
+export const LOCK_BLOCK_D = (3 / 4) * inch;        // along y
+export const LOCK_BLOCK_TOP_Z = RAIL_FOOT_Z + FOLD_DZ - LOCK_GAP;   // 17
+export const LOCK_SHELF_TOP_Z = LOCK_BLOCK_TOP_Z - LOCK_BLOCK_T;    // 16 13/16, just under the cabinet bracket's web (16 7/8)
+export const LOCK_LEDGE_W = 1.5 * inch;            // along x
+export const LOCK_LEDGE_X0 = LOCK_X - LOCK_LEDGE_W / 2;             // 8
+export const LOCK_LEDGE_REACH = RAIL_Y + PLATE_T + RAIL_FLANGE + FOLD_DY;   // 3 15/16, as far out as the folded rail's flange
+export const LOCK_LEDGE_LEG = 1.75 * inch;         // panel leg, down from the shelf's top
+export const LOCK_SCREW_DROP = (9 / 8) * inch;     // two #8 screws, below the shelf's top
+export const RAIL_PAD_X0 = LOCK_X + 1 * inch;      // the foot pad starts here (9 3/4), clear of the lock's ledge
 
 // ---------------------------------------------------------------------------
 // Step ledge
@@ -313,3 +318,35 @@ export const STEP_AXLE_X0 = 2 * GOING - 0.13 * inch;  // 11.37; back end is the 
 export const STEP_AXLE_X1 = 3 * GOING - 0.14 * inch;  // 17.11; 145.8 mm (5.74) long
 export const STEP_PAD_L = GOING - (9 / 8) * inch;   // 4 5/8 rubber pad under each leg's foot flange, as wide as the flange
 export const STEP_PAD_T = STEP_LEG_BOTTOM_Z;       // 1/8, down to the floor
+
+// ---------------------------------------------------------------------------
+// Stowed hook-on step: two hook plates on the panel catch its two pins
+// ---------------------------------------------------------------------------
+// The stowed step stands in the top tread's going with its pins pointing to
+// the cabinet front, just past x = GOING, where plates like the front angle's
+// catch them. The lower plate's slot opens upward: the step's bottom end is
+// set down on the ledge and its lower pin drops in. The upper plate's slot
+// opens toward the room: the step's top is then tipped in to the panel and
+// the upper pin slides in, held up and down by the slot. A turn tab across
+// the slot's mouth keeps it in.
+export const STOW_TOP_Y = STOW_PANEL_GAP + OUT_AXLE_DROP + CAB_AXLE_Y - STEP_LEG_Y0;   // the stowed step's tread face: 2 1/4
+export const STOW_Z0 = LEDGE_TOP_Z + LEDGE_STRIP_T - TRAY_Y0;      // stowed height of the step's y = 0: 7/8
+export const STOW_PIN_UP_Y = STOW_TOP_Y - OUT_AXLE_DROP;           // upper pin: 3/4 off the panel
+export const STOW_PIN_UP_Z = STOW_Z0 + OUT_AXLE_Y;                 // 17 5/8
+export const STOW_PIN_LO_Y = STOW_TOP_Y - CAB_AXLE_DROP;           // lower pin: 1 5/8
+export const STOW_PIN_LO_Z = STOW_Z0 + CAB_AXLE_Y;                 // 1 13/16
+export const STOW_HOOK_X0 = GOING;                 // plates from here to GOING + SHEET_T, where the front angle sits when the step is in use
+export const STOW_SLOT_DROP = (1 / 8) * inch;      // each slot's round end past the resting pin
+export const STOW_HOOK_LEG = 1.5 * inch;           // panel leg, along x past the plate
+export const STOW_UP_Z0 = 15.25 * inch;            // upper hook: plate bottom; its panel leg runs under the cabinet bracket
+export const STOW_UP_LEG_Z1 = 16.75 * inch;        // panel leg top, 1/8 under the bracket's web
+export const STOW_UP_Z1 = 18.25 * inch;            // plate top, under the middle tread's back lip as it folds (18.39)
+export const STOW_UP_D = 2 * inch;                 // plate reach from the panel
+export const STOW_LO_Z0 = 1 * inch;                // lower hook
+export const STOW_LO_Z1 = (21 / 8) * inch;
+export const STOW_LO_D = 2.25 * inch;
+export const STOW_SCREW_DIA = 0.177 * inch;        // #8 clearance
+export const STOW_TAB_Y0 = 1.2 * inch;             // turn tab, closed: upright across the slot's mouth, past the pin's neoprene washer
+export const STOW_TAB_Y1 = 1.4 * inch;
+export const STOW_TAB_HALF = 0.6 * inch;           // it reaches this far above and below the pin
+export const STOW_TAB_PIVOT_UP = 0.5 * inch;       // its screw, above the slot

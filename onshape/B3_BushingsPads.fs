@@ -19,11 +19,6 @@ import(path : "onshape/std/common.fs", version : "2641.0");
  *   Rail foot pad (1), step leg pad (2), ledge strip (1): rubber under the
  *   rail's foot and the step legs' feet, and on the step ledge's shelf.
  *   Panel bumper (2): rubber, on the panel behind each folded tread.
- *   Plunger block (1): aluminum, inside the middle tread's front lip at its
- *   bottom edge, drilled for the nose of the 8501A58 spring plunger that
- *   locks the folded stair.
- *   Plunger spacer (1): aluminum, inside the outer rail's plate, tapped M10
- *   for that plunger.
  * The pivot parts are built on the back end of the top tread's cabinet axle,
  * the neoprene washer on the step's cabinet-side pin, each pad where it is
  * used first. Their sizes come from the tube (AXLE_DIA, BUSHING_WALL) and the
@@ -81,7 +76,8 @@ export const b3BushingsAndPads = defineFeature(function(context is Context, id i
         b3FinishRubber(context, neoprene, "Neoprene washer");
         b3Mc(context, id + "mcNeoprene", neoprene, "Neoprene washer", "Tread", pin);
 
-        // Rubber pad under the flat of the rail's foot flange, down to the floor.
+        // Rubber pad under the flat of the rail's foot flange, down to the floor;
+        // it starts past the travel lock's hole.
         const railPad = b3RailPadJoint();
         const rp = railPad.origin;
         b3Box(context, id + "railPad", vector(rp[0], rp[1], rp[2] - RAIL_PAD_T), vector(2 * GOING, rp[1] + RAIL_PAD_W, rp[2]));
@@ -101,28 +97,6 @@ export const b3BushingsAndPads = defineFeature(function(context is Context, id i
         b3PrismXY(context, id + "ledgeStrip", shelf, [], LEDGE_TOP_Z, LEDGE_TOP_Z + LEDGE_STRIP_T);
         b3FinishRubber(context, b3Solids(id + "ledgeStrip"), "Ledge strip");
         b3Mc(context, id + "mcLedgeStrip", b3Solids(id + "ledgeStrip"), "Ledge strip", "Ledge", b3LedgeStripJoint());
-
-        // The travel lock. A block of aluminum inside the tread's front lip, flush
-        // with its bottom edge, drilled for the plunger's nose; two #8 screws through
-        // the lip (not modeled).
-        const pt = b3PlungerTreadJoint(TREAD_TOP).origin;
-        b3Box(context, id + "plungerBlock", vector(pt[0] - PLUNGER_BLOCK_T / 2, pt[1] - PLUNGER_BLOCK_W / 2, pt[2]),
-            vector(pt[0] + PLUNGER_BLOCK_T / 2, pt[1] + PLUNGER_BLOCK_W / 2, pt[2] + PLUNGER_BLOCK_H));
-        b3Cyl(context, id + "plungerHole", pt - vector(0, 0, 1) * millimeter, pt + vector(0 * inch, 0 * inch, PLUNGER_BLOCK_H + 1 * millimeter), PLUNGER_HOLE);
-        b3Subtract(context, id + "plungerCut", b3Solids(id + "plungerBlock"), b3Solids(id + "plungerHole"));
-        b3Finish(context, b3Solids(id + "plungerBlock"), "Plunger block", RGB_ALU_DARK);
-        b3Mc(context, id + "mcPlungerBlock", b3Solids(id + "plungerBlock"), "Plunger block", "Tread", b3PlungerTreadJoint(TREAD_TOP));
-
-        // And a spacer inside the rail's plate, tapped M10: the plunger threads
-        // through the plate's clearance hole into it, with a jam nut outside.
-        const pr = b3PlungerRailJoint().origin;
-        const sw = PLUNGER_SPACER_W / 2;
-        b3Box(context, id + "plungerSpacer", vector(pr[0] - sw, RAIL_Y - PLUNGER_SPACER_T, pr[2] - sw), vector(pr[0] + sw, RAIL_Y, pr[2] + sw));
-        b3Cyl(context, id + "plungerTap", vector(pr[0], RAIL_Y - PLUNGER_SPACER_T - 1 * millimeter, pr[2]),
-            vector(pr[0], RAIL_Y + 1 * millimeter, pr[2]), PLUNGER_TAP);
-        b3Subtract(context, id + "spacerCut", b3Solids(id + "plungerSpacer"), b3Solids(id + "plungerTap"));
-        b3Finish(context, b3Solids(id + "plungerSpacer"), "Plunger spacer", RGB_ALU_DARK);
-        b3Mc(context, id + "mcPlungerSpacer", b3Solids(id + "plungerSpacer"), "Plunger spacer", "Rail", b3PlungerRailJoint());
 
         // Rubber bumper on the panel behind the folded top tread, at its free height.
         const bumper = b3BumperJoint(TREAD_TOP);

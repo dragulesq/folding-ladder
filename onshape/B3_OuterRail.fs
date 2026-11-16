@@ -54,9 +54,7 @@ export const b3OuterRail = defineFeature(function(context is Context, id is Id, 
                 foot,
                 back
             ];
-        // The hand slot, and the travel lock's plunger hole.
-        var holes = [b3Slot(vector(HAND_SLOT_X, HAND_SLOT_Z), HAND_SLOT_L, HAND_SLOT_H),
-                b3Hole(GOING + PLUNGER_GOING_X, PLUNGER_RAIL_Z, PLUNGER_RAIL_HOLE)];
+        var holes = [b3Slot(vector(HAND_SLOT_X, HAND_SLOT_Z), HAND_SLOT_L, HAND_SLOT_H)];
         for (var k = 0; k < size(CLIP_SCREW_X); k += 1)
         {
             holes = append(holes, b3Hole(CLIP_SCREW_X[k], CLIP_SCREW_Z, SCREW_HOLE_DIA));
@@ -103,6 +101,13 @@ export const b3OuterRail = defineFeature(function(context is Context, id is Id, 
         const reliefs = b3Solids(id + "riserRelief");
         b3Subtract(context, id + "cutRelief", qSubtraction(b3Solids(id), reliefs), reliefs);
 
+        // The travel lock's hole in the foot flange: the plunger's nose comes up
+        // through it when the stair is folded.
+        b3Cyl(context, id + "lockHole", vector(LOCK_X, LOCK_Y, RAIL_FOOT_Z - 1 * millimeter),
+            vector(LOCK_X, LOCK_Y, RAIL_FOOT_Z + PLATE_T + 1 * millimeter), LOCK_HOLE);
+        const lockHole = b3Solids(id + "lockHole");
+        b3Subtract(context, id + "cutLock", qSubtraction(b3Solids(id), lockHole), lockHole);
+
 
         b3SheetMetal(context, id + "sm", b3Solids(id), outside, PLATE_T, BEND_R_PLATE, K_PLATE);
 
@@ -113,7 +118,6 @@ export const b3OuterRail = defineFeature(function(context is Context, id is Id, 
         b3Mc(context, id + "mcMiddle", rail, name, "Middle tread bracket", b3RailBracketJoint(TREAD_MIDDLE));
         b3Mc(context, id + "mcClip", rail, name, "Step clip", b3StepClipJoint());
         b3Mc(context, id + "mcPad", rail, name, "Foot pad", b3RailPadJoint());
-        b3Mc(context, id + "mcPlunger", rail, name, "Plunger", b3PlungerRailJoint());
         for (var k = 0; k < size(CLIP_SCREW_X); k += 1)
         {
             b3Mc(context, id + ("mcNutClip" ~ k), rail, name, "Nut, clip " ~ (k + 1), b3ClipNutJoint(k));

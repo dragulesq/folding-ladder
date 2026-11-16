@@ -40,13 +40,13 @@ class Model:
     def T(self, n):
         return (n + 1) * self.RISE
 
-    def plunger_tread(self, n):
-        """The plunger's line on tread n: the bottom edge of its block in the front lip, z up (b3PlungerTreadJoint)."""
-        return self.joint((self.going_x(n) + self.PLUNGER_GOING_X, self.PLUNGER_Y, self.T(n) - self.LIP), (0, 0, 1), (1, 0, 0))
+    def lock_plunger(self):
+        """The travel lock's pin line: on top of the ledge's block, z up (b3LockPlungerJoint)."""
+        return self.joint((self.LOCK_X, self.LOCK_FOLD_Y, self.LOCK_BLOCK_TOP_Z), (0, 0, 1), (1, 0, 0))
 
-    def plunger_rail(self):
-        """On the rail's plate, outer face, z along the nose toward the cabinet (b3PlungerRailJoint)."""
-        return self.joint((self.GOING + self.PLUNGER_GOING_X, self.RAIL_Y + self.PLATE_T, self.PLUNGER_RAIL_Z), (0, -1, 0), (1, 0, 0))
+    def stow_tab(self):
+        return self.joint((self.STOW_HOOK_X0, (self.STOW_TAB_Y0 + self.STOW_TAB_Y1) / 2, self.STOW_PIN_UP_Z + self.STOW_TAB_PIVOT_UP),
+                          (-1, 0, 0), (0, 1, 0))
 
     def going_x(self, n):
         return (2 - n) * self.GOING
@@ -117,7 +117,7 @@ class Model:
         return self.joint((self.CLIP_SCREW_X[k], self.RAIL_Y + self.PLATE_T, self.CLIP_SCREW_Z), (0, 1, 0), (1, 0, 0))
 
     def rail_pad(self):
-        return self.joint((self.RAIL_FOOT_X, self.RAIL_Y + self.PLATE_T + self.RAIL_FLANGE - self.RAIL_PAD_W, self.RAIL_FOOT_Z),
+        return self.joint((self.RAIL_PAD_X0, self.RAIL_Y + self.PLATE_T + self.RAIL_FLANGE - self.RAIL_PAD_W, self.RAIL_FOOT_Z),
                           (0, 0, -1), (1, 0, 0))
 
     def step_pad(self):
@@ -155,10 +155,16 @@ class Model:
             ("Outer rail", "Step clip"): self.step_clip(),
             ("Outer rail", "Foot pad"): self.rail_pad(),
             ("Step clip", "Outer rail"): self.step_clip(),
-            ("Tread", "Plunger"): self.plunger_tread(top),
-            ("Plunger block", "Tread"): self.plunger_tread(top),
-            ("Outer rail", "Plunger"): self.plunger_rail(),
-            ("Plunger spacer", "Rail"): self.plunger_rail(),
+            ("REF cabinet", "Rail lock ledge"): self.panel_joint(self.LOCK_LEDGE_X0, self.LOCK_SHELF_TOP_Z - self.LOCK_LEDGE_LEG),
+            ("Rail lock ledge", "Cabinet"): self.panel_joint(self.LOCK_LEDGE_X0, self.LOCK_SHELF_TOP_Z - self.LOCK_LEDGE_LEG),
+            ("REF cabinet", "Plunger"): self.lock_plunger(),
+            ("Plunger block", "Ledge"): self.lock_plunger(),
+            ("REF cabinet", "Stow hook, upper"): self.panel_joint(self.STOW_HOOK_X0, self.STOW_UP_Z0),
+            ("Stow hook, upper", "Cabinet"): self.panel_joint(self.STOW_HOOK_X0, self.STOW_UP_Z0),
+            ("REF cabinet", "Stow hook, lower"): self.panel_joint(self.STOW_HOOK_X0, self.STOW_LO_Z0),
+            ("Stow hook, lower", "Cabinet"): self.panel_joint(self.STOW_HOOK_X0, self.STOW_LO_Z0),
+            ("REF cabinet", "Stow tab"): self.stow_tab(),
+            ("Stow tab", "Hook"): self.stow_tab(),
             ("Tread axle", "Back end"): axle,
             ("Tread axle", "Front end"): self.joint((p[0] + self.TREAD_AXLE_LEN, p[1], p[2]), (1, 0, 0), (0, 1, 0)),
             ("Step axle", "Back end"): step_axle,

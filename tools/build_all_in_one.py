@@ -24,6 +24,7 @@ ORDER = [
     "B3_FrontAngle.fs",
     "B3_StepLedge.fs",
     "B3_HookOnStep.fs",
+    "B3_StowLocks.fs",
 ]
 
 HEADER = re.compile(r'^(FeatureScript \d+;|import\(path : "onshape/std/\w+\.fs".*\);)\s*$')

@@ -81,9 +81,10 @@ INSTANCES = {
     # Rubber.
     "Rail foot pad": "Rail foot pad", "Step leg pad 1": "Step leg pad", "Step leg pad 2": "Step leg pad",
     "Ledge strip": "Ledge strip", "Panel bumper 1": "Panel bumper", "Panel bumper 2": "Panel bumper",
-    # The stowing lock: the block in the middle tread's front lip that the plunger's nose drops
-    # into, and the tapped spacer inside the rail that the plunger threads into.
-    "Plunger block": "Plunger block", "Plunger spacer": "Plunger spacer",
+    # Travel locks on the panel: the ledge and tapped block the plunger stands in, under the folded
+    # rail's foot, and the hook plates and turn tab that hold the stowed hook-on step.
+    "Rail lock ledge": "Rail lock ledge", "Plunger block": "Plunger block",
+    "Stow hook, upper": "Stow hook, upper", "Stow hook, lower": "Stow hook, lower", "Stow tab": "Stow tab",
 }
 
 # Mates between the main parts: (type, (instance, its mate connector), (instance it goes on, that one's
@@ -173,8 +174,11 @@ HARDWARE += [
     (("Ledge strip", "Ledge"), ("Step ledge", "Rubber strip")),
     (("Panel bumper 1", "Panel"), ("REF cabinet", "Bumper, top tread")),
     (("Panel bumper 2", "Panel"), ("REF cabinet", "Bumper, middle tread")),
-    (("Plunger block", "Tread"), ("Tread 2", "Plunger")),
-    (("Plunger spacer", "Rail"), ("Outer rail", "Plunger")),
+    (("Rail lock ledge", "Cabinet"), ("REF cabinet", "Rail lock ledge")),
+    (("Plunger block", "Ledge"), ("REF cabinet", "Plunger")),
+    (("Stow hook, upper", "Cabinet"), ("REF cabinet", "Stow hook, upper")),
+    (("Stow hook, lower", "Cabinet"), ("REF cabinet", "Stow hook, lower")),
+    (("Stow tab", "Hook"), ("REF cabinet", "Stow tab")),
 ]
 
 # Bought parts imported into the document (McMaster's models), used in place of the modeled ones:
@@ -200,7 +204,7 @@ EXTRA = {}
 # Bought parts with no modeled stand-in: (instance, import key, part instance, its mate connector).
 # Each goes where the import's frame meets that connector, and moves with that part.
 ADDS = [
-    ("Spring plunger", "8501A58", "Outer rail", "Plunger"),
+    ("Spring plunger", "8501A58", "REF cabinet", "Plunger"),
 ]
 
 
