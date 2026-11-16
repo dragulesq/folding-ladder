@@ -184,10 +184,12 @@ SWAPS = [
     ("M6 fender washer ", "94316A560"),
     ("M6 nyloc nut ", "93625A250"),
     ("Wave washer ", "1775N12"),
+    ("Lip bushing ", "JFM-1214-04"),
+    ("Ear bushing ", "GFM-1214-06"),
 ]
 # The connector each swapped part is placed by, in the modeled part's Part Studio.
 SWAP_CONNECTOR = {"M6 flat-head screw": "Head", "M6 button-head screw": "Washer", "M6 fender washer": "Axle",
-                  "M6 nyloc nut": "Rail", "Wave washer": "Axle"}
+                  "M6 nyloc nut": "Rail", "Wave washer": "Axle", "Lip bushing": "Axle", "Ear bushing": "Axle"}
 # A second part of an import (the nut's nylon insert) -> the instance it goes with.
 EXTRA = {}
 

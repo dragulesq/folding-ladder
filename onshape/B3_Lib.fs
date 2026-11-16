@@ -180,6 +180,19 @@ export function b3FrontAngleJoint() returns map
     return b3PanelJoint(FA_X1, FA_BOTTOM_Z);
 }
 
+// Draw latch body on the rail's front flange, open: between its two base
+// screws on the flange's outer face, z out of the face, x toward the strike.
+export function b3LatchJoint() returns map
+{
+    return b3Joint(vector(2 * GOING, LATCH_BASE_Y, LATCH_Z), vector(1, 0, 0), vector(0, -1, 0));
+}
+
+// Its strike on the front angle's outward leg, between the strike's two screws.
+export function b3LatchStrikeJoint() returns map
+{
+    return b3Joint(vector(FA_X1, LATCH_STRIKE_Y, LATCH_Z + FOLD_DZ), vector(1, 0, 0), vector(0, -1, 0));
+}
+
 // Step ledge on the panel: the leg's bottom corner at the bed end.
 export function b3StepLedgeJoint() returns map
 {

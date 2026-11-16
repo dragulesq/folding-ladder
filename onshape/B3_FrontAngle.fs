@@ -41,8 +41,11 @@ export const b3FrontAngle = defineFeature(function(context is Context, id is Id,
                 vector(stepBack, FA_PANEL_LEG_TOP),
                 vector(0 * inch, FA_PANEL_LEG_TOP)
             ];
+        const strikeZ = LATCH_Z + FOLD_DZ;
         b3PrismYZ(context, id + "outLeg", b3Rounded(outLeg, [0, r, FA_ENTRY_R, r, 0, 0]),
-            [b3Keyhole(FA_KEYHOLE_Y, FA_KEYHOLE_Z, FA_KEYHOLE_END_Z)], FA_X1 - SHEET_T, FA_X1);
+            [b3Keyhole(FA_KEYHOLE_Y, FA_KEYHOLE_Z, FA_KEYHOLE_END_Z),
+                b3Hole(LATCH_STRIKE_Y, strikeZ - LATCH_STRIKE_DZ / 2, LATCH_SCREW_DIA),
+                b3Hole(LATCH_STRIKE_Y, strikeZ + LATCH_STRIKE_DZ / 2, LATCH_SCREW_DIA)], FA_X1 - SHEET_T, FA_X1);
         b3Union(context, id + "join", b3Solids(id));
 
         // Sheet metal: the panel leg's face on the panel, then the outward leg's outer face.
@@ -56,4 +59,5 @@ export const b3FrontAngle = defineFeature(function(context is Context, id is Id,
         b3Finish(context, body, name, RGB_ALU_DARK);
         b3Mc(context, id + "mcCabinet", body, name, "Cabinet", b3FrontAngleJoint());
         b3Mc(context, id + "mcStep", body, name, "Hook-on step", b3CabAxleJoint(HOOK_STEP));
+        b3Mc(context, id + "mcStrike", body, name, "Latch strike", b3LatchStrikeJoint());
     });

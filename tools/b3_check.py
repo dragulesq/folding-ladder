@@ -36,6 +36,17 @@ def checks(m):
                 f"aisle is {m.ENTRY_AISLE_W:.3f}, the step reaches {step_end - 2 * m.GOING:.3f} into it"))
     out.append(("Open rail to the shower wall, across the middle aisle", m.SHOWER_Y - tip, 12,
                 f"middle aisle runs y {m.DINETTE_Y1:.3f} to {m.SHOWER_Y:.3f}"))
+    # The draw latch: folded, its body on the rail's front flange, its strike on the front angle.
+    mo = m.body_motions()
+    base = apply(mo["rail"], (2 * m.GOING, m.LATCH_BASE_Y, m.LATCH_Z))
+    out.append(("Latch strike screws inside the front angle's outward leg", min(m.LATCH_STRIKE_Y, m.FA_OUT_LEG - m.LATCH_STRIKE_Y) - 0.25, 0,
+                f"strike at y {m.LATCH_STRIKE_Y:.3f}, latch base folded at y {base[1]:.3f}, {base[1] - m.LATCH_STRIKE_Y:.3f} apart"))
+    out.append(("Latch's adjustment either side of the drawn pitch", min(m.LATCH_PITCH - 2.31, 2.66 - m.LATCH_PITCH), 0.1,
+                "base to strike screws, about 2.31 to 2.66 over its 2 to 2 3/8 latching distance"))
+    out.append(("Latch top to the front angle's top", m.FA_TOP_Z - (m.LATCH_Z + m.FOLD_DZ + 0.555), 0, "the latch is 1 1/8 wide"))
+    out.append(("Latch bottom above the folded rail's front flange end", m.LATCH_Z - 0.555 - m.RAIL_FOOT_Z, 0.25, ""))
+    head = m.T(TREAD_MIDDLE) - m.CAB_AXLE_DROP - m.END_WASHER_DIA / 2
+    out.append(("Front angle top under the middle tread's axle washer", head - m.FA_TOP_Z, 0.125, ""))
     # The stack between a lip and its ear.
     gap = m.EAR_X0 - m.TRAY_INSET - m.SHEET_T
     wave = gap - m.THRUST_T - m.BUSHING_FLANGE_T

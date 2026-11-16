@@ -222,7 +222,7 @@ export const FA_PANEL_LEG_X0 = FA_X1 - (11 / 8) * inch;    // 10 1/8
 export const FA_PANEL_LEG_TOP = 16.5 * inch;
 export const FA_OUT_LEG = 2 * inch;                // along y
 export const FA_BOTTOM_Z = 1 * inch;
-export const FA_TOP_Z = 18 * inch;
+export const FA_TOP_Z = 19.25 * inch;             // tall enough to carry the draw latch's strike beside the folded rail; 3/8 under the middle tread's axle screw head
 export const FA_SCREW_X = FA_X1 - (19 / 32) * inch;  // 10 29/32, front post centerline (15 mm in from the frame's front)
 export const FA_SCREW_Z = [4.5 * inch, 12.25 * inch, 15.5 * inch];
 export const FA_SCREW_HOLE_DIA = (17 / 64) * inch;
@@ -230,6 +230,19 @@ export const FA_KEYHOLE_Y = CAB_AXLE_Y;            // 15/16, on the step's cabin
 export const FA_KEYHOLE_Z = (161 / 16) * inch;     // 10 1/16, hole center
 export const FA_KEYHOLE_END_Z = 9.5 * inch;        // slot's round end, 1/8 below the pin at 9 5/8
 export const FA_CORNER_R = R_OUTSIDE_SMALL;
+// Travel latch: McMaster 1864A17 adjustable draw latch, its body on the rail's
+// front flange and its strike on the front angle's outward leg. Folded, the
+// two faces are in one plane (x = 2 GOING), so the latch pulls the folded
+// stair straight in against the bumpers. #6 machine screws and nyloc nuts.
+export const FOLD_DY = -(CAB_AXLE_DROP - OUT_AXLE_DROP) - (OUT_AXLE_Y - CAB_AXLE_Y);   // the rail's move when folded: -14 15/16
+export const FOLD_DZ = (OUT_AXLE_Y - CAB_AXLE_Y) - (CAB_AXLE_DROP - OUT_AXLE_DROP);    // +16 11/16
+export const LATCH_SCREW_DIA = 0.15 * inch;        // #6 clearance
+export const LATCH_BASE_Y = RAIL_Y + PLATE_T + RAIL_FLANGE - (3 / 8) * inch;   // base screws on the rail's front flange, 3/8 in from its tip (open)
+export const LATCH_BASE_DZ = 0.562 * inch;         // base screws apart, along z
+export const LATCH_Z = (31 / 16) * inch;           // the latch's center line on the rail, open (18 5/8 folded)
+export const LATCH_PITCH = 2.45 * inch;            // base screws to strike screws, mid-way through its adjustment
+export const LATCH_STRIKE_Y = LATCH_BASE_Y + FOLD_DY - LATCH_PITCH;   // 1 1/8 on the front angle
+export const LATCH_STRIKE_DZ = 0.312 * inch;       // strike screws apart, along z
 export const FA_ENTRY_R = R_OUTSIDE_LARGE;         // outward leg's top outer corner (y 2, z 18), facing the entry
 
 // ---------------------------------------------------------------------------
