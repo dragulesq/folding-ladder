@@ -180,11 +180,18 @@ export function b3FrontAngleJoint() returns map
     return b3PanelJoint(FA_X1, FA_BOTTOM_Z);
 }
 
-// The travel lock's pin line on the front lip of tread n, built where the top
-// tread sits: on the lip's outer face, z along the nose (toward the front).
-export function b3PlungerJoint(n is number) returns map
+// The travel lock's pin line. On tread n (built where the top tread sits): at the
+// bottom edge of the block inside the front lip, z up into the block's hole.
+export function b3PlungerTreadJoint(n is number) returns map
 {
-    return b3Joint(vector(b3GoingX(n) + TRAY_INSET + TRAY_D, PLUNGER_Y, b3T(n) - PLUNGER_DROP), vector(1, 0, 0), vector(0, 1, 0));
+    return b3Joint(vector(b3GoingX(n) + PLUNGER_GOING_X, PLUNGER_Y, b3T(n) - LIP), vector(0, 0, 1), vector(1, 0, 0));
+}
+
+// On the outer rail: on the plate's outer face, z along the nose (in toward the
+// cabinet), x along the stair.
+export function b3PlungerRailJoint() returns map
+{
+    return b3Joint(vector(GOING + PLUNGER_GOING_X, RAIL_Y + PLATE_T, PLUNGER_RAIL_Z), vector(0, -1, 0), vector(1, 0, 0));
 }
 
 // Step ledge on the panel: the leg's bottom corner at the bed end.
@@ -382,6 +389,12 @@ export function b3PrismXY(context is Context, id is Id, path is array, holes is 
 export function b3Box(context is Context, id is Id, lo is Vector, hi is Vector)
 {
     fCuboid(context, id, { "corner1" : b3V(lo), "corner2" : b3V(hi) });
+}
+
+// Cylinder from p0 to p1.
+export function b3Cyl(context is Context, id is Id, p0 is Vector, p1 is Vector, dia is ValueWithUnits)
+{
+    fCylinder(context, id, { "bottomCenter" : b3V(p0), "topCenter" : b3V(p1), "radius" : dia / 2 });
 }
 
 // Cylinder along x.

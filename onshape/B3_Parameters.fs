@@ -249,23 +249,28 @@ export const CLIP_CORNER_R = R_OUTSIDE_SMALL;      // the free corners of both l
 // Travel lock
 // ---------------------------------------------------------------------------
 // Travel lock: McMaster 8501A58 twist-lock spring plunger (M10, 6 mm nose,
-// 14 mm travel) in a tapped block inside the middle tread's front lip. Folded,
-// that lip lies 1/16 behind the step clip's keyhole leg, and the nose drops
-// through both into a hole in the clip, locking the fold. Extended, the nose
-// stops flush with the clip's outer face.
+// 14 mm travel), threaded through the outer rail's plate and a tapped spacer
+// block inside it, handle on the rail's outer face (the room side when
+// folded). Folded, the middle tread's front lip lies with its bottom edge
+// 7/16 off the rail's inner face, and the nose drops into a hole in a block
+// inside that lip. The rail and the tread turn 90 degrees to each other as
+// the stair folds, so the pin locks the fold.
 export const FOLD_DY = -(CAB_AXLE_DROP - OUT_AXLE_DROP) - (OUT_AXLE_Y - CAB_AXLE_Y);   // the rail's move when folded: -14 15/16
 export const FOLD_DZ = (OUT_AXLE_Y - CAB_AXLE_Y) - (CAB_AXLE_DROP - OUT_AXLE_DROP);    // +16 11/16
-export const PLUNGER_FOLD_Y = 1 * inch;            // the pin's line, folded: out from the panel, 3/8 clear of the clip's keyhole
-export const PLUNGER_FOLD_Z = CLIP_Z0 + CLIP_H / 2 + FOLD_DZ;   // and up, mid-height on the clip's keyhole leg (25 5/8)
-export const PLUNGER_Y = PLUNGER_FOLD_Z - (2 * RISE - CAB_AXLE_DROP) + CAB_AXLE_Y;   // the same line on the open middle tread: 6 11/16 out
-export const PLUNGER_DROP = CAB_AXLE_DROP + PLUNGER_FOLD_Y - CAB_AXLE_Y;            // and 11/16 under the tread top
-export const PLUNGER_LIP_HOLE = 6.5 * millimeter;  // in the tread's front lip, for the nose
-export const PLUNGER_CLIP_HOLE = 6.2 * millimeter; // in the clip, close on the nose so the folded stair can't rattle
-export const PLUNGER_NOSE = 14 * millimeter;       // nose travel past the plunger's thread
+export const PLUNGER_BLOCK_T = (5 / 4) * inch;     // tread block: along x, against the lip's inner face; long enough that the
+                                                   // pin line, and the jam nut on the rail, clear the rail's front flange bend
+export const PLUNGER_BLOCK_W = 1 * inch;           // along the tread's y
+export const PLUNGER_BLOCK_H = (5 / 8) * inch;     // up from the lip's bottom edge
+export const PLUNGER_GOING_X = TRAY_INSET + TRAY_D - SHEET_T - PLUNGER_BLOCK_T / 2;   // pin line in its going: 4 13/16 (x 10 9/16 on the rail)
+export const PLUNGER_FOLD_Z = 30 * inch;           // pin height, folded
+export const PLUNGER_RAIL_Z = PLUNGER_FOLD_Z - FOLD_DZ;   // the same line on the open rail: 13 5/16, between the clip and the bracket
+export const PLUNGER_Y = CAB_AXLE_Y + PLUNGER_FOLD_Z - (2 * RISE - CAB_AXLE_DROP);  // and on the open middle tread: 11 1/16 out
+export const PLUNGER_HOLE = 6.5 * millimeter;      // in the tread block, for the nose
+export const PLUNGER_RAIL_HOLE = 10.5 * millimeter; // M10 clearance in the rail plate
 export const PLUNGER_TAP = 8.5 * millimeter;       // M10 x 1.5 tap drill
-export const PLUNGER_BLOCK_T = (5 / 8) * inch;     // along x, against the lip's inner face
-export const PLUNGER_BLOCK_W = 1 * inch;           // along y
-export const PLUNGER_BLOCK_H = (7 / 8) * inch;     // along z, clear of the lip's bend
+export const PLUNGER_NOSE = 14 * millimeter;       // nose travel past the plunger's thread
+export const PLUNGER_SPACER_T = (3 / 8) * inch;    // rail spacer: along y, against the rail's inner face
+export const PLUNGER_SPACER_W = (3 / 4) * inch;    // along x and z
 
 // ---------------------------------------------------------------------------
 // Step ledge

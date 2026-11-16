@@ -28,8 +28,7 @@ export const b3Treads = defineFeature(function(context is Context, id is Id, def
                 b3Hole(CAB_AXLE_Y, top - CAB_AXLE_DROP, HOLE_DIA),
                 b3Hole(OUT_AXLE_Y, top - OUT_AXLE_DROP, HOLE_DIA)
             ];
-        // The travel lock's hole, in the front lip only; it is used on the middle tread.
-        b3Tray(context, id + "tray", b3GoingX(n) + TRAY_INSET, top, holes, [b3Hole(PLUNGER_Y, top - PLUNGER_DROP, PLUNGER_LIP_HOLE)]);
+        b3Tray(context, id + "tray", b3GoingX(n) + TRAY_INSET, top, holes, []);
 
         const body = b3Solids(id + "tray");
         b3Finish(context, body, "Tread", RGB_ALU);
@@ -38,5 +37,5 @@ export const b3Treads = defineFeature(function(context is Context, id is Id, def
         // The same two axles from the front, for the bushings and washers at the front lip.
         b3Mc(context, id + "mcCabTurned", body, "Tread", "Cabinet axle, turned", b3CabAxleTurnedJoint(n));
         b3Mc(context, id + "mcOutTurned", body, "Tread", "Outer axle, turned", b3OutAxleTurnedJoint(n));
-        b3Mc(context, id + "mcPlunger", body, "Tread", "Plunger", b3PlungerJoint(n));
+        b3Mc(context, id + "mcPlunger", body, "Tread", "Plunger", b3PlungerTreadJoint(n));
     });

@@ -36,29 +36,50 @@ def checks(m):
                 f"aisle is {m.ENTRY_AISLE_W:.3f}, the step reaches {step_end - 2 * m.GOING:.3f} into it"))
     out.append(("Open rail to the shower wall, across the middle aisle", m.SHOWER_Y - tip, 12,
                 f"middle aisle runs y {m.DINETTE_Y1:.3f} to {m.SHOWER_Y:.3f}"))
-    # The stowing lock: a spring plunger in a block on the middle tread's front lip, its nose
-    # through the lip and into a hole in the step clip's keyhole leg when the stair is folded.
+    # The stowing lock: a spring plunger through the outer rail's plate and a spacer inside it,
+    # its nose into a block in the middle tread's front lip when the stair is folded.
     mo = m.body_motions()
-    lip = apply(mo["middle tread"], m.plunger(TREAD_MIDDLE)["origin"])
-    clip = apply(mo["rail"], (m.CLIP_X0, m.PLUNGER_FOLD_Y - m.FOLD_DY, m.PLUNGER_FOLD_Z - m.FOLD_DZ))
-    off = math.hypot(lip[1] - clip[1], lip[2] - clip[2])
-    out.append(("Folded, the lip's plunger hole on the clip's", -off, -0.002 / MM,
-                f"lip hole at y {lip[1]:.4f} z {lip[2]:.4f}, clip hole at y {clip[1]:.4f} z {clip[2]:.4f}"))
-    hy, hz, r = m.PLUNGER_FOLD_Y - m.FOLD_DY, m.PLUNGER_FOLD_Z - m.FOLD_DZ, m.PLUNGER_CLIP_HOLE / 2
-    key = math.hypot(m.CLIP_KEYHOLE_Y - hy, m.CLIP_KEYHOLE_Z - hz) - m.KEYHOLE_DIA / 2 - r
-    out.append(("Clip's plunger hole to its keyhole", key, 0.125, ""))
-    edge = min(hy - m.CLIP_KEY_LEG_Y0, hz - m.CLIP_Z0, m.CLIP_Z0 + m.CLIP_H - hz) - r
-    out.append(("Clip's plunger hole to the keyhole leg's edges", edge, 0.125, ""))
-    lip_out, clip_in = lip[0], 2 * m.GOING - m.SHEET_T
-    need = (clip_in - lip_out) + m.SHEET_T
-    need = (clip_in - lip_out) + m.SHEET_T   # gap and clip: the nose's reach past the lip's outer face
-    setback = m.PLUNGER_NOSE - need           # thread end inside the lip's outer face, nose flush with the clip's
-    engaged = m.PLUNGER_BLOCK_T - (setback - m.SHEET_T)
-    out.append(("Plunger thread in the block, nose flush with the clip's outer face", engaged, 8 / MM,
-                f"nose travel {m.PLUNGER_NOSE * MM:.1f} mm reaches {need * MM:.2f} past the lip (gap {(clip_in - lip_out) * MM:.2f}, "
-                f"clip {m.SHEET_T * MM:.2f}), so the thread ends {setback * MM:.2f} mm inside the lip's outer face; add a jam nut"))
-    blk_top = m.T(TREAD_MIDDLE) - m.PLUNGER_DROP + m.PLUNGER_BLOCK_H / 2
-    out.append(("Plunger block under the lip's bend", m.T(TREAD_MIDDLE) - m.SHEET_T - m.BEND_R_SHEET - blk_top, 0, ""))
+    blk = apply(mo["middle tread"], m.plunger_tread(TREAD_MIDDLE)["origin"])
+    rail = m.plunger_rail()["origin"]
+    spacer_in = apply(mo["rail"], (rail[0], m.RAIL_Y - m.PLUNGER_SPACER_T, rail[2]))
+    off = math.hypot(blk[0] - spacer_in[0], blk[2] - spacer_in[2])
+    out.append(("Folded, the tread block's hole on the plunger's line", -off, -0.002 / MM,
+                f"block at x {blk[0]:.4f} z {blk[2]:.4f}, plunger at x {spacer_in[0]:.4f} z {spacer_in[2]:.4f}"))
+    gap = spacer_in[1] - blk[1]
+    out.append(("Folded, rail spacer to the tread block", gap, 1 / 32, ""))
+    engage = m.PLUNGER_NOSE - gap
+    out.append(("Plunger nose into the tread block", engage, 8 / MM,
+                f"{m.PLUNGER_NOSE * MM:.0f} mm travel less the {gap * MM:.2f} mm gap; block is {m.PLUNGER_BLOCK_H * MM:.1f} deep"))
+    out.append(("Nose short of the block's far side", m.PLUNGER_BLOCK_H - engage, 0, "the hole runs through"))
+    thread_in = m.PLATE_T + m.PLUNGER_SPACER_T
+    out.append(("Plunger thread left outside the rail for a jam nut", 33 / MM - thread_in, 8 / MM,
+                f"33 mm thread, {thread_in * MM:.1f} mm in the plate and spacer; handle stands about {(33 / MM - thread_in + 18 / MM):.2f} proud"))
+    # The jam nut (M10, 19.6 mm across corners) and the L-handle beside the rail's front flange.
+    bend = 2 * m.GOING - m.PLATE_T - m.BEND_R_PLATE
+    out.append(("Plunger jam nut to the start of the rail's front flange bend", bend - (rail[0] + 9.8 / MM), 1 / 16, ""))
+    # The L-handle (25.8 mm arm) rests pointing down; it can't swing toward the front flange,
+    # so it is turned toward the bed end to lock it retracted.
+    # Clear of the step clip below and the middle tread's rail bracket above, on the open rail.
+    sw = m.PLUNGER_SPACER_W / 2
+    out.append(("Plunger spacer above the step clip", rail[2] - sw - (m.CLIP_Z0 + m.CLIP_H), 0.25, ""))
+    out.append(("Plunger spacer under the middle tread's rail bracket",
+                (m.T(TREAD_MIDDLE) - m.BRACKET_TOP_DROP - m.BRACKET_H) - (rail[2] + sw), 0.25, ""))
+    # Swept through the fold, the middle tread's front lip and block stay clear of the spacer.
+    worst = 9.0
+    lip_x0 = m.going_x(TREAD_MIDDLE) + m.TRAY_INSET + m.TRAY_D - m.SHEET_T
+    pts = [(x, m.TRAY_Y0 + m.TRAY_W * i / 80, m.T(TREAD_MIDDLE) - m.LIP + m.LIP * j / 8)
+           for x in (lip_x0, lip_x0 + m.SHEET_T) for i in range(81) for j in range(9)]
+    pts += [(blk0[0] + dx, m.PLUNGER_Y + dy, m.T(TREAD_MIDDLE) - m.LIP + dz)
+            for blk0 in [m.plunger_tread(TREAD_MIDDLE)["origin"]]
+            for dx in (-m.PLUNGER_BLOCK_T / 2, 0, m.PLUNGER_BLOCK_T / 2) for dy in (-0.5, 0, 0.5) for dz in (0, m.PLUNGER_BLOCK_H)]
+    for a in range(0, 91, 2):
+        mt, mr = m.body_motions(a)["middle tread"], m.body_motions(a)["rail"]
+        for p in pts:
+            q = apply(mt, p)
+            r = (q[0], q[1] - mr[1][3], q[2] - mr[2][3])   # into the rail's frame: the rail only translates
+            if abs(r[0] - rail[0]) <= sw and abs(r[2] - rail[2]) <= sw:
+                worst = min(worst, (m.RAIL_Y - m.PLUNGER_SPACER_T) - r[1])
+    out.append(("Folding, the tread's lip and block past the rail spacer", worst, 1 / 32, "closest over the whole fold"))
     head = m.T(TREAD_MIDDLE) - m.CAB_AXLE_DROP - m.END_WASHER_DIA / 2
     out.append(("Front angle top under the middle tread's axle washer", head - m.FA_TOP_Z, 0.125, ""))
     # The stack between a lip and its ear.

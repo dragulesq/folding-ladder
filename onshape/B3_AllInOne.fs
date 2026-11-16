@@ -256,23 +256,28 @@ export const CLIP_CORNER_R = R_OUTSIDE_SMALL;      // the free corners of both l
 // Travel lock
 // ---------------------------------------------------------------------------
 // Travel lock: McMaster 8501A58 twist-lock spring plunger (M10, 6 mm nose,
-// 14 mm travel) in a tapped block inside the middle tread's front lip. Folded,
-// that lip lies 1/16 behind the step clip's keyhole leg, and the nose drops
-// through both into a hole in the clip, locking the fold. Extended, the nose
-// stops flush with the clip's outer face.
+// 14 mm travel), threaded through the outer rail's plate and a tapped spacer
+// block inside it, handle on the rail's outer face (the room side when
+// folded). Folded, the middle tread's front lip lies with its bottom edge
+// 7/16 off the rail's inner face, and the nose drops into a hole in a block
+// inside that lip. The rail and the tread turn 90 degrees to each other as
+// the stair folds, so the pin locks the fold.
 export const FOLD_DY = -(CAB_AXLE_DROP - OUT_AXLE_DROP) - (OUT_AXLE_Y - CAB_AXLE_Y);   // the rail's move when folded: -14 15/16
 export const FOLD_DZ = (OUT_AXLE_Y - CAB_AXLE_Y) - (CAB_AXLE_DROP - OUT_AXLE_DROP);    // +16 11/16
-export const PLUNGER_FOLD_Y = 1 * inch;            // the pin's line, folded: out from the panel, 3/8 clear of the clip's keyhole
-export const PLUNGER_FOLD_Z = CLIP_Z0 + CLIP_H / 2 + FOLD_DZ;   // and up, mid-height on the clip's keyhole leg (25 5/8)
-export const PLUNGER_Y = PLUNGER_FOLD_Z - (2 * RISE - CAB_AXLE_DROP) + CAB_AXLE_Y;   // the same line on the open middle tread: 6 11/16 out
-export const PLUNGER_DROP = CAB_AXLE_DROP + PLUNGER_FOLD_Y - CAB_AXLE_Y;            // and 11/16 under the tread top
-export const PLUNGER_LIP_HOLE = 6.5 * millimeter;  // in the tread's front lip, for the nose
-export const PLUNGER_CLIP_HOLE = 6.2 * millimeter; // in the clip, close on the nose so the folded stair can't rattle
-export const PLUNGER_NOSE = 14 * millimeter;       // nose travel past the plunger's thread
+export const PLUNGER_BLOCK_T = (5 / 4) * inch;     // tread block: along x, against the lip's inner face; long enough that the
+                                                   // pin line, and the jam nut on the rail, clear the rail's front flange bend
+export const PLUNGER_BLOCK_W = 1 * inch;           // along the tread's y
+export const PLUNGER_BLOCK_H = (5 / 8) * inch;     // up from the lip's bottom edge
+export const PLUNGER_GOING_X = TRAY_INSET + TRAY_D - SHEET_T - PLUNGER_BLOCK_T / 2;   // pin line in its going: 4 13/16 (x 10 9/16 on the rail)
+export const PLUNGER_FOLD_Z = 30 * inch;           // pin height, folded
+export const PLUNGER_RAIL_Z = PLUNGER_FOLD_Z - FOLD_DZ;   // the same line on the open rail: 13 5/16, between the clip and the bracket
+export const PLUNGER_Y = CAB_AXLE_Y + PLUNGER_FOLD_Z - (2 * RISE - CAB_AXLE_DROP);  // and on the open middle tread: 11 1/16 out
+export const PLUNGER_HOLE = 6.5 * millimeter;      // in the tread block, for the nose
+export const PLUNGER_RAIL_HOLE = 10.5 * millimeter; // M10 clearance in the rail plate
 export const PLUNGER_TAP = 8.5 * millimeter;       // M10 x 1.5 tap drill
-export const PLUNGER_BLOCK_T = (5 / 8) * inch;     // along x, against the lip's inner face
-export const PLUNGER_BLOCK_W = 1 * inch;           // along y
-export const PLUNGER_BLOCK_H = (7 / 8) * inch;     // along z, clear of the lip's bend
+export const PLUNGER_NOSE = 14 * millimeter;       // nose travel past the plunger's thread
+export const PLUNGER_SPACER_T = (3 / 8) * inch;    // rail spacer: along y, against the rail's inner face
+export const PLUNGER_SPACER_W = (3 / 4) * inch;    // along x and z
 
 // ---------------------------------------------------------------------------
 // Step ledge
@@ -492,11 +497,18 @@ export function b3FrontAngleJoint() returns map
     return b3PanelJoint(FA_X1, FA_BOTTOM_Z);
 }
 
-// The travel lock's pin line on the front lip of tread n, built where the top
-// tread sits: on the lip's outer face, z along the nose (toward the front).
-export function b3PlungerJoint(n is number) returns map
+// The travel lock's pin line. On tread n (built where the top tread sits): at the
+// bottom edge of the block inside the front lip, z up into the block's hole.
+export function b3PlungerTreadJoint(n is number) returns map
 {
-    return b3Joint(vector(b3GoingX(n) + TRAY_INSET + TRAY_D, PLUNGER_Y, b3T(n) - PLUNGER_DROP), vector(1, 0, 0), vector(0, 1, 0));
+    return b3Joint(vector(b3GoingX(n) + PLUNGER_GOING_X, PLUNGER_Y, b3T(n) - LIP), vector(0, 0, 1), vector(1, 0, 0));
+}
+
+// On the outer rail: on the plate's outer face, z along the nose (in toward the
+// cabinet), x along the stair.
+export function b3PlungerRailJoint() returns map
+{
+    return b3Joint(vector(GOING + PLUNGER_GOING_X, RAIL_Y + PLATE_T, PLUNGER_RAIL_Z), vector(0, -1, 0), vector(1, 0, 0));
 }
 
 // Step ledge on the panel: the leg's bottom corner at the bed end.
@@ -694,6 +706,12 @@ export function b3PrismXY(context is Context, id is Id, path is array, holes is 
 export function b3Box(context is Context, id is Id, lo is Vector, hi is Vector)
 {
     fCuboid(context, id, { "corner1" : b3V(lo), "corner2" : b3V(hi) });
+}
+
+// Cylinder from p0 to p1.
+export function b3Cyl(context is Context, id is Id, p0 is Vector, p1 is Vector, dia is ValueWithUnits)
+{
+    fCylinder(context, id, { "bottomCenter" : b3V(p0), "topCenter" : b3V(p1), "radius" : dia / 2 });
 }
 
 // Cylinder along x.
@@ -1077,8 +1095,7 @@ export const b3Treads = defineFeature(function(context is Context, id is Id, def
                 b3Hole(CAB_AXLE_Y, top - CAB_AXLE_DROP, HOLE_DIA),
                 b3Hole(OUT_AXLE_Y, top - OUT_AXLE_DROP, HOLE_DIA)
             ];
-        // The travel lock's hole, in the front lip only; it is used on the middle tread.
-        b3Tray(context, id + "tray", b3GoingX(n) + TRAY_INSET, top, holes, [b3Hole(PLUNGER_Y, top - PLUNGER_DROP, PLUNGER_LIP_HOLE)]);
+        b3Tray(context, id + "tray", b3GoingX(n) + TRAY_INSET, top, holes, []);
 
         const body = b3Solids(id + "tray");
         b3Finish(context, body, "Tread", RGB_ALU);
@@ -1087,7 +1104,7 @@ export const b3Treads = defineFeature(function(context is Context, id is Id, def
         // The same two axles from the front, for the bushings and washers at the front lip.
         b3Mc(context, id + "mcCabTurned", body, "Tread", "Cabinet axle, turned", b3CabAxleTurnedJoint(n));
         b3Mc(context, id + "mcOutTurned", body, "Tread", "Outer axle, turned", b3OutAxleTurnedJoint(n));
-        b3Mc(context, id + "mcPlunger", body, "Tread", "Plunger", b3PlungerJoint(n));
+        b3Mc(context, id + "mcPlunger", body, "Tread", "Plunger", b3PlungerTreadJoint(n));
     });
 
 // ===========================================================================
@@ -1211,7 +1228,9 @@ export const b3OuterRail = defineFeature(function(context is Context, id is Id, 
                 foot,
                 back
             ];
-        var holes = [b3Slot(vector(HAND_SLOT_X, HAND_SLOT_Z), HAND_SLOT_L, HAND_SLOT_H)];
+        // The hand slot, and the travel lock's plunger hole.
+        var holes = [b3Slot(vector(HAND_SLOT_X, HAND_SLOT_Z), HAND_SLOT_L, HAND_SLOT_H),
+                b3Hole(GOING + PLUNGER_GOING_X, PLUNGER_RAIL_Z, PLUNGER_RAIL_HOLE)];
         for (var k = 0; k < size(CLIP_SCREW_X); k += 1)
         {
             holes = append(holes, b3Hole(CLIP_SCREW_X[k], CLIP_SCREW_Z, SCREW_HOLE_DIA));
@@ -1268,6 +1287,7 @@ export const b3OuterRail = defineFeature(function(context is Context, id is Id, 
         b3Mc(context, id + "mcMiddle", rail, name, "Middle tread bracket", b3RailBracketJoint(TREAD_MIDDLE));
         b3Mc(context, id + "mcClip", rail, name, "Step clip", b3StepClipJoint());
         b3Mc(context, id + "mcPad", rail, name, "Foot pad", b3RailPadJoint());
+        b3Mc(context, id + "mcPlunger", rail, name, "Plunger", b3PlungerRailJoint());
         for (var k = 0; k < size(CLIP_SCREW_X); k += 1)
         {
             b3Mc(context, id + ("mcNutClip" ~ k), rail, name, "Nut, clip " ~ (k + 1), b3ClipNutJoint(k));
@@ -1309,9 +1329,7 @@ export const b3StepClip = defineFeature(function(context is Context, id is Id, d
 
         // Keyhole leg, outer face flush with x = 12.
         b3PrismYZ(context, id + "keyLeg", b3Rounded(b3Rect(CLIP_KEY_LEG_Y0, z0, RAIL_Y, z1), [r, 0, 0, r]),
-            [b3Keyhole(CLIP_KEYHOLE_Y, CLIP_KEYHOLE_Z, CLIP_KEYHOLE_END_Z),
-                // The travel lock's pin drops in here when the stair is folded.
-                b3Hole(PLUNGER_FOLD_Y - FOLD_DY, PLUNGER_FOLD_Z - FOLD_DZ, PLUNGER_CLIP_HOLE)], x1 - SHEET_T, x1);
+            [b3Keyhole(CLIP_KEYHOLE_Y, CLIP_KEYHOLE_Z, CLIP_KEYHOLE_END_Z)], x1 - SHEET_T, x1);
         b3Union(context, id + "join", b3Solids(id));
 
         // Sheet metal: the face against the rail, then the keyhole leg's outer face.
@@ -1441,9 +1459,11 @@ function b3Axle(context is Context, id is Id, tip is map, len is ValueWithUnits,
  *   Rail foot pad (1), step leg pad (2), ledge strip (1): rubber under the
  *   rail's foot and the step legs' feet, and on the step ledge's shelf.
  *   Panel bumper (2): rubber, on the panel behind each folded tread.
- *   Plunger block (1): aluminum, inside the middle tread's front lip, tapped
- *   M10 for the 8501A58 spring plunger that locks the folded stair to the
- *   step clip.
+ *   Plunger block (1): aluminum, inside the middle tread's front lip at its
+ *   bottom edge, drilled for the nose of the 8501A58 spring plunger that
+ *   locks the folded stair.
+ *   Plunger spacer (1): aluminum, inside the outer rail's plate, tapped M10
+ *   for that plunger.
  * The pivot parts are built on the back end of the top tread's cabinet axle,
  * the neoprene washer on the step's cabinet-side pin, each pad where it is
  * used first. Their sizes come from the tube (AXLE_DIA, BUSHING_WALL) and the
@@ -1522,16 +1542,27 @@ export const b3BushingsAndPads = defineFeature(function(context is Context, id i
         b3FinishRubber(context, b3Solids(id + "ledgeStrip"), "Ledge strip");
         b3Mc(context, id + "mcLedgeStrip", b3Solids(id + "ledgeStrip"), "Ledge strip", "Ledge", b3LedgeStripJoint());
 
-        // The travel lock's block: aluminum, against the inside of the tread's front
-        // lip, tapped M10 for the plunger; two #8 screws through the lip (not modeled).
-        const pl = b3PlungerJoint(TREAD_TOP).origin;
-        const frontIn = pl[0] - SHEET_T;
-        b3Box(context, id + "plungerBlock", vector(frontIn - PLUNGER_BLOCK_T, pl[1] - PLUNGER_BLOCK_W / 2, pl[2] - PLUNGER_BLOCK_H / 2),
-            vector(frontIn, pl[1] + PLUNGER_BLOCK_W / 2, pl[2] + PLUNGER_BLOCK_H / 2));
-        b3CylX(context, id + "plungerTap", pl[1], pl[2], frontIn - PLUNGER_BLOCK_T - 1 * millimeter, frontIn + 1 * millimeter, PLUNGER_TAP);
-        b3Subtract(context, id + "plungerCut", b3Solids(id + "plungerBlock"), b3Solids(id + "plungerTap"));
+        // The travel lock. A block of aluminum inside the tread's front lip, flush
+        // with its bottom edge, drilled for the plunger's nose; two #8 screws through
+        // the lip (not modeled).
+        const pt = b3PlungerTreadJoint(TREAD_TOP).origin;
+        b3Box(context, id + "plungerBlock", vector(pt[0] - PLUNGER_BLOCK_T / 2, pt[1] - PLUNGER_BLOCK_W / 2, pt[2]),
+            vector(pt[0] + PLUNGER_BLOCK_T / 2, pt[1] + PLUNGER_BLOCK_W / 2, pt[2] + PLUNGER_BLOCK_H));
+        b3Cyl(context, id + "plungerHole", pt - vector(0, 0, 1) * millimeter, pt + vector(0 * inch, 0 * inch, PLUNGER_BLOCK_H + 1 * millimeter), PLUNGER_HOLE);
+        b3Subtract(context, id + "plungerCut", b3Solids(id + "plungerBlock"), b3Solids(id + "plungerHole"));
         b3Finish(context, b3Solids(id + "plungerBlock"), "Plunger block", RGB_ALU_DARK);
-        b3Mc(context, id + "mcPlungerBlock", b3Solids(id + "plungerBlock"), "Plunger block", "Tread", b3PlungerJoint(TREAD_TOP));
+        b3Mc(context, id + "mcPlungerBlock", b3Solids(id + "plungerBlock"), "Plunger block", "Tread", b3PlungerTreadJoint(TREAD_TOP));
+
+        // And a spacer inside the rail's plate, tapped M10: the plunger threads
+        // through the plate's clearance hole into it, with a jam nut outside.
+        const pr = b3PlungerRailJoint().origin;
+        const sw = PLUNGER_SPACER_W / 2;
+        b3Box(context, id + "plungerSpacer", vector(pr[0] - sw, RAIL_Y - PLUNGER_SPACER_T, pr[2] - sw), vector(pr[0] + sw, RAIL_Y, pr[2] + sw));
+        b3Cyl(context, id + "plungerTap", vector(pr[0], RAIL_Y - PLUNGER_SPACER_T - 1 * millimeter, pr[2]),
+            vector(pr[0], RAIL_Y + 1 * millimeter, pr[2]), PLUNGER_TAP);
+        b3Subtract(context, id + "spacerCut", b3Solids(id + "plungerSpacer"), b3Solids(id + "plungerTap"));
+        b3Finish(context, b3Solids(id + "plungerSpacer"), "Plunger spacer", RGB_ALU_DARK);
+        b3Mc(context, id + "mcPlungerSpacer", b3Solids(id + "plungerSpacer"), "Plunger spacer", "Rail", b3PlungerRailJoint());
 
         // Rubber bumper on the panel behind the folded top tread, at its free height.
         const bumper = b3BumperJoint(TREAD_TOP);

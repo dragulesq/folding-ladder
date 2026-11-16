@@ -81,8 +81,9 @@ INSTANCES = {
     # Rubber.
     "Rail foot pad": "Rail foot pad", "Step leg pad 1": "Step leg pad", "Step leg pad 2": "Step leg pad",
     "Ledge strip": "Ledge strip", "Panel bumper 1": "Panel bumper", "Panel bumper 2": "Panel bumper",
-    # The block on the middle tread's lip that the stowing plunger threads into.
-    "Plunger block": "Plunger block",
+    # The stowing lock: the block in the middle tread's front lip that the plunger's nose drops
+    # into, and the tapped spacer inside the rail that the plunger threads into.
+    "Plunger block": "Plunger block", "Plunger spacer": "Plunger spacer",
 }
 
 # Mates between the main parts: (type, (instance, its mate connector), (instance it goes on, that one's
@@ -173,6 +174,7 @@ HARDWARE += [
     (("Panel bumper 1", "Panel"), ("REF cabinet", "Bumper, top tread")),
     (("Panel bumper 2", "Panel"), ("REF cabinet", "Bumper, middle tread")),
     (("Plunger block", "Tread"), ("Tread 2", "Plunger")),
+    (("Plunger spacer", "Rail"), ("Outer rail", "Plunger")),
 ]
 
 # Bought parts imported into the document (McMaster's models), used in place of the modeled ones:
@@ -198,7 +200,7 @@ EXTRA = {}
 # Bought parts with no modeled stand-in: (instance, import key, part instance, its mate connector).
 # Each goes where the import's frame meets that connector, and moves with that part.
 ADDS = [
-    ("Spring plunger", "8501A58", "Tread 2", "Plunger"),
+    ("Spring plunger", "8501A58", "Outer rail", "Plunger"),
 ]
 
 

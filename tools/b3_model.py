@@ -40,10 +40,13 @@ class Model:
     def T(self, n):
         return (n + 1) * self.RISE
 
-    def plunger(self, n):
-        """The plunger's axis through tread n's front lip, at the lip's outer face (b3PlungerJoint)."""
-        return self.joint((self.going_x(n) + self.TRAY_INSET + self.TRAY_D, self.PLUNGER_Y, self.T(n) - self.PLUNGER_DROP),
-                          (1, 0, 0), (0, 1, 0))
+    def plunger_tread(self, n):
+        """The plunger's line on tread n: the bottom edge of its block in the front lip, z up (b3PlungerTreadJoint)."""
+        return self.joint((self.going_x(n) + self.PLUNGER_GOING_X, self.PLUNGER_Y, self.T(n) - self.LIP), (0, 0, 1), (1, 0, 0))
+
+    def plunger_rail(self):
+        """On the rail's plate, outer face, z along the nose toward the cabinet (b3PlungerRailJoint)."""
+        return self.joint((self.GOING + self.PLUNGER_GOING_X, self.RAIL_Y + self.PLATE_T, self.PLUNGER_RAIL_Z), (0, -1, 0), (1, 0, 0))
 
     def going_x(self, n):
         return (2 - n) * self.GOING
@@ -152,8 +155,10 @@ class Model:
             ("Outer rail", "Step clip"): self.step_clip(),
             ("Outer rail", "Foot pad"): self.rail_pad(),
             ("Step clip", "Outer rail"): self.step_clip(),
-            ("Tread", "Plunger"): self.plunger(top),
-            ("Plunger block", "Tread"): self.plunger(top),
+            ("Tread", "Plunger"): self.plunger_tread(top),
+            ("Plunger block", "Tread"): self.plunger_tread(top),
+            ("Outer rail", "Plunger"): self.plunger_rail(),
+            ("Plunger spacer", "Rail"): self.plunger_rail(),
             ("Tread axle", "Back end"): axle,
             ("Tread axle", "Front end"): self.joint((p[0] + self.TREAD_AXLE_LEN, p[1], p[2]), (1, 0, 0), (0, 1, 0)),
             ("Step axle", "Back end"): step_axle,

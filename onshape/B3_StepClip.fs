@@ -33,9 +33,7 @@ export const b3StepClip = defineFeature(function(context is Context, id is Id, d
 
         // Keyhole leg, outer face flush with x = 12.
         b3PrismYZ(context, id + "keyLeg", b3Rounded(b3Rect(CLIP_KEY_LEG_Y0, z0, RAIL_Y, z1), [r, 0, 0, r]),
-            [b3Keyhole(CLIP_KEYHOLE_Y, CLIP_KEYHOLE_Z, CLIP_KEYHOLE_END_Z),
-                // The travel lock's pin drops in here when the stair is folded.
-                b3Hole(PLUNGER_FOLD_Y - FOLD_DY, PLUNGER_FOLD_Z - FOLD_DZ, PLUNGER_CLIP_HOLE)], x1 - SHEET_T, x1);
+            [b3Keyhole(CLIP_KEYHOLE_Y, CLIP_KEYHOLE_Z, CLIP_KEYHOLE_END_Z)], x1 - SHEET_T, x1);
         b3Union(context, id + "join", b3Solids(id));
 
         // Sheet metal: the face against the rail, then the keyhole leg's outer face.
