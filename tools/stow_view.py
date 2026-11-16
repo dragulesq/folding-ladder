@@ -265,11 +265,13 @@ def rail_view(m):
 
 
 def plan_view(m):
-    """The room from above with the stair open: x along the cabinet to the right, y out from the panel upward."""
+    """The room from above with the stair open: x along the cabinet to the right, y out from the panel downward."""
+    top = m.SHOWER_Y + 2.5
+    F = lambda y: top - y
     y0 = m.SIDE_WALL_Y - 1.5
     v = View(0, -3.0, m.DINETTE_X0 + m.DINETTE_T + 3.0, m.SHOWER_Y + 2.5 - y0, "Plan, stair open", 9.0)
-    R = lambda cls, x0, x1, ya, yb, tip="": v.rect(cls, x0, x1, ya - y0, yb - y0, tip)
-    T = lambda cls, x, y, s, anchor="middle", dx=0, dy=0: v.text(cls, x, y - y0, s, anchor, dx, dy)
+    R = lambda cls, x0, x1, ya, yb, tip="": v.rect(cls, x0, x1, F(yb), F(ya), tip)
+    T = lambda cls, x, y, s, anchor="middle", dx=0, dy=0: v.text(cls, x, F(y), s, anchor, dx, dy)
     wall, far = -m.WALL_GAP, m.DINETTE_X0 + m.DINETTE_T + 3.0
     front = m.CABINET_DEPTH - m.WALL_GAP
     R("panel", wall - 1, wall, m.SIDE_WALL_Y, m.SHOWER_Y, "Bed-end wall")
@@ -284,17 +286,17 @@ def plan_view(m):
             e = moved(box, open_[body])
             R(cls, e[0], e[1], e[2], e[3], NAMES[body].split(",")[0])
     tip = m.RAIL_Y + m.PLATE_T + m.RAIL_FLANGE
-    v.hdim(3 * m.GOING, m.DINETTE_X0, 12.0 - y0, "")
+    v.hdim(3 * m.GOING, m.DINETTE_X0, F(12.0), "")
     T("dimt", (3 * m.GOING + m.DINETTE_X0) / 2, 12.0, frac(m.DINETTE_X0 - 3 * m.GOING), "middle", 0, -5)
-    v.hdim(front, m.DINETTE_X0, -8.0 - y0, "")
+    v.hdim(front, m.DINETTE_X0, F(-8.0), "")
     T("dimt", (front + m.DINETTE_X0) / 2, -8.0, f"{frac(m.ENTRY_AISLE_W)} entrance aisle", "middle", 0, -5)
-    v.vdim(8.0, tip - y0, m.SHOWER_Y - y0, frac(m.SHOWER_Y - tip), 1)
-    v.vdim(far - 2.0, m.DINETTE_Y1 - y0, m.SHOWER_Y - y0, f"{frac(m.SHOWER_Y - m.DINETTE_Y1)} middle aisle", -1)
+    v.vdim(8.0, F(m.SHOWER_Y), F(tip), frac(m.SHOWER_Y - tip), 1)
+    v.vdim(far - 2.0, F(m.SHOWER_Y), F(m.DINETTE_Y1), f"{frac(m.SHOWER_Y - m.DINETTE_Y1)} middle aisle", -1)
     T("lbl", (wall + front) / 2, m.SIDE_WALL_Y / 2, "entry cabinet")
     T("lbl", m.DINETTE_X0 + m.DINETTE_T / 2, m.SIDE_WALL_Y + 3, "dinette", "middle")
     T("lbl", (front + m.DINETTE_X0) / 2, m.SIDE_WALL_Y + 3, "camper door side")
-    T("lbl", 20, m.SHOWER_Y, "shower", "middle", 0, -3)
-    T("lbl", wall, m.HANDLE_Y + m.HANDLE_W, "handle", "start", 22, 12)
+    T("lbl", 20, m.SHOWER_Y, "shower", "middle", 0, 11)
+    T("lbl", wall, m.HANDLE_Y, "handle", "start", 22, 12)
     T("lbl", 2.5 * m.GOING, 9, "first tread")
     return v.svg()
 
