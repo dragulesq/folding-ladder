@@ -181,10 +181,11 @@ export const SCREW_X = [GOING / 2 - 1.5 * inch, GOING / 2, GOING / 2 + 1.5 * inc
 export const SCREW_DROP = (17 / 8) * inch;         // screw row at T - 2 1/8
 export const SCREW_HOLE_DIA = 6.6 * millimeter;    // M6 clearance
 export const SCREW_CSK_DIA = 12.4 * millimeter;    // 90 degree countersink, ear side (not modeled)
-export const STOP_PIN_Y = (17 / 16) * inch;
-export const STOP_PIN_DROP = (67 / 32) * inch;     // T - 2 3/32
-export const STOP_PIN_DIA = (3 / 16) * inch;
-export const STOP_PIN_OUT = (5 / 16) * inch;       // sticks out under the lip; flush on the ear's inside
+// Stop pin: SendCutSend's flush standoff SO-M5-12 (smooth 0.28" body, 0.472" long, 0.281" hole, 0.315" at least from hole center to an edge).
+export const STOP_PIN_Y = 1.055 * inch;            // 0.32 from the ear's far edge
+export const STOP_PIN_DIA = 0.281 * inch;
+export const STOP_PIN_DROP = (67 / 32) * inch + (STOP_PIN_DIA - (3 / 16) * inch) / 2;   // pin's top at T - 2: the lip's bottom edge rests on it
+export const STOP_PIN_OUT = 0.472 * inch;          // sticks out under the lip; flush on the ear's inside
 export const EAR_CORNER_R = R_OUTSIDE_SMALL;       // each ear's bottom outer corner
 // The hook starts 1/16" past the end of the ear's 1/4" bend, so the notch's
 // inside corner can only take a 1/32" radius and still stay clear of the bend.
@@ -357,7 +358,7 @@ export const STOW_PIN_LO_Z = STOW_Z0 + CAB_AXLE_Y;                 // 1 13/16
 export const STOW_HOOK_X0 = GOING;                 // plates from here to GOING + SHEET_T, where the cabinet's step clip sits when the step is in use
 export const STOW_SLOT_DROP = (1 / 8) * inch;      // the lower slot's round end below the resting pin (the step stands on the ledge)
 export const STOW_BRACKET_Z0 = LOCK_SHELF_TOP_Z - LOCK_LEDGE_LEG;   // the stow bracket's bottom edge: 15.05
-export const STOW_UP_Z1 = 18.25 * inch;            // upper hook plate's top, under the middle tread's back lip as it folds (18.39)
+export const STOW_UP_Z1 = 18.1875 * inch;          // upper hook plate's top, under the cabinet bracket's stop pin (18.22) and the middle tread's back lip as it folds (18.39)
 export const STOW_UP_D = 2.25 * inch;              // plate reach from the panel
 export const STOW_UP_Y0 = (5 / 16) * inch;         // the hook plate and its bend start here, clear of the panel leg's bend
 export const STOW_NOTCH_X = STOW_HOOK_X0 + (7 / 16) * inch;   // the panel leg and its bend start here, clear of the hook plate's bend

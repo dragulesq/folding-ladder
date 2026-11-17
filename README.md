@@ -160,11 +160,11 @@ All parts are 5052 H32 aluminum, cut and bent.
 | Part | Qty | Sheet | Bends | Countersinking | Tapping | Hardware |
 |---|---|---|---|---|---|---|
 | Tread | 3 | 1/8" | 2 | none | none | none |
-| Bracket | 4 | 3/16" | 2 | 3 holes, M6 flat head, 90 degrees, 0.488" (12.4 mm) major diameter, on the face the ears bend toward | none | On the 2 cabinet brackets only: 2 flush studs FH-M5-8 (M5 x 0.8, 0.315" long) in the small ear holes, head on the inside of the ear so the stud points outward. The 2 rail brackets get none: a stud there would be in the tread lip's way as it folds |
+| Bracket | 4 | 3/16" | 2 | 3 holes, M6 flat head, 90 degrees, 0.488" (12.4 mm) major diameter, on the face the ears bend toward | none | On the 2 cabinet brackets only: 2 flush standoffs SO-M5-12 (M5 x 0.8 inside, smooth outside, 0.472" long) in the small ear holes, head on the inside of the ear so the standoff points outward. The 2 rail brackets get none: a pin there would be in the tread lip's way as it folds |
 | Outer rail | 1 | 3/16" | 5 | none | none | none |
 | Step clip | 2 | 1/8" | 1 | none | none | none |
 | Step ledge | 1 | 1/8" | 2 | none | none | none |
 | Hook-on step leg | 2 | 1/8" | 3 | none | 2 holes M6 x 1.0 (the 5 mm holes, one in each ear) | none |
 | Stow bracket | 1 | 1/8" | 2 | none | none | none |
 
-The studs are the treads' stop pins (the model draws a 3/16" pin; SendCutSend resizes the hole to 0.201" for the stud). The stud's hole is 0.3125" from the ear's edge: over the stud's own least of 0.283", under the general 0.44" in SendCutSend's hardware table for this sheet, so their configurator has the last word. A pressed-in 3/16" x 1/2" dowel pin does the same job.
+The standoffs are the treads' stop pins: the folded-down lip's bottom edge rests on the smooth body. The ear hole is 0.281", SendCutSend's size for this standoff, 0.32" from the ear's edge (0.315" at least), and the standoff ends 0.10" past the lip's outer face.
