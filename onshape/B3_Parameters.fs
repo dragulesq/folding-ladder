@@ -173,13 +173,13 @@ export const BRACKET_H = 2 * inch;                 // web bottom at T - 3 5/8
 export const SCREW_X = [GOING / 2 - 1.5 * inch, GOING / 2, GOING / 2 + 1.5 * inch];   // three M6, 1 1/2" apart about the going's middle
 export const SCREW_DROP = (17 / 8) * inch;         // screw row at T - 2 1/8
 export const SCREW_HOLE_DIA = 6.6 * millimeter;    // M6 clearance
-// Stop pin: press-fit standoff PEM SOS-M5-12 (smooth 7.12 mm body, 7.14 mm hole, 0.315" at least from hole center to an edge). Its 12 mm is overall,
-// from the face of the head, which is pressed flush into the ear's inside: it sticks out of the ear by its length less the ear's thickness.
-export const STOP_PIN_Y = 1.055 * inch;            // 0.32 from the ear's far edge
+// Stop pin: threaded standoff PEM SOS-M5-8 (McMaster 93090A115: smooth 7.12 mm body, 8 mm long overall, thin 7.9 mm hex head), used as a
+// nut rather than pressed in: head against the ear's outer face, held by an M5 x 12 button-head screw from inside the ear.
+export const STOP_PIN_Y = 1.055 * inch;            // 0.32 from the ear's far edge, which a pressed-in standoff would need
 export const STOP_PIN_DIA = 0.281 * inch;
 export const STOP_PIN_DROP = (67 / 32) * inch + (STOP_PIN_DIA - (3 / 16) * inch) / 2;   // pin's top at T - 2: the lip's bottom edge rests on it
-export const STOP_PIN_LEN = 12 * millimeter;
-export const STOP_PIN_OUT = STOP_PIN_LEN - PLATE_T;   // 0.285: under the whole lip (1/8 to 1/4 from the ear) and 1/32 past it, short of the stow bracket's hook plate at 5/16
+export const STOP_PIN_HOLE = 5.5 * millimeter;     // M5 clearance, in the ear
+export const STOP_PIN_OUT = 8 * millimeter;        // out from the ear's outer face: under the whole lip (1/8 to 1/4 from the ear), up to the stow bracket's hook plate at 5/16
 export const EAR_CORNER_R = R_OUTSIDE_SMALL;       // each ear's bottom outer corner
 // The hook starts 1/16" past the end of the ear's 1/4" bend, so the notch's
 // inside corner can only take a 1/32" radius and still stay clear of the bend.

@@ -43,7 +43,7 @@ export const b3CabinetBrackets = defineFeature(function(context is Context, id i
         const ear = b3EarOutline(0 * inch, PLATE_T + EAR_W, PLATE_T + HOOK_U0, webBot, webTop, CAB_AXLE_Y, axZ);
         const earHoles = [
                 b3Hole(CAB_AXLE_Y, axZ, HOLE_DIA),
-                b3Hole(STOP_PIN_Y, top - STOP_PIN_DROP, STOP_PIN_DIA)
+                b3Hole(STOP_PIN_Y, top - STOP_PIN_DROP, STOP_PIN_HOLE)
             ];
         const ranges = b3EarRanges(n);
         b3PrismYZ(context, id + "earBack", ear, earHoles, ranges[0][0], ranges[0][1]);

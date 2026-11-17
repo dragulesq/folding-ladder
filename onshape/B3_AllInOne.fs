@@ -180,13 +180,13 @@ export const BRACKET_H = 2 * inch;                 // web bottom at T - 3 5/8
 export const SCREW_X = [GOING / 2 - 1.5 * inch, GOING / 2, GOING / 2 + 1.5 * inch];   // three M6, 1 1/2" apart about the going's middle
 export const SCREW_DROP = (17 / 8) * inch;         // screw row at T - 2 1/8
 export const SCREW_HOLE_DIA = 6.6 * millimeter;    // M6 clearance
-// Stop pin: press-fit standoff PEM SOS-M5-12 (smooth 7.12 mm body, 7.14 mm hole, 0.315" at least from hole center to an edge). Its 12 mm is overall,
-// from the face of the head, which is pressed flush into the ear's inside: it sticks out of the ear by its length less the ear's thickness.
-export const STOP_PIN_Y = 1.055 * inch;            // 0.32 from the ear's far edge
+// Stop pin: threaded standoff PEM SOS-M5-8 (McMaster 93090A115: smooth 7.12 mm body, 8 mm long overall, thin 7.9 mm hex head), used as a
+// nut rather than pressed in: head against the ear's outer face, held by an M5 x 12 button-head screw from inside the ear.
+export const STOP_PIN_Y = 1.055 * inch;            // 0.32 from the ear's far edge, which a pressed-in standoff would need
 export const STOP_PIN_DIA = 0.281 * inch;
 export const STOP_PIN_DROP = (67 / 32) * inch + (STOP_PIN_DIA - (3 / 16) * inch) / 2;   // pin's top at T - 2: the lip's bottom edge rests on it
-export const STOP_PIN_LEN = 12 * millimeter;
-export const STOP_PIN_OUT = STOP_PIN_LEN - PLATE_T;   // 0.285: under the whole lip (1/8 to 1/4 from the ear) and 1/32 past it, short of the stow bracket's hook plate at 5/16
+export const STOP_PIN_HOLE = 5.5 * millimeter;     // M5 clearance, in the ear
+export const STOP_PIN_OUT = 8 * millimeter;        // out from the ear's outer face: under the whole lip (1/8 to 1/4 from the ear), up to the stow bracket's hook plate at 5/16
 export const EAR_CORNER_R = R_OUTSIDE_SMALL;       // each ear's bottom outer corner
 // The hook starts 1/16" past the end of the ear's 1/4" bend, so the notch's
 // inside corner can only take a 1/32" radius and still stay clear of the bend.
@@ -1282,7 +1282,7 @@ export const b3CabinetBrackets = defineFeature(function(context is Context, id i
         const ear = b3EarOutline(0 * inch, PLATE_T + EAR_W, PLATE_T + HOOK_U0, webBot, webTop, CAB_AXLE_Y, axZ);
         const earHoles = [
                 b3Hole(CAB_AXLE_Y, axZ, HOLE_DIA),
-                b3Hole(STOP_PIN_Y, top - STOP_PIN_DROP, STOP_PIN_DIA)
+                b3Hole(STOP_PIN_Y, top - STOP_PIN_DROP, STOP_PIN_HOLE)
             ];
         const ranges = b3EarRanges(n);
         b3PrismYZ(context, id + "earBack", ear, earHoles, ranges[0][0], ranges[0][1]);
@@ -1525,7 +1525,7 @@ export const b3StepClip = defineFeature(function(context is Context, id is Id, d
  *   M6 fender washer (12, one on each axle end) and M6 button-head screw (28:
  *   one on each axle end, two on each step clip, and three through each
  *   bracket), modeled as its head only.
- *   Stop pin (4 used), a press-fit standoff in each cabinet bracket ear.
+ *   Stop pin (4 used), a threaded standoff screwed to each cabinet bracket ear.
  *   M6 nyloc nut (8): on the rail brackets' webs, between the ears, and on
  *   the rail's outer face for the step clip's screws.
  * Each is built where its first use sits: the top tread's cabinet axle, the
@@ -1562,10 +1562,10 @@ export const b3PivotHardware = defineFeature(function(context is Context, id is 
         b3FinishSteel(context, screw, "M6 button-head screw");
         b3Mc(context, id + "mcScrew", screw, "M6 button-head screw", "Washer", under);
 
-        // Stop pin: flush with the bracket ear's inside face, sticking out under the lip.
+        // Stop pin: a standoff on the bracket ear's outer face, sticking out under the lip (its screw, from inside the ear, is not modeled).
         const pin = b3StopPinJoint(TREAD_TOP, false);
         const q = pin.origin;
-        b3CylX(context, id + "pin", q[1], q[2], q[0] - PLATE_T - STOP_PIN_OUT, q[0], STOP_PIN_DIA);
+        b3CylX(context, id + "pin", q[1], q[2], q[0] - PLATE_T - STOP_PIN_OUT, q[0] - PLATE_T, STOP_PIN_DIA);
         b3FinishSteel(context, b3Solids(id + "pin"), "Stop pin");
         b3Mc(context, id + "mcPin", b3Solids(id + "pin"), "Stop pin", "Bracket", pin);
 

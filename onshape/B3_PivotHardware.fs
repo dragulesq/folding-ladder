@@ -14,7 +14,7 @@ import(path : "onshape/std/common.fs", version : "2641.0");
  *   M6 fender washer (12, one on each axle end) and M6 button-head screw (28:
  *   one on each axle end, two on each step clip, and three through each
  *   bracket), modeled as its head only.
- *   Stop pin (4 used), a press-fit standoff in each cabinet bracket ear.
+ *   Stop pin (4 used), a threaded standoff screwed to each cabinet bracket ear.
  *   M6 nyloc nut (8): on the rail brackets' webs, between the ears, and on
  *   the rail's outer face for the step clip's screws.
  * Each is built where its first use sits: the top tread's cabinet axle, the
@@ -51,10 +51,10 @@ export const b3PivotHardware = defineFeature(function(context is Context, id is 
         b3FinishSteel(context, screw, "M6 button-head screw");
         b3Mc(context, id + "mcScrew", screw, "M6 button-head screw", "Washer", under);
 
-        // Stop pin: flush with the bracket ear's inside face, sticking out under the lip.
+        // Stop pin: a standoff on the bracket ear's outer face, sticking out under the lip (its screw, from inside the ear, is not modeled).
         const pin = b3StopPinJoint(TREAD_TOP, false);
         const q = pin.origin;
-        b3CylX(context, id + "pin", q[1], q[2], q[0] - PLATE_T - STOP_PIN_OUT, q[0], STOP_PIN_DIA);
+        b3CylX(context, id + "pin", q[1], q[2], q[0] - PLATE_T - STOP_PIN_OUT, q[0] - PLATE_T, STOP_PIN_DIA);
         b3FinishSteel(context, b3Solids(id + "pin"), "Stop pin");
         b3Mc(context, id + "mcPin", b3Solids(id + "pin"), "Stop pin", "Bracket", pin);
 
