@@ -207,7 +207,7 @@ export const RAIL_Y = OUT_AXLE_Y + CAB_AXLE_Y;     // 17 11/16, inner face (oute
 export const RAIL_STEP_DROP = 2 * inch;            // step edges at T - 2 (28 3/4 and 18 1/2)
 export const RAIL_BACK_Z = 23.5 * inch;            // bottom of the bed-side edge; the long lower edge runs from here straight to the foot
 export const RAIL_FOOT_X = GOING - 1.25 * inch;    // foot runs x 4 1/2 to 11 1/2: 7 on the floor. Folded, its back inch stands in front of the stowed step's top
-export const RAIL_FOOT_Z = 0.5 * inch;
+export const RAIL_FOOT_Z = (1 / 8) * inch;           // the rail foot pad, the step leg pads and the ledge strip are all the same 1/8" rubber
 export const RAIL_FLANGE = 1 * inch;               // outward, beyond the plate (out to y 18 7/8)
 export const RAIL_FLANGE_TIP_R = R_OUTSIDE_LARGE;  // every flange's free corners
 export const HAND_SLOT_X = 1.5 * GOING;            // centered under the middle tread's bracket, near the travel lock
@@ -216,7 +216,7 @@ export const HAND_SLOT_L = 4 * inch;               // along x
 export const HAND_SLOT_H = 1.25 * inch;
 // Foot pad: rubber, glued under the foot flange's flat, standing on the floor.
 export const RAIL_PAD_W = RAIL_FLANGE - RAIL_BEND_R;   // 3/4, the flange's flat width past its bend
-export const RAIL_PAD_T = RAIL_FOOT_Z;             // 1/2; shim it so it is squeezed about 1/16
+export const RAIL_PAD_T = RAIL_FOOT_Z;             // 1/8, the same rubber as the step leg pads and the ledge strip
 
 // ---------------------------------------------------------------------------
 // Step clips: one part, used twice. One on the cabinet's front post, one
@@ -268,7 +268,7 @@ export const PLUNGER_THREAD = 33 * millimeter;     // threaded length
 export const LOCK_GAP = (3 / 16) * inch;           // block top to the folded flange; the foot comes in about 0.09 low
 export const LOCK_BLOCK_T = 5 * millimeter;        // M10 x 1.5 thin jam nut on the shelf (a regular nut under it clamps the plunger)
 export const LOCK_NUT_AF = 17 * millimeter;        // across its flats
-export const LOCK_BLOCK_TOP_Z = RAIL_FOOT_Z + FOLD_DZ - LOCK_GAP;   // 17
+export const LOCK_BLOCK_TOP_Z = RAIL_FOOT_Z + FOLD_DZ - LOCK_GAP;   // 16 5/8
 export const LOCK_SHELF_TOP_Z = LOCK_BLOCK_TOP_Z - LOCK_BLOCK_T;    // 16.80, just under the cabinet bracket's web (16 7/8)
 export const LOCK_LEDGE_W = (9 / 8) * inch;        // the shelf's tongue along x, between the two foot pads
 export const LOCK_LEDGE_X0 = LOCK_X - LOCK_LEDGE_W / 2;             // 8 11/16
