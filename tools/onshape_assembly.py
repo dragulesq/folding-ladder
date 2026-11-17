@@ -196,6 +196,8 @@ SWAPS = [
     # The M6 x 16 also stands in for the rail brackets' M6 x 20. The cabinet brackets' screws
     # (23 to 28) stay as the modeled head: the document has no model of that length.
     *((f"M6 button-head screw {i}", "92095A238") for i in range(13, 23)),
+    # The stop pins: McMaster's press-fit standoff, screwed to the ear's outer face.
+    ("Stop pin ", "93090A115"),
     ("M6 fender washer ", "94316A560"),
     ("M6 nyloc nut ", "93625A250"),
     ("Wave washer ", "1775N12"),
@@ -203,7 +205,7 @@ SWAPS = [
     ("Ear bushing ", "GFM-1214-06"),
 ]
 # The connector each swapped part is placed by, in the modeled part's Part Studio.
-SWAP_CONNECTOR = {"M6 button-head screw": "Washer", "M6 fender washer": "Axle",
+SWAP_CONNECTOR = {"Stop pin": "Bracket", "M6 button-head screw": "Washer", "M6 fender washer": "Axle",
                   "M6 nyloc nut": "Rail", "Wave washer": "Axle", "Lip bushing": "Axle", "Ear bushing": "Axle"}
 # A second part of an import (the nut's nylon insert) -> the instance it goes with.
 EXTRA = {}
