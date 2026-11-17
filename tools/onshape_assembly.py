@@ -215,6 +215,11 @@ ADDS = [
     ("Spring plunger", "8501A58", "REF cabinet", "Plunger"),
     ("Leg lock plunger 1", "8501A54", "Hook-on step leg 1", "Lock"),
     ("Leg lock plunger 2", "8501A54", "Hook-on step leg 2", "Lock, turned"),
+    # The M5 x 12 button heads that hold the stop pins' standoffs, from inside each cabinet bracket's ear.
+    ("Stop pin screw 1", "92095A210", "Bracket 1", "Stop pin, back"),
+    ("Stop pin screw 2", "92095A210", "Bracket 1", "Stop pin, front"),
+    ("Stop pin screw 3", "92095A210", "Bracket 2", "Stop pin, back"),
+    ("Stop pin screw 4", "92095A210", "Bracket 2", "Stop pin, front"),
 ]
 
 

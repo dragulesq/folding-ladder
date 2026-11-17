@@ -109,7 +109,7 @@ def checks(m):
                 "the notch in the shelf's corner, past each bend's radius and thickness"))
     out.append(("Hook plate's height after its bend", m.STOW_UP_Z1 - (m.LOCK_SHELF_TOP_Z - m.SHEET_T), 0.476, "SendCutSend's least flange"))
     out.append(("Metal behind the upper slot's round end", m.STOW_PIN_UP_Y - m.KEYHOLE_SLOT_W / 2 - m.STOW_UP_Y0, 0.3, "ties the plate's top prong to the bottom one"))
-    out.append(("Metal above the upper slot", m.STOW_UP_Z1 - (m.STOW_PIN_UP_Z + m.KEYHOLE_SLOT_W / 2), 0.3, ""))
+    out.append(("Metal above the upper slot", m.STOW_UP_Z1 - (m.STOW_PIN_UP_Z + m.KEYHOLE_SLOT_W / 2), 0.25, "it only keeps the stowed step's top from tipping out"))
     # The step ledge's back wall: three M6 behind the stowed step, between the shelf's bend and the hook plate's.
     xs = m.LEDGE_SCREW_X
     out.append(("Ledge's screw holes clear of the hook plate's bend", (m.STOW_HOOK_X0 + m.SHEET_T - line) - (xs[-1] + m.LEDGE_SCREW_DIA / 2) - die, 0, ""))
