@@ -98,11 +98,12 @@ def checks(m):
     out.append(("Stow bracket's bottom under the upper pin's slot", m.STOW_PIN_UP_Z - m.KEYHOLE_SLOT_W / 2 - m.STOW_BRACKET_Z0, 0.5, ""))
     xs = m.STOW_BRACKET_SCREW_X
     lx1 = m.LOCK_LEDGE_X0 + m.LOCK_LEDGE_W
-    out.append(("Stow bracket's screws inside its leg's ends", min(xs[0] - m.STOW_NOTCH_X, lx1 - xs[2]) - m.STOW_SCREW_DIA / 2, 0.2, ""))
+    out.append(("Stow bracket's screws inside its leg's ends", min(xs[0] - m.STOW_NOTCH_X, lx1 - xs[-1]) - m.STOW_SCREW_DIA / 2, 0.2, ""))
     # SendCutSend, 1/8 5052: holes half a die width (0.315) from a bend line, flanges at least 0.476 after the bend.
     die = 0.63 / 2
     line = m.BEND_R_SHEET + m.SHEET_T - (math.pi / 4) * (m.BEND_R_SHEET + m.K_SHEET * m.SHEET_T)
-    out.append(("Stow bracket's screw holes clear of the leg's bend", (m.LOCK_SHELF_TOP_Z - line) - (m.STOW_BRACKET_SCREW_Z + m.STOW_SCREW_DIA / 2) - die, 0, "hole edge to half a die width from the bend line"))
+    out.append(("Stow bracket's screw holes clear of the leg's bend", (m.LOCK_SHELF_TOP_Z - line) - (max(m.STOW_BRACKET_SCREW_Z) + m.STOW_SCREW_DIA / 2) - die, 0, "hole edge to half a die width from the bend line"))
+    out.append(("Stow bracket's low screw hole above the leg's bottom edge", min(m.STOW_BRACKET_SCREW_Z) - m.STOW_SCREW_DIA / 2 - m.STOW_BRACKET_Z0, 0.2, ""))
     out.append(("Upper pin's slot clear of the hook plate's bend", (m.STOW_PIN_UP_Z - m.KEYHOLE_SLOT_W / 2) - (m.LOCK_SHELF_TOP_Z - m.SHEET_T + line) - die, 0, ""))
     out.append(("Plunger hole clear of the shelf's bends", m.LOCK_FOLD_Y - m.LOCK_SHELF_HOLE / 2 - line - die, 0, ""))
     out.append(("Hook plate's bend clear of the leg's bend", min(m.STOW_UP_Y0, m.STOW_NOTCH_X - m.STOW_HOOK_X0) - (m.BEND_R_SHEET + m.SHEET_T), 0.03,

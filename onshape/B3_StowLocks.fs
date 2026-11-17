@@ -13,7 +13,7 @@ import(path : "onshape/std/common.fs", version : "2641.0");
  *   travel lock's shelf, 17" up: 2 1/4" deep behind the hook plate, with a
  *   1 1/8" tongue out to under where the rail's foot flange lands when
  *   folded. The panel leg is bent down along the shelf's panel edge and takes
- *   three M6 screws. The upper hook plate is bent up along the shelf's bed-end
+ *   two M6 screws on a slant. The upper hook plate is bent up along the shelf's bed-end
  *   edge; its slot, open to the room, takes the stowed step's upper pin. A
  *   notch in the shelf's corner keeps the two bends apart. The spring plunger
  *   (McMaster 8501A58) points up through the tongue into the hole in the foot
@@ -53,7 +53,7 @@ export const b3StowLocks = defineFeature(function(context is Context, id is Id, 
         var screws = [];
         for (var k = 0; k < size(STOW_BRACKET_SCREW_X); k += 1)
         {
-            screws = append(screws, b3Hole(STOW_BRACKET_SCREW_X[k], STOW_BRACKET_SCREW_Z, STOW_SCREW_DIA));
+            screws = append(screws, b3Hole(STOW_BRACKET_SCREW_X[k], STOW_BRACKET_SCREW_Z[k], STOW_SCREW_DIA));
         }
         b3PrismXZ(context, id + "bracket" + "leg", b3Rounded(b3Rect(xn, z0, lx1, shelfTop), [sr, sr, 0, 0]), screws, 0 * inch, SHEET_T);
         // The pin seats on the slot's round end.

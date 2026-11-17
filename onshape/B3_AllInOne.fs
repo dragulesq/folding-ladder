@@ -363,9 +363,8 @@ export const STOW_UP_D = 2.25 * inch;              // plate reach from the panel
 export const STOW_UP_Y0 = (5 / 16) * inch;         // the hook plate and its bend start here, clear of the panel leg's bend
 export const STOW_NOTCH_X = STOW_HOOK_X0 + (7 / 16) * inch;   // the panel leg and its bend start here, clear of the hook plate's bend
 export const STOW_SHELF_R = R_OUTSIDE_SMALL;       // the shelf's inside corner and the tongue's tips
-export const STOW_BRACKET_SCREW_X = [STOW_NOTCH_X + (3 / 8) * inch, (STOW_NOTCH_X + LOCK_LEDGE_X0 + LOCK_LEDGE_W) / 2,
-        LOCK_LEDGE_X0 + LOCK_LEDGE_W - (3 / 8) * inch];   // three M6 screws along the leg
-export const STOW_BRACKET_SCREW_Z = LOCK_SHELF_TOP_Z - (11 / 16) * inch;   // high on the leg, half a die width below the bend
+export const STOW_BRACKET_SCREW_X = [STOW_NOTCH_X + (3 / 8) * inch, LOCK_LEDGE_X0 + LOCK_LEDGE_W - (3 / 8) * inch];   // two M6 screws, one near each end of the leg
+export const STOW_BRACKET_SCREW_Z = [LOCK_SHELF_TOP_Z - (11 / 16) * inch, STOW_BRACKET_Z0 + (3 / 8) * inch];   // on a slant: the first high on the leg (half a die width below the bend), the second low
 export const STOW_LO_Z0 = LEDGE_TOP_Z - SHEET_T;    // lower hook plate, bent off the front end of the step ledge's back wall: from the shelf's underside, 1
 export const STOW_LO_Z1 = (21 / 8) * inch;
 export const STOW_LO_D = 2.5 * inch;
@@ -1873,7 +1872,7 @@ export const b3HookOnStep = defineFeature(function(context is Context, id is Id,
  *   travel lock's shelf, 17" up: 2 1/4" deep behind the hook plate, with a
  *   1 1/8" tongue out to under where the rail's foot flange lands when
  *   folded. The panel leg is bent down along the shelf's panel edge and takes
- *   three M6 screws. The upper hook plate is bent up along the shelf's bed-end
+ *   two M6 screws on a slant. The upper hook plate is bent up along the shelf's bed-end
  *   edge; its slot, open to the room, takes the stowed step's upper pin. A
  *   notch in the shelf's corner keeps the two bends apart. The spring plunger
  *   (McMaster 8501A58) points up through the tongue into the hole in the foot
@@ -1913,7 +1912,7 @@ export const b3StowLocks = defineFeature(function(context is Context, id is Id, 
         var screws = [];
         for (var k = 0; k < size(STOW_BRACKET_SCREW_X); k += 1)
         {
-            screws = append(screws, b3Hole(STOW_BRACKET_SCREW_X[k], STOW_BRACKET_SCREW_Z, STOW_SCREW_DIA));
+            screws = append(screws, b3Hole(STOW_BRACKET_SCREW_X[k], STOW_BRACKET_SCREW_Z[k], STOW_SCREW_DIA));
         }
         b3PrismXZ(context, id + "bracket" + "leg", b3Rounded(b3Rect(xn, z0, lx1, shelfTop), [sr, sr, 0, 0]), screws, 0 * inch, SHEET_T);
         // The pin seats on the slot's round end.

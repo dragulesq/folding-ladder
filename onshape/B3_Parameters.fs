@@ -356,9 +356,8 @@ export const STOW_UP_D = 2.25 * inch;              // plate reach from the panel
 export const STOW_UP_Y0 = (5 / 16) * inch;         // the hook plate and its bend start here, clear of the panel leg's bend
 export const STOW_NOTCH_X = STOW_HOOK_X0 + (7 / 16) * inch;   // the panel leg and its bend start here, clear of the hook plate's bend
 export const STOW_SHELF_R = R_OUTSIDE_SMALL;       // the shelf's inside corner and the tongue's tips
-export const STOW_BRACKET_SCREW_X = [STOW_NOTCH_X + (3 / 8) * inch, (STOW_NOTCH_X + LOCK_LEDGE_X0 + LOCK_LEDGE_W) / 2,
-        LOCK_LEDGE_X0 + LOCK_LEDGE_W - (3 / 8) * inch];   // three M6 screws along the leg
-export const STOW_BRACKET_SCREW_Z = LOCK_SHELF_TOP_Z - (11 / 16) * inch;   // high on the leg, half a die width below the bend
+export const STOW_BRACKET_SCREW_X = [STOW_NOTCH_X + (3 / 8) * inch, LOCK_LEDGE_X0 + LOCK_LEDGE_W - (3 / 8) * inch];   // two M6 screws, one near each end of the leg
+export const STOW_BRACKET_SCREW_Z = [LOCK_SHELF_TOP_Z - (11 / 16) * inch, STOW_BRACKET_Z0 + (3 / 8) * inch];   // on a slant: the first high on the leg (half a die width below the bend), the second low
 export const STOW_LO_Z0 = LEDGE_TOP_Z - SHEET_T;    // lower hook plate, bent off the front end of the step ledge's back wall: from the shelf's underside, 1
 export const STOW_LO_Z1 = (21 / 8) * inch;
 export const STOW_LO_D = 2.5 * inch;
