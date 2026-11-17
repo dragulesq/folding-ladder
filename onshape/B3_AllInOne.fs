@@ -213,7 +213,7 @@ export const RAIL_FLANGE_TIP_R = R_OUTSIDE_LARGE;  // every flange's free corner
 export const HAND_SLOT_X = 1.5 * GOING;            // centered under the middle tread's bracket, near the travel lock
 export const HAND_SLOT_Z = 14.5 * inch;
 export const HAND_SLOT_L = 4 * inch;               // along x
-export const HAND_SLOT_H = 1.25 * inch;
+export const HAND_SLOT_H = 1.5 * inch;               // 1 1/8 open once the 3/32 rubber edge trim (8507K54) is on
 // Foot pad: rubber, glued under the foot flange's flat, standing on the floor.
 export const RAIL_PAD_W = RAIL_FLANGE - RAIL_BEND_R;   // 3/4, the flange's flat width past its bend
 export const RAIL_PAD_T = RAIL_FOOT_Z;             // 1/8, the same rubber as the step leg pads and the ledge strip
