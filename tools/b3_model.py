@@ -92,7 +92,7 @@ class Model:
         return self.turn_in_going(n, j, self.CAB_AXLE_DROP - self.OUT_AXLE_DROP)
 
     def bracket_screw(self, n, k):
-        return self.joint((self.going_x(n) + self.SCREW_X[k], self.PLATE_T, self.T(n) - self.SCREW_DROP), (0, -1, 0), (1, 0, 0))
+        return self.joint((self.going_x(n) + self.SCREW_X[k], self.PLATE_T, self.T(n) - self.SCREW_DROP), (0, 1, 0), (1, 0, 0))
 
     def rail_nut(self, n, k):
         hole = self.on_rail(n, self.bracket_screw(n, k))["origin"]
@@ -184,7 +184,6 @@ class Model:
             ("M6 fender washer", "Screw"): under,
             ("M6 button-head screw", "Washer"): under,
             ("Stop pin", "Bracket"): self.stop_pin(top, False),
-            ("M6 flat-head screw", "Head"): self.on_rail(top, self.bracket_screw(top, 0)),
             ("M6 nyloc nut", "Rail"): self.rail_nut(top, 0),
             ("Step ledge", "Cabinet"): self.panel_joint(0, self.LEDGE_TOP_Z - self.SHEET_T),
             ("Step ledge", "Rubber strip"): self.joint((0, 0, self.LEDGE_TOP_Z), (0, 0, 1), (1, 0, 0)),
@@ -210,8 +209,8 @@ class Model:
         }
         for k in range(len(self.SCREW_X)):
             c[("Bracket", f"Screw {k + 1}")] = self.bracket_screw(top, k)
-            c[("Outer rail", f"Nut, top {k + 1}")] = self.rail_nut(top, k)
-            c[("Outer rail", f"Nut, middle {k + 1}")] = self.rail_nut(mid, k)
+            c[("Outer rail", f"Screw, top {k + 1}")] = self.rail_nut(top, k)
+            c[("Outer rail", f"Screw, middle {k + 1}")] = self.rail_nut(mid, k)
         for k in range(2):
             c[("Outer rail", f"Nut, clip {k + 1}")] = self.clip_nut(k)
         for k in range(4):

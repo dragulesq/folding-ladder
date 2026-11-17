@@ -67,11 +67,9 @@ INSTANCES = {
     **AXLES,
     **{f"Stop pin {i}": "Stop pin" for i in range(1, 5)},
     **{f"M6 fender washer {i}": "M6 fender washer" for i in range(1, 13)},
-    **{f"M6 button-head screw {i}": "M6 button-head screw" for i in range(1, 17)},
-    **{f"M6 flat-head screw {i}": "M6 flat-head screw" for i in range(1, 7)},
-    # The cabinet brackets' screws into the 8020, through the side panel: the same part, swapped
-    # for the longer McMaster screw below.
-    **{f"M6 x 25 flat-head screw {i}": "M6 flat-head screw" for i in range(1, 7)},
+    # Button heads 1 to 12 on the axle ends, 13 to 16 on the step clips, 17 to 22 through the rail
+    # brackets (head outside the rail) and 23 to 28 through the cabinet brackets into the 8020.
+    **{f"M6 button-head screw {i}": "M6 button-head screw" for i in range(1, 29)},
     **{f"M6 nyloc nut {i}": "M6 nyloc nut" for i in range(1, 9)},
     # Pivot stacks: lip bushings 1 to 12 in the three trays' lips, 13 to 16 in the step legs' ears.
     **{f"Lip bushing {i}": "Lip bushing" for i in range(1, 17)},
@@ -131,18 +129,19 @@ for i, (axle, end) in enumerate((a, e) for a in AXLES for e in ("Back end", "Fro
         ((f"M6 fender washer {i + 1}", "Axle"), (axle, end)),
         ((f"M6 button-head screw {i + 1}", "Washer"), (f"M6 fender washer {i + 1}", "Screw")),
     ]
-# Three flat-head screws through each rail bracket, with a nyloc nut on the rail's outer face.
+# Three button-head screws through each rail bracket: head on the rail's outer face, nyloc nut
+# on the bracket's web, between its ears.
 for b, row in (("Bracket 3", "top"), ("Bracket 4", "middle")):
     for k in range(1, 4):
         i = k + (3 if row == "middle" else 0)
         HARDWARE += [
-            ((f"M6 flat-head screw {i}", "Head"), (b, f"Screw {k}")),
-            ((f"M6 nyloc nut {i}", "Rail"), ("Outer rail", f"Nut, {row} {k}")),
+            ((f"M6 button-head screw {16 + i}", "Washer"), ("Outer rail", f"Screw, {row} {k}")),
+            ((f"M6 nyloc nut {i}", "Rail"), (b, f"Screw {k}")),
         ]
-# Three flat-head screws through each cabinet bracket into the 8020.
+# Three button-head screws through each cabinet bracket into the 8020.
 for b in (1, 2):
     for k in range(1, 4):
-        HARDWARE.append(((f"M6 x 25 flat-head screw {3 * (b - 1) + k}", "Head"), (f"Bracket {b}", f"Screw {k}")))
+        HARDWARE.append(((f"M6 button-head screw {22 + 3 * (b - 1) + k}", "Washer"), (f"Bracket {b}", f"Screw {k}")))
 # Two button-head screws through each step clip: into the front post on the cabinet, and with a
 # nyloc nut on the rail's outer face.
 for k in range(1, 3):
@@ -193,10 +192,10 @@ HARDWARE += [
 # Part Studio, its part ids and a frame in its own coordinates that matches the mate connector the
 # modeled part is placed by, so the bought part lands where the modeled one would.
 SWAPS = [
-    ("M6 flat-head screw ", "92125A240"),
-    ("M6 x 25 flat-head screw ", "92125A242"),
     *((f"M6 button-head screw {i}", "92095A226") for i in range(1, 13)),
-    *((f"M6 button-head screw {i}", "92095A238") for i in (13, 14, 15, 16)),
+    # The M6 x 16 also stands in for the rail brackets' M6 x 20. The cabinet brackets' screws
+    # (23 to 28) stay as the modeled head: the document has no model of that length.
+    *((f"M6 button-head screw {i}", "92095A238") for i in range(13, 23)),
     ("M6 fender washer ", "94316A560"),
     ("M6 nyloc nut ", "93625A250"),
     ("Wave washer ", "1775N12"),
@@ -204,7 +203,7 @@ SWAPS = [
     ("Ear bushing ", "GFM-1214-06"),
 ]
 # The connector each swapped part is placed by, in the modeled part's Part Studio.
-SWAP_CONNECTOR = {"M6 flat-head screw": "Head", "M6 button-head screw": "Washer", "M6 fender washer": "Axle",
+SWAP_CONNECTOR = {"M6 button-head screw": "Washer", "M6 fender washer": "Axle",
                   "M6 nyloc nut": "Rail", "Wave washer": "Axle", "Lip bushing": "Axle", "Ear bushing": "Axle"}
 # A second part of an import (the nut's nylon insert) -> the instance it goes with.
 EXTRA = {}

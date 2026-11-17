@@ -133,7 +133,7 @@ export const b3OuterRail = defineFeature(function(context is Context, id is Id, 
         }
         for (var k = 0; k < size(SCREW_X); k += 1)
         {
-            b3Mc(context, id + ("mcNutTop" ~ k), rail, name, "Nut, top " ~ (k + 1), b3RailNutJoint(TREAD_TOP, k));
-            b3Mc(context, id + ("mcNutMiddle" ~ k), rail, name, "Nut, middle " ~ (k + 1), b3RailNutJoint(TREAD_MIDDLE, k));
+            b3Mc(context, id + ("mcNutTop" ~ k), rail, name, "Screw, top " ~ (k + 1), b3RailNutJoint(TREAD_TOP, k));
+            b3Mc(context, id + ("mcNutMiddle" ~ k), rail, name, "Screw, middle " ~ (k + 1), b3RailNutJoint(TREAD_MIDDLE, k));
         }
     });

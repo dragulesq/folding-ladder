@@ -164,10 +164,10 @@ export function b3BracketAxleTurnedJoint(n is number) returns map
 // Screw hole k in bracket n's web, on the ear side, z along the screw.
 export function b3BracketScrewJoint(n is number, k is number) returns map
 {
-    return b3Joint(vector(b3GoingX(n) + SCREW_X[k], PLATE_T, b3T(n) - SCREW_DROP), vector(0, -1, 0), vector(1, 0, 0));
+    return b3Joint(vector(b3GoingX(n) + SCREW_X[k], PLATE_T, b3T(n) - SCREW_DROP), vector(0, 1, 0), vector(1, 0, 0));
 }
 
-// The nut on the rail's outer face for screw k of tread n's rail bracket.
+// The screw head on the rail's outer face for screw k of tread n's rail bracket.
 export function b3RailNutJoint(n is number, k is number) returns map
 {
     const hole = b3OnRail(n, b3BracketScrewJoint(n, k)).origin;

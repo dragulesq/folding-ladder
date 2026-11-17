@@ -180,20 +180,19 @@ export const BRACKET_H = 2 * inch;                 // web bottom at T - 3 5/8
 export const SCREW_X = [GOING / 2 - 1.5 * inch, GOING / 2, GOING / 2 + 1.5 * inch];   // three M6, 1 1/2" apart about the going's middle
 export const SCREW_DROP = (17 / 8) * inch;         // screw row at T - 2 1/8
 export const SCREW_HOLE_DIA = 6.6 * millimeter;    // M6 clearance
-export const SCREW_CSK_DIA = 12.4 * millimeter;    // 90 degree countersink, ear side (not modeled)
-// Stop pin: SendCutSend's flush standoff SO-M5-12 (smooth 0.28" body, 0.472" long, 0.281" hole, 0.315" at least from hole center to an edge).
+// Stop pin: press-fit standoff PEM SOS-M5-12 (smooth 7.12 mm body, 7.14 mm hole, 0.315" at least from hole center to an edge). Its 12 mm is overall,
+// from the face of the head, which is pressed flush into the ear's inside: it sticks out of the ear by its length less the ear's thickness.
 export const STOP_PIN_Y = 1.055 * inch;            // 0.32 from the ear's far edge
 export const STOP_PIN_DIA = 0.281 * inch;
 export const STOP_PIN_DROP = (67 / 32) * inch + (STOP_PIN_DIA - (3 / 16) * inch) / 2;   // pin's top at T - 2: the lip's bottom edge rests on it
-export const STOP_PIN_OUT = 0.472 * inch;          // sticks out under the lip; flush on the ear's inside
+export const STOP_PIN_LEN = 12 * millimeter;
+export const STOP_PIN_OUT = STOP_PIN_LEN - PLATE_T;   // 0.285: under the whole lip (1/8 to 1/4 from the ear) and 1/32 past it, short of the stow bracket's hook plate at 5/16
 export const EAR_CORNER_R = R_OUTSIDE_SMALL;       // each ear's bottom outer corner
 // The hook starts 1/16" past the end of the ear's 1/4" bend, so the notch's
 // inside corner can only take a 1/32" radius and still stay clear of the bend.
 export const EAR_NOTCH_R = (1 / 32) * inch;        // the hook notch
-// Rail bracket screws: M6 x 20 flat head (ISO 10642) from the ear side, DIN 985 nyloc nut outside the rail.
+// Bracket screws: M6 button heads in plain holes. On the rail brackets, M6 x 20 with the head outside the rail and a DIN 985 nyloc nut on the web, between the ears.
 export const FH_DIA = 6 * millimeter;
-export const FH_LEN = 20 * millimeter;             // overall, head included; comes through the nut by about 4 mm
-export const FH_HEAD_DIA = 12 * millimeter;        // 90 degree head
 export const NUT_AF = 10 * millimeter;
 export const NUT_H = 6 * millimeter;
 
@@ -536,10 +535,10 @@ export function b3BracketAxleTurnedJoint(n is number) returns map
 // Screw hole k in bracket n's web, on the ear side, z along the screw.
 export function b3BracketScrewJoint(n is number, k is number) returns map
 {
-    return b3Joint(vector(b3GoingX(n) + SCREW_X[k], PLATE_T, b3T(n) - SCREW_DROP), vector(0, -1, 0), vector(1, 0, 0));
+    return b3Joint(vector(b3GoingX(n) + SCREW_X[k], PLATE_T, b3T(n) - SCREW_DROP), vector(0, 1, 0), vector(1, 0, 0));
 }
 
-// The nut on the rail's outer face for screw k of tread n's rail bracket.
+// The screw head on the rail's outer face for screw k of tread n's rail bracket.
 export function b3RailNutJoint(n is number, k is number) returns map
 {
     const hole = b3OnRail(n, b3BracketScrewJoint(n, k)).origin;
@@ -1248,11 +1247,11 @@ export const b3Treads = defineFeature(function(context is Context, id is Id, def
 // ===========================================================================
 /*
  * B3 Bracket, 3/16" sheet-metal part, used four times. The 5 1/8 x 2 web
- * has three M6 holes (countersinks not modeled); a hook-shaped ear is bent 90
+ * has three plain M6 holes for button-head screws; a hook-shaped ear is bent 90
  * degrees off each end to carry a tread axle. Two sit on the cabinet panel,
  * ears toward the room, with a stop pin through each ear. The other two are
  * the same part turned to face the cabinet and bolted inside the outer rail
- * with M6 x 20 flat-head screws and nyloc nuts; their stop-pin holes stay
+ * with M6 x 20 button-head screws, heads outside the rail and nyloc nuts on the web; their stop-pin holes stay
  * empty. The ears run the web's full height and the hook starts past the
  * bend, so the bends need no extra reliefs. Built once, where the top
  * tread's cabinet bracket sits.
@@ -1443,8 +1442,8 @@ export const b3OuterRail = defineFeature(function(context is Context, id is Id, 
         }
         for (var k = 0; k < size(SCREW_X); k += 1)
         {
-            b3Mc(context, id + ("mcNutTop" ~ k), rail, name, "Nut, top " ~ (k + 1), b3RailNutJoint(TREAD_TOP, k));
-            b3Mc(context, id + ("mcNutMiddle" ~ k), rail, name, "Nut, middle " ~ (k + 1), b3RailNutJoint(TREAD_MIDDLE, k));
+            b3Mc(context, id + ("mcNutTop" ~ k), rail, name, "Screw, top " ~ (k + 1), b3RailNutJoint(TREAD_TOP, k));
+            b3Mc(context, id + ("mcNutMiddle" ~ k), rail, name, "Screw, middle " ~ (k + 1), b3RailNutJoint(TREAD_MIDDLE, k));
         }
     });
 
@@ -1523,12 +1522,12 @@ export const b3StepClip = defineFeature(function(context is Context, id is Id, d
  * clearances in the assembly:
  *   Tread axle (4 used) and step axle (2 used; the back end is the hook
  *   pin), 12 mm aluminum tube with a 5 mm bore tapped M6 at both ends.
- *   M6 fender washer (12, one on each axle end) and M6 button-head screw (14:
- *   one on each axle end, and two bolting the step clip to the outer rail).
- *   Stop pin (4 used), 3/16" pin through each cabinet bracket ear.
- *   M6 x 20 flat-head screw (8), bolting the two rail brackets inside the
- *   outer rail, and M6 nyloc nut (10), on the rail's outer face for those and
- *   the step clip's screws.
+ *   M6 fender washer (12, one on each axle end) and M6 button-head screw (28:
+ *   one on each axle end, two on each step clip, and three through each
+ *   bracket), modeled as its head only.
+ *   Stop pin (4 used), a press-fit standoff in each cabinet bracket ear.
+ *   M6 nyloc nut (8): on the rail brackets' webs, between the ears, and on
+ *   the rail's outer face for the step clip's screws.
  * Each is built where its first use sits: the top tread's cabinet axle, the
  * step's cabinet-side axle, the washer and screw on the top tread's cabinet
  * axle at the bed end, the top cabinet bracket's back stop pin, and the
@@ -1570,21 +1569,8 @@ export const b3PivotHardware = defineFeature(function(context is Context, id is 
         b3FinishSteel(context, b3Solids(id + "pin"), "Stop pin");
         b3Mc(context, id + "mcPin", b3Solids(id + "pin"), "Stop pin", "Bracket", pin);
 
-        // Flat-head screw: 90 degree head flush with the bracket web's ear side, shank through the rail.
-        const head = b3OnRail(TREAD_TOP, b3BracketScrewJoint(TREAD_TOP, 0));
-        const s0 = head.origin;
-        const along = head.zAxis;
-        const headH = (FH_HEAD_DIA - FH_DIA) / 2;
-        fCone(context, id + "fh" + "head", { "bottomCenter" : b3V(s0), "topCenter" : b3V(s0 + along * headH),
-                    "bottomRadius" : FH_HEAD_DIA / 2, "topRadius" : FH_DIA / 2 });
-        fCylinder(context, id + "fh" + "shank", { "bottomCenter" : b3V(s0 + along * headH), "topCenter" : b3V(s0 + along * FH_LEN),
-                    "radius" : FH_DIA / 2 });
-        b3Union(context, id + "fh" + "join", b3Solids(id + "fh"));
-        const fh = b3Solids(id + "fh");
-        b3FinishSteel(context, fh, "M6 flat-head screw");
-        b3Mc(context, id + "mcFh", fh, "M6 flat-head screw", "Head", head);
-
-        // Nyloc nut on the rail's outer face, a hex prism around the screw.
+        // Nyloc nut, a hex prism around the screw, built on the rail's outer face where the step clip's nuts go;
+        // the rail brackets' nuts sit on the bracket's web instead.
         const nutJoint = b3RailNutJoint(TREAD_TOP, 0);
         const c = nutJoint.origin;
         var hex = [];
