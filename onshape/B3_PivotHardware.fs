@@ -11,17 +11,17 @@ import(path : "onshape/std/common.fs", version : "2641.0");
  * clearances in the assembly:
  *   Tread axle (4 used) and step axle (2 used; the back end is the hook
  *   pin), 12 mm aluminum tube with a 5 mm bore tapped M6 at both ends.
- *   M6 fender washer (12, one on each axle end) and M6 button-head screw (14:
- *   one on each axle end, and two bolting the step clip to the outer rail).
- *   Stop pin (4 used), 3/16" pin through each cabinet bracket ear.
- *   M6 x 20 flat-head screw (8), bolting the two rail brackets inside the
- *   outer rail, and M6 nyloc nut (10), on the rail's outer face for those and
- *   the step clip's screws.
+ *   M6 fender washer (12, one on each axle end) and M6 button-head screw (28:
+ *   one on each axle end, two on each step clip, and three through each
+ *   bracket), modeled as its head only.
+ *   Stop pin (4 used), a threaded standoff screwed to each cabinet bracket ear.
+ *   M6 nyloc nut (8): on the rail brackets' webs, between the ears, and on
+ *   the rail's outer face for the step clip's screws.
  * Each is built where its first use sits: the top tread's cabinet axle, the
  * step's cabinet-side axle, the washer and screw on the top tread's cabinet
  * axle at the bed end, the top cabinet bracket's back stop pin, and the
  * first screw of the top rail bracket with its nut.
- * Bushings, thrust washers and wave washers aren't modeled.
+ * The bushings, thrust washers and wave washers are in B3 Bushings and Pads.
  */
 annotation { "Feature Type Name" : "B3 Pivot Hardware" }
 export const b3PivotHardware = defineFeature(function(context is Context, id is Id, definition is map)
@@ -51,28 +51,15 @@ export const b3PivotHardware = defineFeature(function(context is Context, id is 
         b3FinishSteel(context, screw, "M6 button-head screw");
         b3Mc(context, id + "mcScrew", screw, "M6 button-head screw", "Washer", under);
 
-        // Stop pin: flush with the bracket ear's inside face, sticking out under the lip.
+        // Stop pin: a standoff on the bracket ear's outer face, sticking out under the lip (its screw, from inside the ear, is not modeled).
         const pin = b3StopPinJoint(TREAD_TOP, false);
         const q = pin.origin;
-        b3CylX(context, id + "pin", q[1], q[2], q[0] - PLATE_T - STOP_PIN_OUT, q[0], STOP_PIN_DIA);
+        b3CylX(context, id + "pin", q[1], q[2], q[0] - PLATE_T - STOP_PIN_OUT, q[0] - PLATE_T, STOP_PIN_DIA);
         b3FinishSteel(context, b3Solids(id + "pin"), "Stop pin");
         b3Mc(context, id + "mcPin", b3Solids(id + "pin"), "Stop pin", "Bracket", pin);
 
-        // Flat-head screw: 90 degree head flush with the bracket web's ear side, shank through the rail.
-        const head = b3OnRail(TREAD_TOP, b3BracketScrewJoint(TREAD_TOP, 0));
-        const s0 = head.origin;
-        const along = head.zAxis;
-        const headH = (FH_HEAD_DIA - FH_DIA) / 2;
-        fCone(context, id + "fh" + "head", { "bottomCenter" : b3V(s0), "topCenter" : b3V(s0 + along * headH),
-                    "bottomRadius" : FH_HEAD_DIA / 2, "topRadius" : FH_DIA / 2 });
-        fCylinder(context, id + "fh" + "shank", { "bottomCenter" : b3V(s0 + along * headH), "topCenter" : b3V(s0 + along * FH_LEN),
-                    "radius" : FH_DIA / 2 });
-        b3Union(context, id + "fh" + "join", b3Solids(id + "fh"));
-        const fh = b3Solids(id + "fh");
-        b3FinishSteel(context, fh, "M6 flat-head screw");
-        b3Mc(context, id + "mcFh", fh, "M6 flat-head screw", "Head", head);
-
-        // Nyloc nut on the rail's outer face, a hex prism around the screw.
+        // Nyloc nut, a hex prism around the screw, built on the rail's outer face where the step clip's nuts go;
+        // the rail brackets' nuts sit on the bracket's web instead.
         const nutJoint = b3RailNutJoint(TREAD_TOP, 0);
         const c = nutJoint.origin;
         var hex = [];

@@ -8,11 +8,11 @@ import(path : "onshape/std/common.fs", version : "2641.0");
 
 /*
  * B3 Bracket, 3/16" sheet-metal part, used four times. The 5 1/8 x 2 web
- * has four M6 holes (countersinks not modeled); a hook-shaped ear is bent 90
+ * has three plain M6 holes for button-head screws; a hook-shaped ear is bent 90
  * degrees off each end to carry a tread axle. Two sit on the cabinet panel,
  * ears toward the room, with a stop pin through each ear. The other two are
  * the same part turned to face the cabinet and bolted inside the outer rail
- * with M6 x 20 flat-head screws and nyloc nuts; their stop-pin holes stay
+ * with M6 x 20 button-head screws, heads outside the rail and nyloc nuts on the web; their stop-pin holes stay
  * empty. The ears run the web's full height and the hook starts past the
  * bend, so the bends need no extra reliefs. Built once, where the top
  * tread's cabinet bracket sits.
@@ -43,7 +43,7 @@ export const b3CabinetBrackets = defineFeature(function(context is Context, id i
         const ear = b3EarOutline(0 * inch, PLATE_T + EAR_W, PLATE_T + HOOK_U0, webBot, webTop, CAB_AXLE_Y, axZ);
         const earHoles = [
                 b3Hole(CAB_AXLE_Y, axZ, HOLE_DIA),
-                b3Hole(STOP_PIN_Y, top - STOP_PIN_DROP, STOP_PIN_DIA)
+                b3Hole(STOP_PIN_Y, top - STOP_PIN_DROP, STOP_PIN_HOLE)
             ];
         const ranges = b3EarRanges(n);
         b3PrismYZ(context, id + "earBack", ear, earHoles, ranges[0][0], ranges[0][1]);

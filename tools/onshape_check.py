@@ -26,6 +26,7 @@ import json
 import subprocess
 import sys
 
+from b3_model import Model, compare_connectors
 from onshape_api import ROOT, State, fs_value, notices
 
 FS_FILE = ROOT / "onshape" / "B3_AllInOne.fs"
@@ -33,7 +34,8 @@ STUDIO_NAME = "B3 test AllInOne"
 # Part Studio key in the state file -> (tab name, the features it holds).
 PART_STUDIOS = {
     "parts": ("B3 test Part Studio", ["b3Treads", "b3CabinetBrackets", "b3OuterRail", "b3StepClip",
-                                      "b3PivotHardware", "b3FrontAngle", "b3StepLedge", "b3HookOnStep"]),
+                                      "b3PivotHardware", "b3BushingsAndPads", "b3StepLedge",
+                                      "b3HookOnStep", "b3StowLocks"]),
     "surroundings": ("B3 test Surroundings", ["b3Reference"]),
 }
 
@@ -55,6 +57,8 @@ def main():
         bad = 0 if args.report else upload(st)
         if not bad:
             bad = sum(report(st, key) for key in PART_STUDIOS)
+        if not bad:
+            model_check(st.data)
     finally:
         st.close()
     sys.exit(1 if bad else 0)
@@ -107,6 +111,16 @@ def upload(st):
                 have[t] = api("POST", path, {"feature": feat})["feature"]["featureId"]
                 st.save()
     return 0
+
+
+def model_check(state):
+    """No calls: tools/b3_model.py repeats the FeatureScript's joints, so say where the two have drifted apart."""
+    actual = [m for ps in state["part_studios"].values() for m in ps.get("mate_connectors", [])]
+    drift = compare_connectors(Model().onshape_connectors(), actual)
+    print("tools/b3_model.py matches every mate connector" if not drift else
+          "tools/b3_model.py differs from the Part Studios; fix it before trusting b3_check.py or --stowed:")
+    for line in drift:
+        print("  " + line)
 
 
 def report(st, key):
