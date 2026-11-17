@@ -117,7 +117,8 @@ def checks(m):
     out.append(("Ledge's screws inside the wall's edges", min(xs[0], m.STOW_LO_Z1 - m.LEDGE_SCREW_Z) - m.LEDGE_SCREW_DIA / 2, 0.2, ""))
     out.append(("Ledge's wall and hook plate after their bends", min(m.STOW_LO_Z1 - m.STOW_LO_Z0, m.STOW_LO_D), 0.476, "SendCutSend's least flange"))
     head = m.SHEET_T + 3.3 / MM
-    out.append(("Stowed step's legs clear of the ledge's screw heads", m.STOW_PANEL_GAP - head, 0.03, "M6 button heads, 3.3 mm tall; the legs' back stands 5/16 off the panel, higher up"))
+    out.append(("Stowed step's legs above the ledge's wall", apply(mo["outer leg"], (m.going_x(HOOK_STEP), m.OUT_AXLE_Y + m.CAB_AXLE_Y - m.STEP_LEG_Y0, m.STEP_LEG_BOTTOM_Z))[2] - m.STOW_LO_Z1, 1.0,
+                "the step's back, 1/32 off the panel, starts well above the wall and its screw heads"))
     out.append(("Stowed step's tray clear of the ledge's screw heads", m.stow_top_y() - m.LIP - head, 0.125, "the tray's lips stand on the ledge, in front of the heads"))
     out.append(("Rubber strip past the wall's bend and under the stowed step", min(m.LEDGE_STRIP_Y0 - (m.SHEET_T + m.BEND_R_SHEET), m.TRAY_Y0 - m.LEDGE_STRIP_Y0), 0, ""))
     out.append(("Metal around the lower slot", min(m.STOW_LO_D - (m.STOW_PIN_LO_Y + m.KEYHOLE_SLOT_W / 2),
@@ -180,13 +181,18 @@ def checks(m):
     reach = math.hypot(m.LEG_LOCK_DY, half)
     out.append(("Leg lock's nose clear of the pivot bushing's flange", reach - m.BUSHING_FLANGE_DIA / 2 - 2 / MM, 0.02, f"{reach:.3f} from either pivot"))
     out.append(("Leg lock's hole to the pivot holes", reach - m.HOLE_DIA / 2 - m.LEG_LOCK_TAP / 2, 0.1, "metal between"))
-    tip = m.STEP_LEG_EAR - (m.CAB_AXLE_Y - m.STEP_LEG_Y0 + m.LEG_LOCK_DY)
-    out.append(("Leg lock's hole to the ear's tip", tip - m.LEG_LOCK_TAP / 2, 0.08, "metal beyond"))
-    out.append(("Leg lock's jam nut on the ear", min(reach - m.HOLE_DIA / 2, tip + 0.02) - m.LEG_LOCK_NUT_AF / 2, 0, "its flats on metal"))
+    web_in = m.CAB_AXLE_Y - m.STEP_LEG_Y0 + m.LEG_LOCK_DY
+    out.append(("Leg lock's tapped hole from the pivot holes' edges", reach - m.HOLE_DIA / 2 - 0.246, 0, "SendCutSend: 0.246 from a tapped hole's center to an edge"))
+    out.append(("Leg lock's tapped hole from the ear's bend line", web_in - line - 0.517, 0, "SendCutSend: 0.517"))
+    out.append(("Leg lock's tapped hole from the ear's tip", m.STEP_LEG_EAR - web_in - 0.246, 0, ""))
+    out.append(("Leg lock's jam nut on the ear", min(reach - m.HOLE_DIA / 2 - m.LEG_LOCK_NUT_AF / 2, web_in - m.LEG_LOCK_NUT_AF / math.sqrt(3) - (m.SHEET_T + m.BEND_R_SHEET)), 0, "its flats on metal, clear of the bend"))
+    fold = (m.CAB_AXLE_DROP - m.SHEET_T) - (m.STEP_LEG_EAR - (m.CAB_AXLE_Y - m.STEP_LEG_Y0))
+    out.append(("Folded, the cabinet-side leg's ear tips under the skin", fold, 0.05, "why the ears can only grow toward the web"))
     out.append(("Leg lock's handle clear of the skin, on the outer leg", m.LEG_LOCK_DROP - m.SHEET_T - m.LEG_LOCK_HANDLE - 1.15 / MM, 0.1, "handle up, away from the pivot below"))
-    out.append(("Leg lock's nose on the lip while folded", min(m.CAB_AXLE_Y - m.TRAY_Y0, m.TRAY_Y0 + m.TRAY_W - m.OUT_AXLE_Y, m.CAB_AXLE_DROP) - reach, 0.05,
+    out.append(("Leg lock's nose on the lip while folded", min(m.LIP - m.CAB_AXLE_DROP, m.TRAY_Y0 + m.TRAY_W - m.OUT_AXLE_Y, m.LIP - m.OUT_AXLE_DROP + abs(m.LEG_LOCK_DY)) - reach - 2 / MM, 0,
                 "both noses ride on the lip and snap in when the leg opens"))
     out.append(("Tray's lock holes clear of the lip's bend", (m.LEG_LOCK_DROP - line) - m.LEG_LOCK_HOLE / 2 - die, 0, ""))
+    out.append(("Tray's lock holes inside the lip's ends", min(m.CAB_AXLE_Y + m.LEG_LOCK_DY - m.TRAY_Y0, m.TRAY_Y0 + m.TRAY_W - m.OUT_AXLE_Y + m.LEG_LOCK_DY) - m.LEG_LOCK_HOLE / 2, 0.1, ""))
     out.append(("Tray's lock holes clear of the lip bushings' flanges", reach - m.BUSHING_FLANGE_DIA / 2 - m.LEG_LOCK_HOLE / 2, 0.01, ""))
     out.append(("Step clip's keyhole on the step's pivot lines", -abs(m.RAIL_Y - m.CAB_AXLE_Y - m.OUT_AXLE_Y), -0.001, "15/16 from the panel and from the rail"))
     washer_top = -m.CLIP_PIN_DROP + m.END_WASHER_DIA / 2

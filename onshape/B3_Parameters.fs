@@ -283,7 +283,7 @@ export const LEDGE_SHELF_R = R_OUTSIDE_LARGE;      // the shelf's front corners,
 export const LEDGE_LEG_R = R_OUTSIDE_SMALL;        // the back wall's top corner at the bed end
 export const LEDGE_STRIP_Y0 = (1 / 4) * inch;      // the rubber strip starts past the back wall's bend
 export const LEDGE_STRIP_T = (1 / 8) * inch;       // rubber strip on the shelf; the folded step stands on it
-export const STOW_PANEL_GAP = (5 / 16) * inch;     // the folded step's back stands this far off the panel, so the folded rail's bumper presses on its face
+export const STOW_PANEL_GAP = (1 / 32) * inch;     // the folded step's back (the outer leg's web, from 9" up) stands this far off the panel
 
 // ---------------------------------------------------------------------------
 // Bumpers: rubber, stuck to the panel behind each folded tread. The folded
@@ -300,18 +300,19 @@ export const BUMPER_UP = 12 * inch;                // above the tread's cabinet 
 // leg is the same part turned half a turn about a vertical axis, which puts
 // its web's outer face at y 17 3/8.
 // ---------------------------------------------------------------------------
-export const STEP_LEG_Y0 = (5 / 16) * inch;        // cabinet-side leg's web, outer face
+export const STEP_LEG_Y0 = 0 * inch;               // cabinet-side leg's web, outer face: in the panel's plane, past the cabinet's front. 15/16 from the pivots, so the lock's tapped hole fits between them and the bend
 export const STEP_LEG_BOTTOM_Z = (1 / 8) * inch;   // underside of the foot flange
 export const STEP_LEG_TOP_Z = (81 / 8) * inch;     // 10 1/8, stops against the skin's underside
 export const STEP_LEG_FLANGE = (5 / 8) * inch;     // side and foot flanges, out from the web's outer face
-export const STEP_LEG_EAR = (17 / 16) * inch;      // ears, out from the web's outer face
+export const STEP_LEG_EAR = CAB_AXLE_Y - STEP_LEG_Y0 + (7 / 16) * inch;   // ears, out from the web's outer face: 1 3/8, 7/16 past the pivots (folded, the tip stops 1/16 under the skin)
 export const STEP_LEG_EAR_Z = (133 / 16) * inch;   // 8 5/16, where each side flange widens into its ear
 export const STEP_LEG_EAR_R = (3 / 8) * inch;      // the ear's top outer corner
 // Leg lock: a McMaster 8501A54 twist-lock spring plunger (M6 x 1, 4 mm nose, 10 mm travel) threaded
 // into each leg's front ear, at a hole of its own halfway between the ear's two pivot holes and
-// 1/4 toward the ear's tip, so that both legs are one part. Open, its nose springs through the
+// 0.3 toward the web, so that both legs are one part and SendCutSend can tap it: 0.255 from the
+// pivot holes' edges (they want 0.246) and 0.529 from the bend line (0.517). Open, its nose springs through the
 // tray's front lip.
-export const LEG_LOCK_DY = (1 / 4) * inch;         // from the pivot holes' line toward the ear's tip
+export const LEG_LOCK_DY = -0.3 * inch;             // from the pivot holes' line, toward the web
 export const LEG_LOCK_DROP = (CAB_AXLE_DROP + OUT_AXLE_DROP) / 2;   // below the tread's top: 1 1/16
 export const LEG_LOCK_TAP = 5 * millimeter;        // M6 x 1 tap drill, in the ear
 export const LEG_LOCK_HOLE = 4.5 * millimeter;     // in the tray's front lip, for the 4 mm nose

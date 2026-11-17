@@ -9,13 +9,14 @@ import(path : "onshape/std/common.fs", version : "2641.0");
 /*
  * B3 Hook-on Step Leg, 1/8" sheet-metal part, used twice. The hook-on step's
  * tray is the tread part, which the assembly places at the step. Each leg is
- * a 5 1/8 x 10 web bent into a shallow channel: a 5/8" side flange at each x
+ * a 5 1/8 x 10 web bent into a channel: a 5/8" side flange at each x
  * end, full height, that widens at the top into a pivot ear, and a 5/8" foot
  * flange along the bottom. Each ear has two 14 mm holes 7/8" apart, on the
  * tray's two pivot lines: the cabinet-side leg turns on the upper one, and the
  * outer leg, the same part turned to face the cabinet, on the lower one.
- * Halfway between them and 1/4" toward the ear's tip is a 5 mm hole, tapped
- * M6 in the ear that faces the front, for the leg's lock: a McMaster 8501A54
+ * Halfway between them and 0.3" toward the web is a hole tapped M6
+ * (drawn at its 5 mm tap drill; only the ear that faces the front uses it)
+ * for the leg's lock: a McMaster 8501A54
  * twist-lock spring plunger whose nose springs through the tray's front lip
  * when the leg is open, with an M6 thin jam nut inside the ear. The side
  * flanges run to the top edge, so their bends need no relief; where they meet
