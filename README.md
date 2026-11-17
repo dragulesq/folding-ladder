@@ -149,7 +149,7 @@ The page's y runs along Onshape's -Y so that the model isn't mirrored: facing th
 
 Every sheet-metal part is an Onshape sheet-metal model with SendCutSend's own numbers for 5052: 1/8" sheet with a 0.125" inside bend radius and K 0.44, 3/16" sheet with 0.250" and K 0.43 (`SHEET_T`, `BEND_R_SHEET`, `K_SHEET`, `PLATE_T`, `BEND_R_PLATE`, `K_PLATE` in `B3_Parameters.fs`). They give SendCutSend's bend deductions, 0.217" and 0.356".
 
-The document has one drawing per part, "Drawing: <part>", holding the part's flat pattern at 1:1 with no border or title block; export it as DXF for SendCutSend. The drawings follow the model. `python3 tools/flat_drawings.py "<part>"` makes one in inches (about 5 calls; without `units` the API makes drawings that export in meters): the API can create the flat pattern view and hide its tangent lines, but cannot turn off its bend notes, which is one tick on the view by hand.
+The document has one drawing per part, "Drawing: <part>" (the ones the script made end in "(in)"), holding the part's flat pattern at 1:1 with no border or title block; export it as DXF for SendCutSend. The drawings follow the model. `python3 tools/flat_drawings.py "<part>"` makes one in inches (about 5 calls; without `units` the API makes drawings that export in meters): the API can create the flat pattern view, but its bend notes and tangent lines still come out in the DXF until they are turned off on the view by hand.
 
 `python3 tools/flat_patterns.py` writes the same flats to `flat/` as DXF files built from the flat patterns' geometry (8 calls): cut geometry on layer `CUT`, bend centerlines on layer `BEND`, and `flat-patterns.svg` to look at.
 
