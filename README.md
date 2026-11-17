@@ -160,7 +160,7 @@ All parts are 5052 H32 aluminum, cut and bent.
 | Part | Qty | Sheet | Bends | Countersinking | Tapping | Hardware |
 |---|---|---|---|---|---|---|
 | Tread | 3 | 1/8" | 2 | none | none | none |
-| Bracket | 4 | 3/16" | 2 | 3 holes, M6 flat head, 90 degrees, 0.488" (12.4 mm) major diameter, on the face the ears bend toward | none | On the 2 cabinet brackets only: 2 flush standoffs SO-M5-12 (M5 x 0.8 inside, smooth outside, 0.472" long) in the small ear holes, head on the inside of the ear so the standoff points outward. The 2 rail brackets get none: a pin there would be in the tread lip's way as it folds |
+| Bracket | 4 (two lines of 2 in the configurator: with and without standoffs) | 3/16" | 2 | 3 holes, M6 flat head, 90 degrees, 0.488" (12.4 mm) major diameter, on the face the ears bend toward | none | On the 2 cabinet brackets only: 2 flush standoffs SO-M5-12 (M5 x 0.8 inside, smooth outside, 0.472" long) in the small ear holes, head on the inside of the ear so the standoff points outward. The 2 rail brackets get none: a pin there would be in the tread lip's way as it folds |
 | Outer rail | 1 | 3/16" | 5 | none | none | none |
 | Step clip | 2 | 1/8" | 1 | none | none | none |
 | Step ledge | 1 | 1/8" | 2 | none | none | none |
