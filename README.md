@@ -149,8 +149,22 @@ The page's y runs along Onshape's -Y so that the model isn't mirrored: facing th
 
 Every sheet-metal part is an Onshape sheet-metal model with SendCutSend's own numbers for 5052: 1/8" sheet with a 0.125" inside bend radius and K 0.44, 3/16" sheet with 0.250" and K 0.43 (`SHEET_T`, `BEND_R_SHEET`, `K_SHEET`, `PLATE_T`, `BEND_R_PLATE`, `K_PLATE` in `B3_Parameters.fs`). They give SendCutSend's bend deductions, 0.217" and 0.356".
 
-The document has one drawing per part, "Drawing: <part>", holding the part's flat pattern at 1:1 with no border or title block; export it as DXF for SendCutSend. The drawings follow the model. `python3 tools/flat_drawings.py "<part>"` makes one (about 5 calls): the API can create the flat pattern view and hide its tangent lines, but cannot turn off its bend notes, which is one tick on the view by hand.
+The document has one drawing per part, "Drawing: <part>", holding the part's flat pattern at 1:1 with no border or title block; export it as DXF for SendCutSend. The drawings follow the model. `python3 tools/flat_drawings.py "<part>"` makes one in inches (about 5 calls; without `units` the API makes drawings that export in meters): the API can create the flat pattern view and hide its tangent lines, but cannot turn off its bend notes, which is one tick on the view by hand.
 
 `python3 tools/flat_patterns.py` writes the same flats to `flat/` as DXF files built from the flat patterns' geometry (8 calls): cut geometry on layer `CUT`, bend centerlines on layer `BEND`, and `flat-patterns.svg` to look at.
 
-Quantities: Tread 3, Bracket 4, Outer rail 1, Step clip 2, Step ledge 1, Hook-on step leg 2, Stow bracket 1. The brackets and the outer rail are 3/16", the rest 1/8".
+### Order list
+
+All parts are 5052 H32 aluminum, cut and bent.
+
+| Part | Qty | Sheet | Bends | Countersinking | Tapping | Hardware |
+|---|---|---|---|---|---|---|
+| Tread | 3 | 1/8" | 2 | none | none | none |
+| Bracket | 4 | 3/16" | 2 | 3 holes, M6 flat head, 90 degrees, 0.488" (12.4 mm) major diameter, on the face the ears bend toward | none | On the 2 cabinet brackets only: 2 flush studs FH-M5-8 (M5 x 0.8, 0.315" long) in the small ear holes, head on the inside of the ear so the stud points outward. The 2 rail brackets get none: a stud there would be in the tread lip's way as it folds |
+| Outer rail | 1 | 3/16" | 5 | none | none | none |
+| Step clip | 2 | 1/8" | 1 | none | none | none |
+| Step ledge | 1 | 1/8" | 2 | none | none | none |
+| Hook-on step leg | 2 | 1/8" | 3 | none | 2 holes M6 x 1.0 (the 5 mm holes, one in each ear) | none |
+| Stow bracket | 1 | 1/8" | 2 | none | none | none |
+
+The studs are the treads' stop pins (the model draws a 3/16" pin; SendCutSend resizes the hole to 0.201" for the stud). The stud's hole is 0.3125" from the ear's edge: over the stud's own least of 0.283", under the general 0.44" in SendCutSend's hardware table for this sheet, so their configurator has the last word. A pressed-in 3/16" x 1/2" dowel pin does the same job.

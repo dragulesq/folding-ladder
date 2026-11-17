@@ -3,7 +3,7 @@
 
   python3 tools/flat_drawings.py "Step clip" ["Stow bracket" ...]
 
-Each drawing ("Drawing: <part>") has no border or title block and holds one
+Each drawing ("Drawing: <part>") is in inches, has no border or title block and holds one
 view of the part's flat pattern in "B3 test Part Studio", from the top at 1:1,
 with tangent lines off (the view only drops them when it is also
 set to quality rendering). It follows the model like any drawing. The API cannot
@@ -37,7 +37,9 @@ def main():
         flats = {p["name"]: p["partId"] for p in api("GET", f"/parts{api.dw}/e/{ps['id']}?includeFlatParts=true") if p.get("isFlattenedBody")}
         for name in sys.argv[1:]:
             d = api("POST", f"/drawings{api.dw}/create", {"drawingName": f"Drawing: {name}", "elementId": ps["id"], "partId": flats[name],
-                                                          "views": "zero", "border": False, "titleblock": False})
+                                                          "views": "zero", "border": False, "titleblock": False,
+                                                          # Without units a drawing made through the API exports in meters.
+                                                          "units": "INCH", "isFlattenedPart": True, "referenceType": 4})
             view = modify(api, d["id"], {"messageName": "onshapeCreateViews", "formatVersion": "2021-01-01", "description": "Add the flat pattern",
                                          "views": [{"viewType": "TopLevel", "position": {"x": 8.5, "y": 5.5}, "orientation": "top",
                                                     "scale": {"scaleSource": "Custom", "numerator": 1, "denumerator": 1},
