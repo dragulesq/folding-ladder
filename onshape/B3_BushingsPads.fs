@@ -92,8 +92,8 @@ export const b3BushingsAndPads = defineFeature(function(context is Context, id i
         b3FinishRubber(context, b3Solids(id + "stepPad"), "Step leg pad");
         b3Mc(context, id + "mcStepPad", b3Solids(id + "stepPad"), "Step leg pad", "Leg", stepPad);
 
-        // Rubber strip covering the step ledge's shelf.
-        const shelf = b3Rounded(b3Rect(0 * inch, 0 * inch, LEDGE_LEN, LEDGE_SHELF), [0, 0, LEDGE_SHELF_R, LEDGE_SHELF_R]);
+        // Rubber strip on the step ledge's shelf, from past the back wall's bend.
+        const shelf = b3Rounded(b3Rect(0 * inch, LEDGE_STRIP_Y0, LEDGE_LEN, LEDGE_SHELF), [0, 0, 0, LEDGE_SHELF_R]);
         b3PrismXY(context, id + "ledgeStrip", shelf, [], LEDGE_TOP_Z, LEDGE_TOP_Z + LEDGE_STRIP_T);
         b3FinishRubber(context, b3Solids(id + "ledgeStrip"), "Ledge strip");
         b3Mc(context, id + "mcLedgeStrip", b3Solids(id + "ledgeStrip"), "Ledge strip", "Ledge", b3LedgeStripJoint());

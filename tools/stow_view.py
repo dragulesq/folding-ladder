@@ -76,8 +76,8 @@ def parts(m):
                                    m.RAIL_FOOT_Z - m.RAIL_PAD_T, m.RAIL_FOOT_Z)))
     # Fixed to the cabinet: the step's ledge with its rubber strip, and the cabinet's step clip.
     out.append(("fixed", "cabinet", (0, m.LEDGE_LEN, 0, m.LEDGE_SHELF, m.LEDGE_TOP_Z - m.SHEET_T, m.LEDGE_TOP_Z)))
-    out.append(("fixed", "cabinet", (0, m.LEDGE_LEN, 0, m.SHEET_T, m.LEDGE_TOP_Z - m.LEDGE_LEG_H, m.LEDGE_TOP_Z)))
-    out.append(("rubber", "cabinet", (0, m.LEDGE_LEN, 0, m.LEDGE_SHELF, m.LEDGE_TOP_Z, m.LEDGE_TOP_Z + m.LEDGE_STRIP_T)))
+    out.append(("fixed", "cabinet", (0, m.LEDGE_LEN + m.SHEET_T, 0, m.SHEET_T, m.LEDGE_TOP_Z - m.SHEET_T, m.STOW_LO_Z1)))
+    out.append(("rubber", "cabinet", (0, m.LEDGE_LEN, m.LEDGE_STRIP_Y0, m.LEDGE_SHELF, m.LEDGE_TOP_Z, m.LEDGE_TOP_Z + m.LEDGE_STRIP_T)))
     xf, zc = 2 * m.GOING, m.CLIP_CAB_Z
     out.append(("fixed", "cabinet", (m.CLIP_X0, xf, 0, m.SHEET_T, zc - m.CLIP_MOUNT_H / 2, zc + m.CLIP_MOUNT_H / 2)))
     out.append(("fixed", "cabinet", (xf - m.SHEET_T, xf, 0, m.CLIP_KEY_LEG, zc - m.CLIP_KEY_H / 2, zc + m.CLIP_KEY_H / 2)))

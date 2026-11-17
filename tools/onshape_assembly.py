@@ -82,9 +82,9 @@ INSTANCES = {
     # Rubber.
     "Rail foot pad 1": "Rail foot pad", "Rail foot pad 2": "Rail foot pad", "Step leg pad 1": "Step leg pad", "Step leg pad 2": "Step leg pad",
     "Ledge strip": "Ledge strip", "Panel bumper 1": "Panel bumper", "Panel bumper 2": "Panel bumper",
-    # Travel locks on the panel: the stow bracket (lock shelf and upper hook), the plunger's jam nut
-    # and the lower hook.
-    "Stow bracket": "Stow bracket", "Plunger jam nut": "Plunger jam nut", "Stow hook, lower": "Stow hook, lower",
+    # Travel locks on the panel: the stow bracket (lock shelf and upper hook) and the plunger's jam
+    # nut. The lower hook is part of the step ledge.
+    "Stow bracket": "Stow bracket", "Plunger jam nut": "Plunger jam nut",
     # Stuck inside the rail's foot: presses on the stowed step once the stair is folded.
     "Step bumper": "Panel bumper",
     # On the leg locks' threads, inside each step leg's front ear.
@@ -183,7 +183,6 @@ HARDWARE += [
     (("Panel bumper 2", "Panel"), ("REF cabinet", "Bumper, middle tread")),
     (("Stow bracket", "Cabinet"), ("REF cabinet", "Stow bracket")),
     (("Plunger jam nut", "Ledge"), ("REF cabinet", "Plunger")),
-    (("Stow hook, lower", "Cabinet"), ("REF cabinet", "Stow hook, lower")),
     (("Step bumper", "Panel"), ("Outer rail", "Step bumper")),
     (("M6 jam nut 1", "Ear"), ("Hook-on step leg 1", "Lock")),
     (("M6 jam nut 2", "Ear"), ("Hook-on step leg 2", "Lock")),
@@ -359,7 +358,7 @@ def plan(state=None):
 
 STEP_BODIES = ("step", "cabinet-side leg", "outer leg")
 # The stowed step hinges on its lower pin in the lower hook plate, so it can be tipped in and out.
-STOW_HINGE = ("REVOLUTE", ("Tread 3", "Cabinet axle"), ("Stow hook, lower", "Pin"))
+STOW_HINGE = ("REVOLUTE", ("Tread 3", "Cabinet axle"), ("Step ledge", "Pin"))
 
 
 def stowed(instances):

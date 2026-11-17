@@ -41,7 +41,6 @@ export const b3Reference = defineFeature(function(context is Context, id is Id, 
         b3Mc(context, id + "mcLedge", cabinet, "REF cabinet", "Step ledge", b3StepLedgeJoint());
         b3Mc(context, id + "mcStowBracket", cabinet, "REF cabinet", "Stow bracket", b3StowBracketJoint());
         b3Mc(context, id + "mcPlunger", cabinet, "REF cabinet", "Plunger", b3LockPlungerJoint());
-        b3Mc(context, id + "mcStowLo", cabinet, "REF cabinet", "Stow hook, lower", b3StowHookJoint());
         b3Mc(context, id + "mcBumperTop", cabinet, "REF cabinet", "Bumper, top tread", b3BumperJoint(TREAD_TOP));
         b3Mc(context, id + "mcBumperMiddle", cabinet, "REF cabinet", "Bumper, middle tread", b3BumperJoint(TREAD_MIDDLE));
     });

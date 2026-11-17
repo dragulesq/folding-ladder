@@ -283,12 +283,12 @@ export const RAIL_PAD_X0 = [RAIL_FOOT_X, 2 * GOING - RAIL_PAD_L];  // back pad, 
 export const LEDGE_LEN = GOING;                    // x 0 to 5 3/4
 export const LEDGE_SHELF = 2.5 * inch;             // along y
 export const LEDGE_TOP_Z = (9 / 8) * inch;
-export const LEDGE_LEG_H = 1 * inch;
-export const LEDGE_SCREW_X = [GOING / 2 - 1.5 * inch, GOING / 2 + 1.5 * inch];
-export const LEDGE_SCREW_Z = 0.5 * inch;           // 1/2 rather than the page's 5/8 keeps the countersinks half a die width from the bend
-export const LEDGE_SCREW_DIA = SCREW_HOLE_DIA;     // M6 (countersink not modeled)
+export const LEDGE_SCREW_X = [0.75 * inch, 2.875 * inch, 5 * inch];   // three M6 through the back wall, behind the stowed step
+export const LEDGE_SCREW_Z = 2 * inch;             // above the shelf's bend, below the wall's top
+export const LEDGE_SCREW_DIA = SCREW_HOLE_DIA;     // M6 button heads
 export const LEDGE_SHELF_R = R_OUTSIDE_LARGE;      // the shelf's front corners, at ankle height
-export const LEDGE_LEG_R = R_OUTSIDE_SMALL;        // the back leg's bottom corners
+export const LEDGE_LEG_R = R_OUTSIDE_SMALL;        // the back wall's top corner at the bed end
+export const LEDGE_STRIP_Y0 = (1 / 4) * inch;      // the rubber strip starts past the back wall's bend
 export const LEDGE_STRIP_T = (1 / 8) * inch;       // rubber strip on the shelf; the folded step stands on it
 export const STOW_PANEL_GAP = (5 / 16) * inch;     // the folded step's back stands this far off the panel, so the folded rail's bumper presses on its face
 
@@ -352,7 +352,6 @@ export const STOW_PIN_LO_Y = STOW_TOP_Y - CAB_AXLE_DROP;           // lower pin:
 export const STOW_PIN_LO_Z = STOW_Z0 + CAB_AXLE_Y;                 // 1 13/16
 export const STOW_HOOK_X0 = GOING;                 // plates from here to GOING + SHEET_T, where the cabinet's step clip sits when the step is in use
 export const STOW_SLOT_DROP = (1 / 8) * inch;      // the lower slot's round end below the resting pin (the step stands on the ledge)
-export const STOW_HOOK_LEG = 1.5 * inch;           // lower hook's panel leg, along x behind the plate, toward the bed end
 export const STOW_BRACKET_Z0 = LOCK_SHELF_TOP_Z - LOCK_LEDGE_LEG;   // the stow bracket's bottom edge: 15.05
 export const STOW_UP_Z1 = 18.25 * inch;            // upper hook plate's top, under the middle tread's back lip as it folds (18.39)
 export const STOW_UP_D = 2.25 * inch;              // plate reach from the panel
@@ -362,12 +361,9 @@ export const STOW_SHELF_R = R_OUTSIDE_SMALL;       // the shelf's inside corner 
 export const STOW_BRACKET_SCREW_X = [STOW_NOTCH_X + (3 / 8) * inch, (STOW_NOTCH_X + LOCK_LEDGE_X0 + LOCK_LEDGE_W) / 2,
         LOCK_LEDGE_X0 + LOCK_LEDGE_W - (3 / 8) * inch];   // three M6 screws along the leg
 export const STOW_BRACKET_SCREW_Z = LOCK_SHELF_TOP_Z - (11 / 16) * inch;   // high on the leg, half a die width below the bend
-export const STOW_LO_Z0 = 1 * inch;                // lower hook
+export const STOW_LO_Z0 = LEDGE_TOP_Z - SHEET_T;    // lower hook plate, bent off the front end of the step ledge's back wall: from the shelf's underside, 1
 export const STOW_LO_Z1 = (21 / 8) * inch;
 export const STOW_LO_D = 2.5 * inch;
-export const STOW_LO_LEG_Z0 = LEDGE_TOP_Z + LEDGE_STRIP_T + (1 / 16) * inch;   // the panel leg's bottom edge, over the ledge's rubber strip: 1 5/16
-export const STOW_LO_SCREW_X = [STOW_HOOK_X0 - 1.125 * inch, STOW_HOOK_X0 - 0.5 * inch];   // behind the plate, under the stowed step's back
-export const STOW_LO_SCREW_Z = (STOW_LO_LEG_Z0 + STOW_LO_Z1) / 2;
 export const STOW_SCREW_DIA = SCREW_HOLE_DIA;      // M6, as everywhere but the plunger
 // Step bumper: a panel bumper stuck on the rail's inner face, on the back inch
 // of the foot. Folded, it presses on the stowed step's face.
@@ -570,12 +566,6 @@ export function b3LockPlungerJoint() returns map
     return b3Joint(vector(LOCK_X, LOCK_FOLD_Y, LOCK_BLOCK_TOP_Z), vector(0, 0, 1), vector(1, 0, 0));
 }
 
-// The stowed step's lower hook plate on the panel: the plate's bottom corner at the panel.
-export function b3StowHookJoint() returns map
-{
-    return b3PanelJoint(STOW_HOOK_X0, STOW_LO_Z0);
-}
-
 // The stowed step's lower pin in the lower hook's slot, as the step's own cabinet
 // axle connector sits there: the hinge the step tips in and out on.
 export function b3StowPinJoint() returns map
@@ -618,10 +608,10 @@ export function b3SlottedPlate(d is ValueWithUnits, z0 is ValueWithUnits, z1 is 
         ];
 }
 
-// Step ledge on the panel: the leg's bottom corner at the bed end.
+// Step ledge on the panel: the back wall's bottom corner at the bed end.
 export function b3StepLedgeJoint() returns map
 {
-    return b3PanelJoint(0 * inch, LEDGE_TOP_Z - LEDGE_LEG_H);
+    return b3PanelJoint(0 * inch, LEDGE_TOP_Z - SHEET_T);
 }
 
 // Tread n's stop pins, on the bracket ear's inside face, z along the pin.
@@ -1193,7 +1183,6 @@ export const b3Reference = defineFeature(function(context is Context, id is Id, 
         b3Mc(context, id + "mcLedge", cabinet, "REF cabinet", "Step ledge", b3StepLedgeJoint());
         b3Mc(context, id + "mcStowBracket", cabinet, "REF cabinet", "Stow bracket", b3StowBracketJoint());
         b3Mc(context, id + "mcPlunger", cabinet, "REF cabinet", "Plunger", b3LockPlungerJoint());
-        b3Mc(context, id + "mcStowLo", cabinet, "REF cabinet", "Stow hook, lower", b3StowHookJoint());
         b3Mc(context, id + "mcBumperTop", cabinet, "REF cabinet", "Bumper, top tread", b3BumperJoint(TREAD_TOP));
         b3Mc(context, id + "mcBumperMiddle", cabinet, "REF cabinet", "Bumper, middle tread", b3BumperJoint(TREAD_MIDDLE));
     });
@@ -1706,8 +1695,8 @@ export const b3BushingsAndPads = defineFeature(function(context is Context, id i
         b3FinishRubber(context, b3Solids(id + "stepPad"), "Step leg pad");
         b3Mc(context, id + "mcStepPad", b3Solids(id + "stepPad"), "Step leg pad", "Leg", stepPad);
 
-        // Rubber strip covering the step ledge's shelf.
-        const shelf = b3Rounded(b3Rect(0 * inch, 0 * inch, LEDGE_LEN, LEDGE_SHELF), [0, 0, LEDGE_SHELF_R, LEDGE_SHELF_R]);
+        // Rubber strip on the step ledge's shelf, from past the back wall's bend.
+        const shelf = b3Rounded(b3Rect(0 * inch, LEDGE_STRIP_Y0, LEDGE_LEN, LEDGE_SHELF), [0, 0, 0, LEDGE_SHELF_R]);
         b3PrismXY(context, id + "ledgeStrip", shelf, [], LEDGE_TOP_Z, LEDGE_TOP_Z + LEDGE_STRIP_T);
         b3FinishRubber(context, b3Solids(id + "ledgeStrip"), "Ledge strip");
         b3Mc(context, id + "mcLedgeStrip", b3Solids(id + "ledgeStrip"), "Ledge strip", "Ledge", b3LedgeStripJoint());
@@ -1739,11 +1728,16 @@ function b3Bushing(context is Context, id is Id, y is ValueWithUnits, z is Value
 // B3_StepLedge.fs
 // ===========================================================================
 /*
- * B3 Step Ledge, 1/8" sheet-metal part: 6" angle on the panel at the bed
- * end. The folded hook-on step stands on end on its 2 1/2" shelf. Two #8
- * screws through the back leg (countersinks not modeled). The shelf's front
- * corners, at ankle height, are rounded 1/2"; the back leg's bottom corners
- * 1/4".
+ * B3 Step Ledge, 1/8" sheet-metal part with two bends, on the panel at the
+ * bed end: the ledge the folded hook-on step stands on and the lower stow
+ * hook in one. Its base is the back wall on the panel, 5 7/8 long, from the
+ * shelf's underside up to 2 5/8, with three M6 button-head screws behind the
+ * stowed step. The 2 1/2" shelf is bent out along the wall's bottom edge. The
+ * hook plate is bent out along the wall's front end; its open-top slot takes
+ * the stowed step's lower pin. Nothing of the part is below the shelf or in
+ * front of the hook plate. Where the shelf's end meets the plate, Onshape
+ * cuts a round corner relief. The shelf's free corner, at ankle height, is
+ * rounded 1/2".
  */
 annotation { "Feature Type Name" : "B3 Step Ledge" }
 export const b3StepLedge = defineFeature(function(context is Context, id is Id, definition is map)
@@ -1752,28 +1746,37 @@ export const b3StepLedge = defineFeature(function(context is Context, id is Id, 
     }
     {
         const top = LEDGE_TOP_Z;
-        const shelf = b3Rounded(b3Rect(0 * inch, 0 * inch, LEDGE_LEN, LEDGE_SHELF), [0, 0, LEDGE_SHELF_R, LEDGE_SHELF_R]);
-        b3PrismXY(context, id + "shelf", shelf, [], top - SHEET_T, top);
+        const z0 = top - SHEET_T;
+        const z1 = STOW_LO_Z1;
+        const hx0 = STOW_HOOK_X0;
+        const hx1 = STOW_HOOK_X0 + SHEET_T;
 
         var screws = [];
         for (var i = 0; i < size(LEDGE_SCREW_X); i += 1)
         {
             screws = append(screws, b3Hole(LEDGE_SCREW_X[i], LEDGE_SCREW_Z, LEDGE_SCREW_DIA));
         }
-        const leg = b3Rounded(b3Rect(0 * inch, top - LEDGE_LEG_H, LEDGE_LEN, top), [LEDGE_LEG_R, LEDGE_LEG_R, 0, 0]);
-        b3PrismXZ(context, id + "leg", leg, screws, 0 * inch, SHEET_T);
+        // Back wall on the panel.
+        b3PrismXZ(context, id + "wall", b3Rounded(b3Rect(0 * inch, z0, hx1, z1), [0, 0, 0, LEDGE_LEG_R]), screws, 0 * inch, SHEET_T);
+        // Shelf, up to the hook plate.
+        b3PrismXY(context, id + "shelf", b3Rounded(b3Rect(0 * inch, 0 * inch, LEDGE_LEN, LEDGE_SHELF), [0, 0, 0, LEDGE_SHELF_R]), [], z0, top);
+        // Hook plate, its slot's round end a little below the resting pin.
+        b3PrismYZ(context, id + "plate", b3SlottedPlate(STOW_LO_D, z0, z1, STOW_PIN_LO_Y, STOW_PIN_LO_Z - STOW_SLOT_DROP), [], hx0, hx1);
         b3Union(context, id + "join", b3Solids(id));
 
-        // Sheet metal: the back leg's face on the panel, then the shelf's top.
+        // Sheet metal: the wall's face on the panel, then the shelf's underside and the
+        // plate's face toward the cabinet front.
         b3SheetMetal(context, id + "sm", b3Solids(id), [
-                    vector(LEDGE_LEN / 2, 0 * inch, LEDGE_SCREW_Z),
-                    vector(LEDGE_LEN / 2, LEDGE_SHELF / 2, top)
+                    vector(2 * inch, 0 * inch, z0 + 0.6 * inch),
+                    vector(2 * inch, LEDGE_SHELF / 2, z0),
+                    vector(hx1, 0.75 * inch, z0 + 0.5 * inch)
                 ], SHEET_T, BEND_R_SHEET, K_SHEET);
 
         const body = b3Solids(id);
         b3Finish(context, body, "Step ledge", RGB_ALU_DARK);
         b3Mc(context, id + "mcCabinet", body, "Step ledge", "Cabinet", b3StepLedgeJoint());
         b3Mc(context, id + "mcStrip", body, "Step ledge", "Rubber strip", b3LedgeStripJoint());
+        b3Mc(context, id + "mcPin", body, "Step ledge", "Pin", b3StowPinJoint());
     });
 
 // ===========================================================================
@@ -1893,11 +1896,7 @@ function b3StepLeg(context is Context, id is Id, name is string, pivotZ is Value
  *   flange.
  *   Plunger jam nut (1): M10 thin jam nut on the shelf; a regular nut under
  *   the shelf clamps the plunger in its plain hole.
- *   Stow hook, lower (1): 1/8" sheet-metal angle, one bend. Its plate takes
- *   the stowed step's lower pin in an open-top slot. Its panel leg runs back
- *   from the plate toward the bed end, behind the stowed step and above the
- *   ledge's rubber strip, with two M6 screws; nothing of it is in front of
- *   the plate, where the heater's outlet is.
+ * The lower hook, for the stowed step's lower pin, is part of the step ledge.
  * Not modeled: the M6 screws and the regular nut under the shelf.
  */
 annotation { "Feature Type Name" : "B3 Stow Locks" }
@@ -1954,29 +1953,4 @@ export const b3StowLocks = defineFeature(function(context is Context, id is Id, 
         b3Subtract(context, id + "nutCut", b3Solids(id + "nut"), b3Solids(id + "nutBore"));
         b3FinishSteel(context, b3Solids(id + "nut"), "Plunger jam nut");
         b3Mc(context, id + "mcNut", b3Solids(id + "nut"), "Plunger jam nut", "Ledge", b3LockPlungerJoint());
-
-        // Lower hook: panel leg (base) behind the plate, toward the bed end, and the slotted
-        // plate bent out at its front end. The leg sits above the ledge's rubber strip; the
-        // plate runs on down past the ledge's end, so the bend has a relief at its bottom.
-        const lz0 = STOW_LO_Z0;
-        const lz1 = STOW_LO_Z1;
-        const lzl = STOW_LO_LEG_Z0;
-        b3PrismYZ(context, id + "hookLo" + "plate", b3SlottedPlate(STOW_LO_D, lz0, lz1, STOW_PIN_LO_Y, STOW_PIN_LO_Z - STOW_SLOT_DROP),
-            [], hx0, hx1);
-        b3PrismXZ(context, id + "hookLo" + "leg", b3Rounded(b3Rect(hx0 - STOW_HOOK_LEG, lzl, hx1, lz1), [sr, 0, 0, sr]),
-            [b3Hole(STOW_LO_SCREW_X[0], STOW_LO_SCREW_Z, STOW_SCREW_DIA), b3Hole(STOW_LO_SCREW_X[1], STOW_LO_SCREW_Z, STOW_SCREW_DIA)],
-            0 * inch, SHEET_T);
-        b3Union(context, id + "hookLo" + "join", b3Solids(id + "hookLo"));
-        b3PrismYZ(context, id + "hookLo" + "relief", b3ReliefPath(vector(0 * inch, lzl), vector(0, -1), vector(1, 0), SHEET_T, BEND_R_SHEET, K_SHEET,
-                lzl - lz0 + 0.05 * inch), [], hx0 - 0.05 * inch, hx1 + 0.05 * inch);
-        const relief = b3Solids(id + "hookLo" + "relief");
-        b3Subtract(context, id + "hookLo" + "cutRelief", qSubtraction(b3Solids(id + "hookLo"), relief), relief);
-        // Sheet metal: the leg's face on the panel, then the plate's face toward the cabinet front.
-        b3SheetMetal(context, id + "hookLo" + "sm", b3Solids(id + "hookLo"), [
-                    vector(hx0 - STOW_HOOK_LEG / 2, 0 * inch, lzl + 0.25 * inch),
-                    vector(hx1, 0.75 * inch, lzl + 0.25 * inch)
-                ], SHEET_T, BEND_R_SHEET, K_SHEET);
-        b3Finish(context, b3Solids(id + "hookLo"), "Stow hook, lower", RGB_ALU_DARK);
-        b3Mc(context, id + "mcHookLo", b3Solids(id + "hookLo"), "Stow hook, lower", "Cabinet", b3StowHookJoint());
-        b3Mc(context, id + "mcHookPin", b3Solids(id + "hookLo"), "Stow hook, lower", "Pin", b3StowPinJoint());
     });

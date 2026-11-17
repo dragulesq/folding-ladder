@@ -110,15 +110,16 @@ def checks(m):
     out.append(("Hook plate's height after its bend", m.STOW_UP_Z1 - (m.LOCK_SHELF_TOP_Z - m.SHEET_T), 0.476, "SendCutSend's least flange"))
     out.append(("Metal behind the upper slot's round end", m.STOW_PIN_UP_Y - m.KEYHOLE_SLOT_W / 2 - m.STOW_UP_Y0, 0.3, "ties the plate's top prong to the bottom one"))
     out.append(("Metal above the upper slot", m.STOW_UP_Z1 - (m.STOW_PIN_UP_Z + m.KEYHOLE_SLOT_W / 2), 0.3, ""))
-    out.append(("Lower hook's screw holes clear of its bend", (m.STOW_HOOK_X0 + m.SHEET_T - line) - (m.STOW_LO_SCREW_X[1] + m.STOW_SCREW_DIA / 2) - die, 0,
-                "the leg runs back from the plate, toward the bed end"))
-    out.append(("Lower hook's screws inside its leg's edges", min(m.STOW_LO_SCREW_X[0] - (m.STOW_HOOK_X0 - m.STOW_HOOK_LEG),
-                                                                 (m.STOW_LO_Z1 - m.STOW_LO_LEG_Z0) / 2) - m.STOW_SCREW_DIA / 2, 0.2, ""))
-    out.append(("Lower hook's leg above the ledge's rubber strip", m.STOW_LO_LEG_Z0 - (m.LEDGE_TOP_Z + m.LEDGE_STRIP_T), 0.03, ""))
-    out.append(("Lower hook's leg after its bend", m.STOW_HOOK_LEG + m.SHEET_T, 0.476, "SendCutSend's least flange"))
-    out.append(("Stowed step's back clear of the lower hook's screw heads", m.STOW_PANEL_GAP - m.SHEET_T - 3.3 / MM, 0.03,
-                "M6 button heads, 3.3 mm tall, on the leg behind the step"))
-    out.append(("Lower hook's relief short of its slot", (m.STOW_PIN_LO_Y - m.KEYHOLE_SLOT_W / 2) - (line + m.BEND_R_SHEET + m.SHEET_T + m.RELIEF_EXTRA), 0.3, ""))
+    # The step ledge's back wall: three M6 behind the stowed step, between the shelf's bend and the hook plate's.
+    xs = m.LEDGE_SCREW_X
+    out.append(("Ledge's screw holes clear of the hook plate's bend", (m.STOW_HOOK_X0 + m.SHEET_T - line) - (xs[-1] + m.LEDGE_SCREW_DIA / 2) - die, 0, ""))
+    out.append(("Ledge's screw holes clear of the shelf's bend", (m.LEDGE_SCREW_Z - m.LEDGE_SCREW_DIA / 2) - (m.STOW_LO_Z0 + line) - die, 0, ""))
+    out.append(("Ledge's screws inside the wall's edges", min(xs[0], m.STOW_LO_Z1 - m.LEDGE_SCREW_Z) - m.LEDGE_SCREW_DIA / 2, 0.2, ""))
+    out.append(("Ledge's wall and hook plate after their bends", min(m.STOW_LO_Z1 - m.STOW_LO_Z0, m.STOW_LO_D), 0.476, "SendCutSend's least flange"))
+    head = m.SHEET_T + 3.3 / MM
+    out.append(("Stowed step's legs clear of the ledge's screw heads", m.STOW_PANEL_GAP - head, 0.03, "M6 button heads, 3.3 mm tall; the legs' back stands 5/16 off the panel, higher up"))
+    out.append(("Stowed step's tray clear of the ledge's screw heads", m.stow_top_y() - m.LIP - head, 0.125, "the tray's lips stand on the ledge, in front of the heads"))
+    out.append(("Rubber strip past the wall's bend and under the stowed step", min(m.LEDGE_STRIP_Y0 - (m.SHEET_T + m.BEND_R_SHEET), m.TRAY_Y0 - m.LEDGE_STRIP_Y0), 0, ""))
     out.append(("Metal around the lower slot", min(m.STOW_LO_D - (m.STOW_PIN_LO_Y + m.KEYHOLE_SLOT_W / 2),
                                                  m.STOW_PIN_LO_Z - m.STOW_SLOT_DROP - m.KEYHOLE_SLOT_W / 2 - m.STOW_LO_Z0), 0.3, ""))
     out.append(("Shelf behind the hook plate under the middle bracket and the upper pin's washer",

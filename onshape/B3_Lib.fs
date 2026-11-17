@@ -199,12 +199,6 @@ export function b3LockPlungerJoint() returns map
     return b3Joint(vector(LOCK_X, LOCK_FOLD_Y, LOCK_BLOCK_TOP_Z), vector(0, 0, 1), vector(1, 0, 0));
 }
 
-// The stowed step's lower hook plate on the panel: the plate's bottom corner at the panel.
-export function b3StowHookJoint() returns map
-{
-    return b3PanelJoint(STOW_HOOK_X0, STOW_LO_Z0);
-}
-
 // The stowed step's lower pin in the lower hook's slot, as the step's own cabinet
 // axle connector sits there: the hinge the step tips in and out on.
 export function b3StowPinJoint() returns map
@@ -247,10 +241,10 @@ export function b3SlottedPlate(d is ValueWithUnits, z0 is ValueWithUnits, z1 is 
         ];
 }
 
-// Step ledge on the panel: the leg's bottom corner at the bed end.
+// Step ledge on the panel: the back wall's bottom corner at the bed end.
 export function b3StepLedgeJoint() returns map
 {
-    return b3PanelJoint(0 * inch, LEDGE_TOP_Z - LEDGE_LEG_H);
+    return b3PanelJoint(0 * inch, LEDGE_TOP_Z - SHEET_T);
 }
 
 // Tread n's stop pins, on the bracket ear's inside face, z along the pin.

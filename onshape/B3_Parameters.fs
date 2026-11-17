@@ -276,12 +276,12 @@ export const RAIL_PAD_X0 = [RAIL_FOOT_X, 2 * GOING - RAIL_PAD_L];  // back pad, 
 export const LEDGE_LEN = GOING;                    // x 0 to 5 3/4
 export const LEDGE_SHELF = 2.5 * inch;             // along y
 export const LEDGE_TOP_Z = (9 / 8) * inch;
-export const LEDGE_LEG_H = 1 * inch;
-export const LEDGE_SCREW_X = [GOING / 2 - 1.5 * inch, GOING / 2 + 1.5 * inch];
-export const LEDGE_SCREW_Z = 0.5 * inch;           // 1/2 rather than the page's 5/8 keeps the countersinks half a die width from the bend
-export const LEDGE_SCREW_DIA = SCREW_HOLE_DIA;     // M6 (countersink not modeled)
+export const LEDGE_SCREW_X = [0.75 * inch, 2.875 * inch, 5 * inch];   // three M6 through the back wall, behind the stowed step
+export const LEDGE_SCREW_Z = 2 * inch;             // above the shelf's bend, below the wall's top
+export const LEDGE_SCREW_DIA = SCREW_HOLE_DIA;     // M6 button heads
 export const LEDGE_SHELF_R = R_OUTSIDE_LARGE;      // the shelf's front corners, at ankle height
-export const LEDGE_LEG_R = R_OUTSIDE_SMALL;        // the back leg's bottom corners
+export const LEDGE_LEG_R = R_OUTSIDE_SMALL;        // the back wall's top corner at the bed end
+export const LEDGE_STRIP_Y0 = (1 / 4) * inch;      // the rubber strip starts past the back wall's bend
 export const LEDGE_STRIP_T = (1 / 8) * inch;       // rubber strip on the shelf; the folded step stands on it
 export const STOW_PANEL_GAP = (5 / 16) * inch;     // the folded step's back stands this far off the panel, so the folded rail's bumper presses on its face
 
@@ -345,7 +345,6 @@ export const STOW_PIN_LO_Y = STOW_TOP_Y - CAB_AXLE_DROP;           // lower pin:
 export const STOW_PIN_LO_Z = STOW_Z0 + CAB_AXLE_Y;                 // 1 13/16
 export const STOW_HOOK_X0 = GOING;                 // plates from here to GOING + SHEET_T, where the cabinet's step clip sits when the step is in use
 export const STOW_SLOT_DROP = (1 / 8) * inch;      // the lower slot's round end below the resting pin (the step stands on the ledge)
-export const STOW_HOOK_LEG = 1.5 * inch;           // lower hook's panel leg, along x behind the plate, toward the bed end
 export const STOW_BRACKET_Z0 = LOCK_SHELF_TOP_Z - LOCK_LEDGE_LEG;   // the stow bracket's bottom edge: 15.05
 export const STOW_UP_Z1 = 18.25 * inch;            // upper hook plate's top, under the middle tread's back lip as it folds (18.39)
 export const STOW_UP_D = 2.25 * inch;              // plate reach from the panel
@@ -355,12 +354,9 @@ export const STOW_SHELF_R = R_OUTSIDE_SMALL;       // the shelf's inside corner 
 export const STOW_BRACKET_SCREW_X = [STOW_NOTCH_X + (3 / 8) * inch, (STOW_NOTCH_X + LOCK_LEDGE_X0 + LOCK_LEDGE_W) / 2,
         LOCK_LEDGE_X0 + LOCK_LEDGE_W - (3 / 8) * inch];   // three M6 screws along the leg
 export const STOW_BRACKET_SCREW_Z = LOCK_SHELF_TOP_Z - (11 / 16) * inch;   // high on the leg, half a die width below the bend
-export const STOW_LO_Z0 = 1 * inch;                // lower hook
+export const STOW_LO_Z0 = LEDGE_TOP_Z - SHEET_T;    // lower hook plate, bent off the front end of the step ledge's back wall: from the shelf's underside, 1
 export const STOW_LO_Z1 = (21 / 8) * inch;
 export const STOW_LO_D = 2.5 * inch;
-export const STOW_LO_LEG_Z0 = LEDGE_TOP_Z + LEDGE_STRIP_T + (1 / 16) * inch;   // the panel leg's bottom edge, over the ledge's rubber strip: 1 5/16
-export const STOW_LO_SCREW_X = [STOW_HOOK_X0 - 1.125 * inch, STOW_HOOK_X0 - 0.5 * inch];   // behind the plate, under the stowed step's back
-export const STOW_LO_SCREW_Z = (STOW_LO_LEG_Z0 + STOW_LO_Z1) / 2;
 export const STOW_SCREW_DIA = SCREW_HOLE_DIA;      // M6, as everywhere but the plunger
 // Step bumper: a panel bumper stuck on the rail's inner face, on the back inch
 // of the foot. Folded, it presses on the stowed step's face.

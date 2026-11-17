@@ -20,11 +20,7 @@ import(path : "onshape/std/common.fs", version : "2641.0");
  *   flange.
  *   Plunger jam nut (1): M10 thin jam nut on the shelf; a regular nut under
  *   the shelf clamps the plunger in its plain hole.
- *   Stow hook, lower (1): 1/8" sheet-metal angle, one bend. Its plate takes
- *   the stowed step's lower pin in an open-top slot. Its panel leg runs back
- *   from the plate toward the bed end, behind the stowed step and above the
- *   ledge's rubber strip, with two M6 screws; nothing of it is in front of
- *   the plate, where the heater's outlet is.
+ * The lower hook, for the stowed step's lower pin, is part of the step ledge.
  * Not modeled: the M6 screws and the regular nut under the shelf.
  */
 annotation { "Feature Type Name" : "B3 Stow Locks" }
@@ -81,29 +77,4 @@ export const b3StowLocks = defineFeature(function(context is Context, id is Id, 
         b3Subtract(context, id + "nutCut", b3Solids(id + "nut"), b3Solids(id + "nutBore"));
         b3FinishSteel(context, b3Solids(id + "nut"), "Plunger jam nut");
         b3Mc(context, id + "mcNut", b3Solids(id + "nut"), "Plunger jam nut", "Ledge", b3LockPlungerJoint());
-
-        // Lower hook: panel leg (base) behind the plate, toward the bed end, and the slotted
-        // plate bent out at its front end. The leg sits above the ledge's rubber strip; the
-        // plate runs on down past the ledge's end, so the bend has a relief at its bottom.
-        const lz0 = STOW_LO_Z0;
-        const lz1 = STOW_LO_Z1;
-        const lzl = STOW_LO_LEG_Z0;
-        b3PrismYZ(context, id + "hookLo" + "plate", b3SlottedPlate(STOW_LO_D, lz0, lz1, STOW_PIN_LO_Y, STOW_PIN_LO_Z - STOW_SLOT_DROP),
-            [], hx0, hx1);
-        b3PrismXZ(context, id + "hookLo" + "leg", b3Rounded(b3Rect(hx0 - STOW_HOOK_LEG, lzl, hx1, lz1), [sr, 0, 0, sr]),
-            [b3Hole(STOW_LO_SCREW_X[0], STOW_LO_SCREW_Z, STOW_SCREW_DIA), b3Hole(STOW_LO_SCREW_X[1], STOW_LO_SCREW_Z, STOW_SCREW_DIA)],
-            0 * inch, SHEET_T);
-        b3Union(context, id + "hookLo" + "join", b3Solids(id + "hookLo"));
-        b3PrismYZ(context, id + "hookLo" + "relief", b3ReliefPath(vector(0 * inch, lzl), vector(0, -1), vector(1, 0), SHEET_T, BEND_R_SHEET, K_SHEET,
-                lzl - lz0 + 0.05 * inch), [], hx0 - 0.05 * inch, hx1 + 0.05 * inch);
-        const relief = b3Solids(id + "hookLo" + "relief");
-        b3Subtract(context, id + "hookLo" + "cutRelief", qSubtraction(b3Solids(id + "hookLo"), relief), relief);
-        // Sheet metal: the leg's face on the panel, then the plate's face toward the cabinet front.
-        b3SheetMetal(context, id + "hookLo" + "sm", b3Solids(id + "hookLo"), [
-                    vector(hx0 - STOW_HOOK_LEG / 2, 0 * inch, lzl + 0.25 * inch),
-                    vector(hx1, 0.75 * inch, lzl + 0.25 * inch)
-                ], SHEET_T, BEND_R_SHEET, K_SHEET);
-        b3Finish(context, b3Solids(id + "hookLo"), "Stow hook, lower", RGB_ALU_DARK);
-        b3Mc(context, id + "mcHookLo", b3Solids(id + "hookLo"), "Stow hook, lower", "Cabinet", b3StowHookJoint());
-        b3Mc(context, id + "mcHookPin", b3Solids(id + "hookLo"), "Stow hook, lower", "Pin", b3StowPinJoint());
     });
