@@ -3,7 +3,7 @@
 
   python3 tools/flat_drawings.py "Step clip" ["Stow bracket" ...]
 
-Each drawing ("Drawing: <part>") is in inches, has no border or title block and holds one
+Each drawing ("Drawing: <part> (in)") is in inches, has no border or title block and holds one
 view of the part's flat pattern in "B3 test Part Studio", from the top at 1:1,
 with tangent lines off (the view only drops them when it is also
 set to quality rendering). It follows the model like any drawing. The API cannot
@@ -36,7 +36,7 @@ def main():
         api, ps = st.api, st.data["part_studios"]["parts"]
         flats = {p["name"]: p["partId"] for p in api("GET", f"/parts{api.dw}/e/{ps['id']}?includeFlatParts=true") if p.get("isFlattenedBody")}
         for name in sys.argv[1:]:
-            d = api("POST", f"/drawings{api.dw}/create", {"drawingName": f"Drawing: {name}", "elementId": ps["id"], "partId": flats[name],
+            d = api("POST", f"/drawings{api.dw}/create", {"drawingName": f"Drawing: {name} (in)", "elementId": ps["id"], "partId": flats[name],
                                                           "views": "zero", "border": False, "titleblock": False,
                                                           # Without units a drawing made through the API exports in meters.
                                                           "units": "INCH", "isFlattenedPart": True, "referenceType": 4})
@@ -46,7 +46,7 @@ def main():
                                                     "reference": {"elementId": ps["id"], "idTag": flats[name]}}]})
             modify(api, d["id"], {"messageName": "onshapeEditViews", "formatVersion": "2021-01-01", "description": "Hide tangent lines",
                                   "views": [{"viewId": view["viewId"], "showTangentLines": False, "showHiddenLines": False, "renderMode": "quality"}]})
-            print(f"created Drawing: {name} ({d['id']})")
+            print(f"created Drawing: {name} (in) ({d['id']})")
     finally:
         st.close()
 
