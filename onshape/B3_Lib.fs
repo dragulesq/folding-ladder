@@ -300,6 +300,22 @@ export function b3StepLegLowerJoint() returns map
     return b3AxleJoint(b3GoingX(HOOK_STEP) + TREAD_AXLE_X0, CAB_AXLE_Y, b3T(HOOK_STEP) - OUT_AXLE_DROP);
 }
 
+// The leg locks: each plunger threads into its leg's front ear, thread end flush
+// with the ear's outer face (the origin), z along the nose toward the tray's
+// lip and x along the plunger's handle. On the cabinet-side leg it sits at the
+// lower hole, handle down the leg.
+export function b3LegLockJoint() returns map
+{
+    return b3Joint(vector(b3EarFaces(HOOK_STEP)[1], CAB_AXLE_Y, b3T(HOOK_STEP) - OUT_AXLE_DROP), vector(1, 0, 0), vector(0, 0, -1));
+}
+
+// On the outer leg, as built at the cabinet-side leg's place: the upper hole of
+// the ear that faces the front once the leg is turned, handle toward the ear's tip.
+export function b3OuterLegLockJoint() returns map
+{
+    return b3Joint(vector(b3EarFaces(HOOK_STEP)[0], CAB_AXLE_Y, b3T(HOOK_STEP) - CAB_AXLE_DROP), vector(-1, 0, 0), vector(0, 1, 0));
+}
+
 // A lip bushing is built in the top tread's back lip. In a step leg's ear it
 // sits EAR_X0 - TRAY_INSET further along the axle, so this connector is that
 // far back from the axle's tip: mated to a leg's axle connector, the bushing

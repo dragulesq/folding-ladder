@@ -62,8 +62,8 @@ INSTANCES = {
     # Step clip 1 on the cabinet's front post, step clip 2 the same part upside down inside the rail.
     "Outer rail": "Outer rail", "Step clip 1": "Step clip", "Step clip 2": "Step clip",
     "Step ledge": "Step ledge",
-    # Leg 1 on the cabinet side, leg 2 the same part turned to face it.
-    "Hook-on step leg 1": "Hook-on step leg", "Hook-on step leg 2": "Hook-on step leg",
+    # Leg 1 on the cabinet side, leg 2 (the same outline, holes swapped) turned to face it.
+    "Hook-on step leg 1": "Hook-on step leg", "Hook-on step leg 2": "Hook-on step leg, outer",
     **AXLES,
     **{f"Stop pin {i}": "Stop pin" for i in range(1, 5)},
     **{f"M6 fender washer {i}": "M6 fender washer" for i in range(1, 13)},
@@ -87,6 +87,8 @@ INSTANCES = {
     "Stow bracket": "Stow bracket", "Plunger jam nut": "Plunger jam nut", "Stow hook, lower": "Stow hook, lower",
     # Stuck inside the rail's foot: presses on the stowed step once the stair is folded.
     "Step bumper": "Panel bumper",
+    # On the leg locks' threads, inside each step leg's front ear.
+    "M6 jam nut 1": "M6 jam nut", "M6 jam nut 2": "M6 jam nut",
 }
 
 # Mates between the main parts: (type, (instance, its mate connector), (instance it goes on, that one's
@@ -183,6 +185,8 @@ HARDWARE += [
     (("Plunger jam nut", "Ledge"), ("REF cabinet", "Plunger")),
     (("Stow hook, lower", "Cabinet"), ("REF cabinet", "Stow hook, lower")),
     (("Step bumper", "Panel"), ("Outer rail", "Step bumper")),
+    (("M6 jam nut 1", "Ear"), ("Hook-on step leg 1", "Lock")),
+    (("M6 jam nut 2", "Ear"), ("Hook-on step leg 2", "Lock")),
 ]
 
 # Bought parts imported into the document (McMaster's models), used in place of the modeled ones:
@@ -209,6 +213,8 @@ EXTRA = {}
 # Each goes where the import's frame meets that connector, and moves with that part.
 ADDS = [
     ("Spring plunger", "8501A58", "REF cabinet", "Plunger"),
+    ("Leg lock plunger 1", "8501A54", "Hook-on step leg 1", "Lock"),
+    ("Leg lock plunger 2", "8501A54", "Hook-on step leg 2", "Lock"),
 ]
 
 

@@ -126,6 +126,16 @@ class Model:
         return self.joint((self.going_x(HOOK_STEP) + self.GOING / 2, self.STEP_LEG_Y0 + self.STEP_LEG_FLANGE / 2,
                            self.STEP_LEG_BOTTOM_Z), (0, 0, -1), (1, 0, 0))
 
+    def leg_lock(self):
+        """The cabinet-side leg's plunger: thread end on the front ear's outer face, z along the nose."""
+        return self.joint((self.going_x(HOOK_STEP) + self.GOING - self.EAR_X0, self.CAB_AXLE_Y, self.T(HOOK_STEP) - self.OUT_AXLE_DROP),
+                          (1, 0, 0), (0, 0, -1))
+
+    def outer_leg_lock(self):
+        """The outer leg's plunger, on the leg as built at the cabinet-side leg's place."""
+        return self.joint((self.going_x(HOOK_STEP) + self.EAR_X0, self.CAB_AXLE_Y, self.T(HOOK_STEP) - self.CAB_AXLE_DROP),
+                          (-1, 0, 0), (0, 1, 0))
+
     def bumper(self, n):
         return self.panel_joint(self.going_x(n) + self.GOING / 2, self.T(n) - self.CAB_AXLE_DROP + self.BUMPER_UP)
 
@@ -186,6 +196,9 @@ class Model:
             ("Hook-on step leg", "Lower axle"): self.axle_joint(self.going_x(step) + self.TREAD_AXLE_X0, self.CAB_AXLE_Y,
                                                                self.T(step) - self.OUT_AXLE_DROP),
             ("Hook-on step leg", "Foot pad"): self.step_pad(),
+            ("Hook-on step leg", "Lock"): self.leg_lock(),
+            ("Hook-on step leg, outer", "Lock"): self.outer_leg_lock(),
+            ("M6 jam nut", "Ear"): self.leg_lock(),
             ("Lip bushing", "Axle"): axle,
             ("Lip bushing", "Leg ear"): self.axle_joint(p[0] - (self.EAR_X0 - self.TRAY_INSET), p[1], p[2]),
             ("Ear bushing", "Axle"): axle,
@@ -197,6 +210,8 @@ class Model:
             ("Ledge strip", "Ledge"): self.joint((0, 0, self.LEDGE_TOP_Z), (0, 0, 1), (1, 0, 0)),
             ("Panel bumper", "Panel"): self.bumper(top),
         }
+        for name in ("Axle", "Axle, turned", "Axle, front", "Lower axle", "Foot pad"):
+            c[("Hook-on step leg, outer", name)] = c[("Hook-on step leg", name)]
         for k in range(len(self.SCREW_X)):
             c[("Bracket", f"Screw {k + 1}")] = self.bracket_screw(top, k)
             c[("Outer rail", f"Nut, top {k + 1}")] = self.rail_nut(top, k)

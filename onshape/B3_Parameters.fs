@@ -307,6 +307,15 @@ export const STEP_LEG_FLANGE = (5 / 8) * inch;     // side and foot flanges, out
 export const STEP_LEG_EAR = (17 / 16) * inch;      // ears, out from the web's outer face
 export const STEP_LEG_EAR_Z = (133 / 16) * inch;   // 8 5/16, where each side flange widens into its ear
 export const STEP_LEG_EAR_R = (3 / 8) * inch;      // the ear's top outer corner
+// Leg lock: a McMaster 8501A54 twist-lock spring plunger (M6 x 1, 4 mm nose, 10 mm travel) threaded
+// into each leg's front ear, at the ear's hole the leg does not turn on, 7/8 from its pivot. Open,
+// its nose springs through the tray's front lip.
+export const LEG_LOCK_TAP = 5 * millimeter;        // M6 x 1 tap drill, in the ear
+export const LEG_LOCK_HOLE = 4.5 * millimeter;     // in the tray's front lip, for the 4 mm nose
+export const LEG_LOCK_NOSE = 10 * millimeter;      // nose travel past the plunger's thread
+export const LEG_LOCK_NUT_T = 3.2 * millimeter;    // M6 thin jam nut inside the ear
+export const LEG_LOCK_NUT_AF = 10 * millimeter;
+export const LEG_LOCK_HANDLE = 15 * millimeter;    // the L-handle's reach from the plunger's axis
 export const STEP_AXLE_X0 = 2 * GOING - 0.13 * inch;  // 11.37; back end is the hook pin, through the keyhole
 export const STEP_AXLE_X1 = 3 * GOING - 0.14 * inch;  // 17.11; 145.8 mm (5.74) long
 export const STEP_PAD_L = GOING - (9 / 8) * inch;   // 4 5/8 rubber pad under each leg's foot flange, as wide as the flange
@@ -336,7 +345,7 @@ export const STOW_PIN_LO_Y = STOW_TOP_Y - CAB_AXLE_DROP;           // lower pin:
 export const STOW_PIN_LO_Z = STOW_Z0 + CAB_AXLE_Y;                 // 1 13/16
 export const STOW_HOOK_X0 = GOING;                 // plates from here to GOING + SHEET_T, where the cabinet's step clip sits when the step is in use
 export const STOW_SLOT_DROP = (1 / 8) * inch;      // the lower slot's round end below the resting pin (the step stands on the ledge)
-export const STOW_HOOK_LEG = 1.5 * inch;           // lower hook's panel leg, along x past the plate
+export const STOW_HOOK_LEG = 1.5 * inch;           // lower hook's panel leg, along x behind the plate, toward the bed end
 export const STOW_BRACKET_Z0 = LOCK_SHELF_TOP_Z - LOCK_LEDGE_LEG;   // the stow bracket's bottom edge: 15.05
 export const STOW_UP_Z1 = 18.25 * inch;            // upper hook plate's top, under the middle tread's back lip as it folds (18.39)
 export const STOW_UP_D = 2.25 * inch;              // plate reach from the panel
@@ -349,7 +358,9 @@ export const STOW_BRACKET_SCREW_Z = LOCK_SHELF_TOP_Z - (11 / 16) * inch;   // hi
 export const STOW_LO_Z0 = 1 * inch;                // lower hook
 export const STOW_LO_Z1 = (21 / 8) * inch;
 export const STOW_LO_D = 2.5 * inch;
-export const STOW_LO_SCREW_X = [STOW_HOOK_X0 + SHEET_T + 0.5 * inch, STOW_HOOK_X0 + SHEET_T + 1.125 * inch];
+export const STOW_LO_LEG_Z0 = LEDGE_TOP_Z + LEDGE_STRIP_T + (1 / 16) * inch;   // the panel leg's bottom edge, over the ledge's rubber strip: 1 5/16
+export const STOW_LO_SCREW_X = [STOW_HOOK_X0 - 1.125 * inch, STOW_HOOK_X0 - 0.5 * inch];   // behind the plate, under the stowed step's back
+export const STOW_LO_SCREW_Z = (STOW_LO_LEG_Z0 + STOW_LO_Z1) / 2;
 export const STOW_SCREW_DIA = SCREW_HOLE_DIA;      // M6, as everywhere but the plunger
 // Step bumper: a panel bumper stuck on the rail's inner face, on the back inch
 // of the foot. Folded, it presses on the stowed step's face.

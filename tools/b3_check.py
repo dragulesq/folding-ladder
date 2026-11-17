@@ -110,7 +110,15 @@ def checks(m):
     out.append(("Hook plate's height after its bend", m.STOW_UP_Z1 - (m.LOCK_SHELF_TOP_Z - m.SHEET_T), 0.476, "SendCutSend's least flange"))
     out.append(("Metal behind the upper slot's round end", m.STOW_PIN_UP_Y - m.KEYHOLE_SLOT_W / 2 - m.STOW_UP_Y0, 0.3, "ties the plate's top prong to the bottom one"))
     out.append(("Metal above the upper slot", m.STOW_UP_Z1 - (m.STOW_PIN_UP_Z + m.KEYHOLE_SLOT_W / 2), 0.3, ""))
-    out.append(("Lower hook's screw holes clear of its bend", m.STOW_LO_SCREW_X[0] - m.STOW_SCREW_DIA / 2 - (m.STOW_HOOK_X0 + line) - die, 0, ""))
+    out.append(("Lower hook's screw holes clear of its bend", (m.STOW_HOOK_X0 + m.SHEET_T - line) - (m.STOW_LO_SCREW_X[1] + m.STOW_SCREW_DIA / 2) - die, 0,
+                "the leg runs back from the plate, toward the bed end"))
+    out.append(("Lower hook's screws inside its leg's edges", min(m.STOW_LO_SCREW_X[0] - (m.STOW_HOOK_X0 - m.STOW_HOOK_LEG),
+                                                                 (m.STOW_LO_Z1 - m.STOW_LO_LEG_Z0) / 2) - m.STOW_SCREW_DIA / 2, 0.2, ""))
+    out.append(("Lower hook's leg above the ledge's rubber strip", m.STOW_LO_LEG_Z0 - (m.LEDGE_TOP_Z + m.LEDGE_STRIP_T), 0.03, ""))
+    out.append(("Lower hook's leg after its bend", m.STOW_HOOK_LEG + m.SHEET_T, 0.476, "SendCutSend's least flange"))
+    out.append(("Stowed step's back clear of the lower hook's screw heads", m.STOW_PANEL_GAP - m.SHEET_T - 3.3 / MM, 0.03,
+                "M6 button heads, 3.3 mm tall, on the leg behind the step"))
+    out.append(("Lower hook's relief short of its slot", (m.STOW_PIN_LO_Y - m.KEYHOLE_SLOT_W / 2) - (line + m.BEND_R_SHEET + m.SHEET_T + m.RELIEF_EXTRA), 0.3, ""))
     out.append(("Metal around the lower slot", min(m.STOW_LO_D - (m.STOW_PIN_LO_Y + m.KEYHOLE_SLOT_W / 2),
                                                  m.STOW_PIN_LO_Z - m.STOW_SLOT_DROP - m.KEYHOLE_SLOT_W / 2 - m.STOW_LO_Z0), 0.3, ""))
     out.append(("Shelf behind the hook plate under the middle bracket and the upper pin's washer",
@@ -162,6 +170,18 @@ def checks(m):
     gap = math.hypot(m.CLIP_HOLE_IN - relief, m.CLIP_KEY_H / 2 - m.CLIP_HOLE_DZ) - m.SCREW_HOLE_DIA / 2
     out.append(("Step clip's screw holes to its bend reliefs", gap, 0.1, ""))
     out.append(("Step clip's screw holes inside its ends", min(m.CLIP_MOUNT_H / 2 - m.CLIP_HOLE_DZ, m.CLIP_MOUNT_L - m.CLIP_HOLE_IN - m.CLIP_HOLE_BACK) - m.SCREW_HOLE_DIA / 2, 0.4, ""))
+    # The leg locks: 8501A54 plungers in the step legs' front ears, noses through the tray's front lip.
+    gap = m.EAR_X0 - m.TRAY_INSET - m.SHEET_T
+    proud = m.LEG_LOCK_NOSE - gap - m.SHEET_T
+    out.append(("Leg lock's nose through the tray's lip", proud, 1 / MM, f"{gap * MM:.2f} mm gap, {m.SHEET_T * MM:.2f} mm lip; this much stands proud"))
+    out.append(("Leg lock's nose inside the step's going", m.TRAY_INSET - proud, 0.03, "in use, and against the bed-end wall when stowed"))
+    out.append(("Leg lock's holes on the other hole of each ear", -abs((m.OUT_AXLE_DROP - m.CAB_AXLE_DROP) - 7 / 8), -0.001, "7/8 from the pivot"))
+    web_in = m.CAB_AXLE_Y - m.STEP_LEG_Y0
+    out.append(("Leg lock's tapped hole from the ear's bend line", web_in - line - 0.517, -0.002, "SendCutSend's least for a tapped M6 hole is 0.517; else tap it by hand"))
+    out.append(("Leg lock's jam nut clear of the ear's bend", web_in - m.LEG_LOCK_NUT_AF / math.sqrt(3) - (m.SHEET_T + m.BEND_R_SHEET), 0.03, "across its corners"))
+    out.append(("Leg lock's handle clear of the pivot's axle", (m.OUT_AXLE_DROP - m.CAB_AXLE_DROP) - m.AXLE_DIA / 2 - m.LEG_LOCK_HANDLE - 1.15 / MM, 0, "as it twists"))
+    out.append(("Tray's lock holes inside its lip", min(m.LIP - m.OUT_AXLE_DROP, m.CAB_AXLE_Y - m.TRAY_Y0, m.TRAY_Y0 + m.TRAY_W - m.OUT_AXLE_Y) - m.LEG_LOCK_HOLE / 2, 0.15, ""))
+    out.append(("Tray's upper lock hole clear of the lip's bend", (m.CAB_AXLE_DROP - line) - m.LEG_LOCK_HOLE / 2 - die, 0, ""))
     out.append(("Step clip's keyhole on the step's pivot lines", -abs(m.RAIL_Y - m.CAB_AXLE_Y - m.OUT_AXLE_Y), -0.001, "15/16 from the panel and from the rail"))
     washer_top = -m.CLIP_PIN_DROP + m.END_WASHER_DIA / 2
     out.append(("Resting pin's washer held by the slot, below the keyhole's hole", -washer_top, 0.05, "the washer's top edge below the hole's middle"))
