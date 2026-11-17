@@ -176,13 +176,18 @@ def checks(m):
     proud = m.LEG_LOCK_NOSE - gap - m.SHEET_T
     out.append(("Leg lock's nose through the tray's lip", proud, 1 / MM, f"{gap * MM:.2f} mm gap, {m.SHEET_T * MM:.2f} mm lip; this much stands proud"))
     out.append(("Leg lock's nose inside the step's going", m.TRAY_INSET - proud, 0.03, "in use, and against the bed-end wall when stowed"))
-    out.append(("Leg lock's holes on the other hole of each ear", -abs((m.OUT_AXLE_DROP - m.CAB_AXLE_DROP) - 7 / 8), -0.001, "7/8 from the pivot"))
-    web_in = m.CAB_AXLE_Y - m.STEP_LEG_Y0
-    out.append(("Leg lock's tapped hole from the ear's bend line", web_in - line - 0.517, -0.002, "SendCutSend's least for a tapped M6 hole is 0.517; else tap it by hand"))
-    out.append(("Leg lock's jam nut clear of the ear's bend", web_in - m.LEG_LOCK_NUT_AF / math.sqrt(3) - (m.SHEET_T + m.BEND_R_SHEET), 0.03, "across its corners"))
-    out.append(("Leg lock's handle clear of the pivot's axle", (m.OUT_AXLE_DROP - m.CAB_AXLE_DROP) - m.AXLE_DIA / 2 - m.LEG_LOCK_HANDLE - 1.15 / MM, 0, "as it twists"))
-    out.append(("Tray's lock holes inside its lip", min(m.LIP - m.OUT_AXLE_DROP, m.CAB_AXLE_Y - m.TRAY_Y0, m.TRAY_Y0 + m.TRAY_W - m.OUT_AXLE_Y) - m.LEG_LOCK_HOLE / 2, 0.15, ""))
-    out.append(("Tray's upper lock hole clear of the lip's bend", (m.CAB_AXLE_DROP - line) - m.LEG_LOCK_HOLE / 2 - die, 0, ""))
+    half = (m.OUT_AXLE_DROP - m.CAB_AXLE_DROP) / 2
+    reach = math.hypot(m.LEG_LOCK_DY, half)
+    out.append(("Leg lock's nose clear of the pivot bushing's flange", reach - m.BUSHING_FLANGE_DIA / 2 - 2 / MM, 0.02, f"{reach:.3f} from either pivot"))
+    out.append(("Leg lock's hole to the pivot holes", reach - m.HOLE_DIA / 2 - m.LEG_LOCK_TAP / 2, 0.1, "metal between"))
+    tip = m.STEP_LEG_EAR - (m.CAB_AXLE_Y - m.STEP_LEG_Y0 + m.LEG_LOCK_DY)
+    out.append(("Leg lock's hole to the ear's tip", tip - m.LEG_LOCK_TAP / 2, 0.08, "metal beyond"))
+    out.append(("Leg lock's jam nut on the ear", min(reach - m.HOLE_DIA / 2, tip + 0.02) - m.LEG_LOCK_NUT_AF / 2, 0, "its flats on metal"))
+    out.append(("Leg lock's handle clear of the skin, on the outer leg", m.LEG_LOCK_DROP - m.SHEET_T - m.LEG_LOCK_HANDLE - 1.15 / MM, 0.1, "handle up, away from the pivot below"))
+    out.append(("Leg lock's nose on the lip while folded", min(m.CAB_AXLE_Y - m.TRAY_Y0, m.TRAY_Y0 + m.TRAY_W - m.OUT_AXLE_Y, m.CAB_AXLE_DROP) - reach, 0.05,
+                "both noses ride on the lip and snap in when the leg opens"))
+    out.append(("Tray's lock holes clear of the lip's bend", (m.LEG_LOCK_DROP - line) - m.LEG_LOCK_HOLE / 2 - die, 0, ""))
+    out.append(("Tray's lock holes clear of the lip bushings' flanges", reach - m.BUSHING_FLANGE_DIA / 2 - m.LEG_LOCK_HOLE / 2, 0.01, ""))
     out.append(("Step clip's keyhole on the step's pivot lines", -abs(m.RAIL_Y - m.CAB_AXLE_Y - m.OUT_AXLE_Y), -0.001, "15/16 from the panel and from the rail"))
     washer_top = -m.CLIP_PIN_DROP + m.END_WASHER_DIA / 2
     out.append(("Resting pin's washer held by the slot, below the keyhole's hole", -washer_top, 0.05, "the washer's top edge below the hole's middle"))

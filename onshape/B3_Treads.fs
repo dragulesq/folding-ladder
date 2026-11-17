@@ -29,11 +29,11 @@ export const b3Treads = defineFeature(function(context is Context, id is Id, def
                 b3Hole(CAB_AXLE_Y, top - CAB_AXLE_DROP, HOLE_DIA),
                 b3Hole(OUT_AXLE_Y, top - OUT_AXLE_DROP, HOLE_DIA)
             ];
-        // The hook-on step's leg locks spring through the front lip, each at the hole its leg
-        // does not turn on.
+        // The hook-on step's leg locks spring through the front lip, halfway between the two
+        // pivot heights and 1/4 inboard of each pivot line.
         const lockHoles = [
-                b3Hole(CAB_AXLE_Y, top - OUT_AXLE_DROP, LEG_LOCK_HOLE),
-                b3Hole(OUT_AXLE_Y, top - CAB_AXLE_DROP, LEG_LOCK_HOLE)
+                b3Hole(CAB_AXLE_Y + LEG_LOCK_DY, top - LEG_LOCK_DROP, LEG_LOCK_HOLE),
+                b3Hole(OUT_AXLE_Y - LEG_LOCK_DY, top - LEG_LOCK_DROP, LEG_LOCK_HOLE)
             ];
         b3Tray(context, id + "tray", b3GoingX(n) + TRAY_INSET, top, holes, lockHoles);
 

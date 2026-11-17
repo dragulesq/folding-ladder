@@ -276,7 +276,7 @@ export const RAIL_PAD_X0 = [RAIL_FOOT_X, 2 * GOING - RAIL_PAD_L];  // back pad, 
 export const LEDGE_LEN = GOING;                    // x 0 to 5 3/4
 export const LEDGE_SHELF = 2.5 * inch;             // along y
 export const LEDGE_TOP_Z = (9 / 8) * inch;
-export const LEDGE_SCREW_X = [0.75 * inch, 2.875 * inch, 5 * inch];   // three M6 through the back wall, behind the stowed step
+export const LEDGE_SCREW_X = [1.25 * inch, 4.75 * inch];   // two M6 through the back wall, behind the stowed step
 export const LEDGE_SCREW_Z = 2 * inch;             // above the shelf's bend, below the wall's top
 export const LEDGE_SCREW_DIA = SCREW_HOLE_DIA;     // M6 button heads
 export const LEDGE_SHELF_R = R_OUTSIDE_LARGE;      // the shelf's front corners, at ankle height
@@ -308,8 +308,11 @@ export const STEP_LEG_EAR = (17 / 16) * inch;      // ears, out from the web's o
 export const STEP_LEG_EAR_Z = (133 / 16) * inch;   // 8 5/16, where each side flange widens into its ear
 export const STEP_LEG_EAR_R = (3 / 8) * inch;      // the ear's top outer corner
 // Leg lock: a McMaster 8501A54 twist-lock spring plunger (M6 x 1, 4 mm nose, 10 mm travel) threaded
-// into each leg's front ear, at the ear's hole the leg does not turn on, 7/8 from its pivot. Open,
-// its nose springs through the tray's front lip.
+// into each leg's front ear, at a hole of its own halfway between the ear's two pivot holes and
+// 1/4 toward the ear's tip, so that both legs are one part. Open, its nose springs through the
+// tray's front lip.
+export const LEG_LOCK_DY = (1 / 4) * inch;         // from the pivot holes' line toward the ear's tip
+export const LEG_LOCK_DROP = (CAB_AXLE_DROP + OUT_AXLE_DROP) / 2;   // below the tread's top: 1 1/16
 export const LEG_LOCK_TAP = 5 * millimeter;        // M6 x 1 tap drill, in the ear
 export const LEG_LOCK_HOLE = 4.5 * millimeter;     // in the tray's front lip, for the 4 mm nose
 export const LEG_LOCK_NOSE = 10 * millimeter;      // nose travel past the plunger's thread

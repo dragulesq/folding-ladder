@@ -296,18 +296,18 @@ export function b3StepLegLowerJoint() returns map
 
 // The leg locks: each plunger threads into its leg's front ear, thread end flush
 // with the ear's outer face (the origin), z along the nose toward the tray's
-// lip and x along the plunger's handle. On the cabinet-side leg it sits at the
-// lower hole, handle down the leg.
+// lip and x along the plunger's handle. On the cabinet-side leg the handle points
+// down the leg, away from the pivot above it.
 export function b3LegLockJoint() returns map
 {
-    return b3Joint(vector(b3EarFaces(HOOK_STEP)[1], CAB_AXLE_Y, b3T(HOOK_STEP) - OUT_AXLE_DROP), vector(1, 0, 0), vector(0, 0, -1));
+    return b3Joint(vector(b3EarFaces(HOOK_STEP)[1], CAB_AXLE_Y + LEG_LOCK_DY, b3T(HOOK_STEP) - LEG_LOCK_DROP), vector(1, 0, 0), vector(0, 0, -1));
 }
 
-// On the outer leg, as built at the cabinet-side leg's place: the upper hole of
-// the ear that faces the front once the leg is turned, handle toward the ear's tip.
-export function b3OuterLegLockJoint() returns map
+// The same on the leg used as the outer leg, turned half a turn: the other ear
+// then faces the front, and the handle points up, away from the pivot below it.
+export function b3LegLockTurnedJoint() returns map
 {
-    return b3Joint(vector(b3EarFaces(HOOK_STEP)[0], CAB_AXLE_Y, b3T(HOOK_STEP) - CAB_AXLE_DROP), vector(-1, 0, 0), vector(0, 1, 0));
+    return b3Joint(vector(b3EarFaces(HOOK_STEP)[0], CAB_AXLE_Y + LEG_LOCK_DY, b3T(HOOK_STEP) - LEG_LOCK_DROP), vector(-1, 0, 0), vector(0, 0, 1));
 }
 
 // A lip bushing is built in the top tread's back lip. In a step leg's ear it

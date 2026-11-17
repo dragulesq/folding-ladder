@@ -283,7 +283,7 @@ export const RAIL_PAD_X0 = [RAIL_FOOT_X, 2 * GOING - RAIL_PAD_L];  // back pad, 
 export const LEDGE_LEN = GOING;                    // x 0 to 5 3/4
 export const LEDGE_SHELF = 2.5 * inch;             // along y
 export const LEDGE_TOP_Z = (9 / 8) * inch;
-export const LEDGE_SCREW_X = [0.75 * inch, 2.875 * inch, 5 * inch];   // three M6 through the back wall, behind the stowed step
+export const LEDGE_SCREW_X = [1.25 * inch, 4.75 * inch];   // two M6 through the back wall, behind the stowed step
 export const LEDGE_SCREW_Z = 2 * inch;             // above the shelf's bend, below the wall's top
 export const LEDGE_SCREW_DIA = SCREW_HOLE_DIA;     // M6 button heads
 export const LEDGE_SHELF_R = R_OUTSIDE_LARGE;      // the shelf's front corners, at ankle height
@@ -315,8 +315,11 @@ export const STEP_LEG_EAR = (17 / 16) * inch;      // ears, out from the web's o
 export const STEP_LEG_EAR_Z = (133 / 16) * inch;   // 8 5/16, where each side flange widens into its ear
 export const STEP_LEG_EAR_R = (3 / 8) * inch;      // the ear's top outer corner
 // Leg lock: a McMaster 8501A54 twist-lock spring plunger (M6 x 1, 4 mm nose, 10 mm travel) threaded
-// into each leg's front ear, at the ear's hole the leg does not turn on, 7/8 from its pivot. Open,
-// its nose springs through the tray's front lip.
+// into each leg's front ear, at a hole of its own halfway between the ear's two pivot holes and
+// 1/4 toward the ear's tip, so that both legs are one part. Open, its nose springs through the
+// tray's front lip.
+export const LEG_LOCK_DY = (1 / 4) * inch;         // from the pivot holes' line toward the ear's tip
+export const LEG_LOCK_DROP = (CAB_AXLE_DROP + OUT_AXLE_DROP) / 2;   // below the tread's top: 1 1/16
 export const LEG_LOCK_TAP = 5 * millimeter;        // M6 x 1 tap drill, in the ear
 export const LEG_LOCK_HOLE = 4.5 * millimeter;     // in the tray's front lip, for the 4 mm nose
 export const LEG_LOCK_NOSE = 10 * millimeter;      // nose travel past the plunger's thread
@@ -663,18 +666,18 @@ export function b3StepLegLowerJoint() returns map
 
 // The leg locks: each plunger threads into its leg's front ear, thread end flush
 // with the ear's outer face (the origin), z along the nose toward the tray's
-// lip and x along the plunger's handle. On the cabinet-side leg it sits at the
-// lower hole, handle down the leg.
+// lip and x along the plunger's handle. On the cabinet-side leg the handle points
+// down the leg, away from the pivot above it.
 export function b3LegLockJoint() returns map
 {
-    return b3Joint(vector(b3EarFaces(HOOK_STEP)[1], CAB_AXLE_Y, b3T(HOOK_STEP) - OUT_AXLE_DROP), vector(1, 0, 0), vector(0, 0, -1));
+    return b3Joint(vector(b3EarFaces(HOOK_STEP)[1], CAB_AXLE_Y + LEG_LOCK_DY, b3T(HOOK_STEP) - LEG_LOCK_DROP), vector(1, 0, 0), vector(0, 0, -1));
 }
 
-// On the outer leg, as built at the cabinet-side leg's place: the upper hole of
-// the ear that faces the front once the leg is turned, handle toward the ear's tip.
-export function b3OuterLegLockJoint() returns map
+// The same on the leg used as the outer leg, turned half a turn: the other ear
+// then faces the front, and the handle points up, away from the pivot below it.
+export function b3LegLockTurnedJoint() returns map
 {
-    return b3Joint(vector(b3EarFaces(HOOK_STEP)[0], CAB_AXLE_Y, b3T(HOOK_STEP) - CAB_AXLE_DROP), vector(-1, 0, 0), vector(0, 1, 0));
+    return b3Joint(vector(b3EarFaces(HOOK_STEP)[0], CAB_AXLE_Y + LEG_LOCK_DY, b3T(HOOK_STEP) - LEG_LOCK_DROP), vector(-1, 0, 0), vector(0, 0, 1));
 }
 
 // A lip bushing is built in the top tread's back lip. In a step leg's ear it
@@ -1221,11 +1224,11 @@ export const b3Treads = defineFeature(function(context is Context, id is Id, def
                 b3Hole(CAB_AXLE_Y, top - CAB_AXLE_DROP, HOLE_DIA),
                 b3Hole(OUT_AXLE_Y, top - OUT_AXLE_DROP, HOLE_DIA)
             ];
-        // The hook-on step's leg locks spring through the front lip, each at the hole its leg
-        // does not turn on.
+        // The hook-on step's leg locks spring through the front lip, halfway between the two
+        // pivot heights and 1/4 inboard of each pivot line.
         const lockHoles = [
-                b3Hole(CAB_AXLE_Y, top - OUT_AXLE_DROP, LEG_LOCK_HOLE),
-                b3Hole(OUT_AXLE_Y, top - CAB_AXLE_DROP, LEG_LOCK_HOLE)
+                b3Hole(CAB_AXLE_Y + LEG_LOCK_DY, top - LEG_LOCK_DROP, LEG_LOCK_HOLE),
+                b3Hole(OUT_AXLE_Y - LEG_LOCK_DY, top - LEG_LOCK_DROP, LEG_LOCK_HOLE)
             ];
         b3Tray(context, id + "tray", b3GoingX(n) + TRAY_INSET, top, holes, lockHoles);
 
@@ -1783,22 +1786,22 @@ export const b3StepLedge = defineFeature(function(context is Context, id is Id, 
 // B3_HookOnStep.fs
 // ===========================================================================
 /*
- * B3 Hook-on Step Legs, two 1/8" sheet-metal parts with the same outline. The
- * hook-on step's tray is the tread part, which the assembly places at the
- * step. Each leg is a 5 1/8 x 10 web bent into a shallow channel: a 5/8" side
- * flange at each x end, full height, that widens at the top into a pivot ear,
- * and a 5/8" foot flange along the bottom. The ears have holes on the tray's
- * two pivot lines, 7/8" apart: the "Hook-on step leg" (cabinet side) turns on
- * the upper one, and the "Hook-on step leg, outer", turned to face the
- * cabinet, on the lower one. Each leg's front ear has the other hole too,
- * tapped M6 for its lock: a McMaster 8501A54 twist-lock spring plunger whose
- * nose springs through the tray's front lip when the leg is open, with an M6
- * thin jam nut inside the ear. The side flanges run to the top edge, so their
- * bends need no relief; where they meet the foot flange, Onshape cuts round
- * corner reliefs and the flanges' tips stay square. The top edge is the open
- * stop against the tray's skin. Both are built where the cabinet-side leg
- * sits, open. The rubber pad under the foot is its own part (B3 Bushings and
- * Pads).
+ * B3 Hook-on Step Leg, 1/8" sheet-metal part, used twice. The hook-on step's
+ * tray is the tread part, which the assembly places at the step. Each leg is
+ * a 5 1/8 x 10 web bent into a shallow channel: a 5/8" side flange at each x
+ * end, full height, that widens at the top into a pivot ear, and a 5/8" foot
+ * flange along the bottom. Each ear has two 14 mm holes 7/8" apart, on the
+ * tray's two pivot lines: the cabinet-side leg turns on the upper one, and the
+ * outer leg, the same part turned to face the cabinet, on the lower one.
+ * Halfway between them and 1/4" toward the ear's tip is a 5 mm hole, tapped
+ * M6 in the ear that faces the front, for the leg's lock: a McMaster 8501A54
+ * twist-lock spring plunger whose nose springs through the tray's front lip
+ * when the leg is open, with an M6 thin jam nut inside the ear. The side
+ * flanges run to the top edge, so their bends need no relief; where they meet
+ * the foot flange, Onshape cuts round corner reliefs and the flanges' tips
+ * stay square. The top edge is the open stop against the tray's skin. Built
+ * where the cabinet-side leg sits, open. The rubber pad under the foot is its
+ * own part (B3 Bushings and Pads).
  */
 annotation { "Feature Type Name" : "B3 Hook-on Step Leg" }
 export const b3HookOnStep = defineFeature(function(context is Context, id is Id, definition is map)
@@ -1807,77 +1810,68 @@ export const b3HookOnStep = defineFeature(function(context is Context, id is Id,
     }
     {
         const n = HOOK_STEP;
-        const upper = b3T(n) - CAB_AXLE_DROP;
-        const lower = b3T(n) - OUT_AXLE_DROP;
         const faces = b3EarFaces(n);
+        const y0 = STEP_LEG_Y0;
+        const yTip = y0 + STEP_LEG_FLANGE;
+        const yEar = y0 + STEP_LEG_EAR;
+        const zb = STEP_LEG_BOTTOM_Z;
+        const zt = STEP_LEG_TOP_Z;
+        const r = R_OUTSIDE_SMALL;
 
-        // Cabinet-side leg: turns on the upper holes, lock in the front ear's lower hole.
-        b3StepLeg(context, id + "cab", "Hook-on step leg", upper, [], [b3Hole(CAB_AXLE_Y, lower, LEG_LOCK_TAP)], b3LegLockJoint());
-        // Outer leg: turns on the lower holes. Turned half a turn, the ear built at the
-        // back faces the front, and takes the lock in its upper hole.
-        b3StepLeg(context, id + "out", "Hook-on step leg, outer", lower, [b3Hole(CAB_AXLE_Y, upper, LEG_LOCK_TAP)], [], b3OuterLegLockJoint());
+        // Web, its outer face toward the cabinet.
+        b3PrismXZ(context, id + "leg" + "web", b3Rect(faces[0], zb, faces[1], zt), [], y0, y0 + SHEET_T);
+
+        // Side flanges in (y, z), outer faces at the ear faces, widening into the ears.
+        const side = b3Rounded([
+                    vector(y0, zb),
+                    vector(yTip, zb),
+                    vector(yTip, STEP_LEG_EAR_Z),
+                    vector(yEar, STEP_LEG_EAR_Z),
+                    vector(yEar, zt),
+                    vector(y0, zt)
+                ], [0, 0, R_INSIDE_MIN, r, STEP_LEG_EAR_R, 0]);
+        const holes = [
+                b3Hole(CAB_AXLE_Y, b3T(n) - CAB_AXLE_DROP, HOLE_DIA),
+                b3Hole(CAB_AXLE_Y, b3T(n) - OUT_AXLE_DROP, HOLE_DIA),
+                b3Hole(CAB_AXLE_Y + LEG_LOCK_DY, b3T(n) - LEG_LOCK_DROP, LEG_LOCK_TAP)
+            ];
+        b3PrismYZ(context, id + "leg" + "sideBack", side, holes, faces[0], faces[0] + SHEET_T);
+        b3PrismYZ(context, id + "leg" + "sideFront", side, holes, faces[1] - SHEET_T, faces[1]);
+
+        // Foot flange in (x, y).
+        b3PrismXY(context, id + "leg" + "foot", b3Rect(faces[0], y0, faces[1], yTip), [], zb, zb + SHEET_T);
+        b3Union(context, id + "leg" + "join", b3Solids(id + "leg"));
+
+        // Sheet metal: the web's outer face, then the side flanges' outer faces and the foot's underside.
+        const midX = (faces[0] + faces[1]) / 2;
+        const midY = (y0 + yTip) / 2;
+        b3SheetMetal(context, id + "leg" + "sm", b3Solids(id + "leg"), [
+                    vector(midX, y0, zt / 2),
+                    vector(faces[0], midY, zt / 2),
+                    vector(faces[1], midY, zt / 2),
+                    vector(midX, midY, zb)
+                ], SHEET_T, BEND_R_SHEET, K_SHEET);
+
+        const leg = b3Solids(id + "leg");
+        const name = "Hook-on step leg";
+        b3Finish(context, leg, name, RGB_STEP);
+        b3Mc(context, id + "mcAxle", leg, name, "Axle", b3CabAxleJoint(n));
+        b3Mc(context, id + "mcAxleTurned", leg, name, "Axle, turned", b3TurnInGoing(n, b3OutAxleJoint(n), 0 * inch));
+        // The other end of each hole, for the bushing in the second ear, and the pad's seat.
+        b3Mc(context, id + "mcAxleFront", leg, name, "Axle, front", b3CabAxleTurnedJoint(n));
+        b3Mc(context, id + "mcAxleLower", leg, name, "Lower axle", b3StepLegLowerJoint());
+        b3Mc(context, id + "mcPad", leg, name, "Foot pad", b3StepPadJoint());
+        b3Mc(context, id + "mcLock", leg, name, "Lock", b3LegLockJoint());
+        b3Mc(context, id + "mcLockTurned", leg, name, "Lock, turned", b3LegLockTurnedJoint());
 
         // Jam nut on the plunger's thread, inside the cabinet-side leg's front ear, drawn
         // round at its across-flats size.
+        const lock = b3LegLockJoint().origin;
         const xn = faces[1] - SHEET_T;
-        b3TubeX(context, id + "nut", CAB_AXLE_Y, lower, xn - LEG_LOCK_NUT_T, xn, LEG_LOCK_NUT_AF, LEG_LOCK_TAP);
+        b3TubeX(context, id + "nut", lock[1], lock[2], xn - LEG_LOCK_NUT_T, xn, LEG_LOCK_NUT_AF, LEG_LOCK_TAP);
         b3FinishSteel(context, b3Solids(id + "nut"), "M6 jam nut");
         b3Mc(context, id + "mcNut", b3Solids(id + "nut"), "M6 jam nut", "Ear", b3LegLockJoint());
     });
-
-// One leg, built at the cabinet-side leg's place: its pivot holes at height
-// pivotZ in both ears, and the lock's tapped hole in the back or the front ear.
-function b3StepLeg(context is Context, id is Id, name is string, pivotZ is ValueWithUnits, backHoles is array, frontHoles is array, lock is map)
-{
-    const n = HOOK_STEP;
-    const faces = b3EarFaces(n);
-    const y0 = STEP_LEG_Y0;
-    const yTip = y0 + STEP_LEG_FLANGE;
-    const yEar = y0 + STEP_LEG_EAR;
-    const zb = STEP_LEG_BOTTOM_Z;
-    const zt = STEP_LEG_TOP_Z;
-    const r = R_OUTSIDE_SMALL;
-
-    // Web, its outer face toward the cabinet.
-    b3PrismXZ(context, id + "web", b3Rect(faces[0], zb, faces[1], zt), [], y0, y0 + SHEET_T);
-
-    // Side flanges in (y, z), outer faces at the ear faces, widening into the ears.
-    const side = b3Rounded([
-                vector(y0, zb),
-                vector(yTip, zb),
-                vector(yTip, STEP_LEG_EAR_Z),
-                vector(yEar, STEP_LEG_EAR_Z),
-                vector(yEar, zt),
-                vector(y0, zt)
-            ], [0, 0, R_INSIDE_MIN, r, STEP_LEG_EAR_R, 0]);
-    const pivot = [b3Hole(CAB_AXLE_Y, pivotZ, HOLE_DIA)];
-    b3PrismYZ(context, id + "sideBack", side, concatenateArrays([pivot, backHoles]), faces[0], faces[0] + SHEET_T);
-    b3PrismYZ(context, id + "sideFront", side, concatenateArrays([pivot, frontHoles]), faces[1] - SHEET_T, faces[1]);
-
-    // Foot flange in (x, y).
-    b3PrismXY(context, id + "foot", b3Rect(faces[0], y0, faces[1], yTip), [], zb, zb + SHEET_T);
-    b3Union(context, id + "join", b3Solids(id));
-
-    // Sheet metal: the web's outer face, then the side flanges' outer faces and the foot's underside.
-    const midX = (faces[0] + faces[1]) / 2;
-    const midY = (y0 + yTip) / 2;
-    b3SheetMetal(context, id + "sm", b3Solids(id), [
-                vector(midX, y0, zt / 2),
-                vector(faces[0], midY, zt / 2),
-                vector(faces[1], midY, zt / 2),
-                vector(midX, midY, zb)
-            ], SHEET_T, BEND_R_SHEET, K_SHEET);
-
-    const leg = b3Solids(id);
-    b3Finish(context, leg, name, RGB_STEP);
-    b3Mc(context, id + "mcAxle", leg, name, "Axle", b3CabAxleJoint(n));
-    b3Mc(context, id + "mcAxleTurned", leg, name, "Axle, turned", b3TurnInGoing(n, b3OutAxleJoint(n), 0 * inch));
-    // The other end of each hole, for the bushing in the second ear, and the pad's seat.
-    b3Mc(context, id + "mcAxleFront", leg, name, "Axle, front", b3CabAxleTurnedJoint(n));
-    b3Mc(context, id + "mcAxleLower", leg, name, "Lower axle", b3StepLegLowerJoint());
-    b3Mc(context, id + "mcPad", leg, name, "Foot pad", b3StepPadJoint());
-    b3Mc(context, id + "mcLock", leg, name, "Lock", lock);
-}
 
 // ===========================================================================
 // B3_StowLocks.fs

@@ -62,8 +62,8 @@ INSTANCES = {
     # Step clip 1 on the cabinet's front post, step clip 2 the same part upside down inside the rail.
     "Outer rail": "Outer rail", "Step clip 1": "Step clip", "Step clip 2": "Step clip",
     "Step ledge": "Step ledge",
-    # Leg 1 on the cabinet side, leg 2 (the same outline, holes swapped) turned to face it.
-    "Hook-on step leg 1": "Hook-on step leg", "Hook-on step leg 2": "Hook-on step leg, outer",
+    # Leg 1 on the cabinet side, leg 2 the same part turned to face it.
+    "Hook-on step leg 1": "Hook-on step leg", "Hook-on step leg 2": "Hook-on step leg",
     **AXLES,
     **{f"Stop pin {i}": "Stop pin" for i in range(1, 5)},
     **{f"M6 fender washer {i}": "M6 fender washer" for i in range(1, 13)},
@@ -185,7 +185,7 @@ HARDWARE += [
     (("Plunger jam nut", "Ledge"), ("REF cabinet", "Plunger")),
     (("Step bumper", "Panel"), ("Outer rail", "Step bumper")),
     (("M6 jam nut 1", "Ear"), ("Hook-on step leg 1", "Lock")),
-    (("M6 jam nut 2", "Ear"), ("Hook-on step leg 2", "Lock")),
+    (("M6 jam nut 2", "Ear"), ("Hook-on step leg 2", "Lock, turned")),
 ]
 
 # Bought parts imported into the document (McMaster's models), used in place of the modeled ones:
@@ -213,7 +213,7 @@ EXTRA = {}
 ADDS = [
     ("Spring plunger", "8501A58", "REF cabinet", "Plunger"),
     ("Leg lock plunger 1", "8501A54", "Hook-on step leg 1", "Lock"),
-    ("Leg lock plunger 2", "8501A54", "Hook-on step leg 2", "Lock"),
+    ("Leg lock plunger 2", "8501A54", "Hook-on step leg 2", "Lock, turned"),
 ]
 
 
