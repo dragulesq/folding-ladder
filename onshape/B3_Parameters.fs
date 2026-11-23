@@ -10,7 +10,7 @@ import(path : "onshape/std/common.fs", version : "2641.0");
  *
  * Datum (same as the B3 page). Origin on the floor, at the side panel's face,
  * at the stair's bed end (the end the top tread is on).
- *   x  along the cabinet toward its front edge; the stair spans x = 0 to 12
+ *   x  along the cabinet toward its front edge; the stair spans x = 0 to 11 1/2
  *   y  out from the panel face into the room (Onshape's -Y)
  *   z  up from the floor
  * Each part is built once, where its first use sits when the stair is open;
@@ -24,23 +24,40 @@ import(path : "onshape/std/common.fs", version : "2641.0");
 // ---------------------------------------------------------------------------
 // Room and cabinet (reference only)
 // ---------------------------------------------------------------------------
-export const CABINET_TOP_Z = 48 * inch;            // folded stair tops out at 47 9/16
-export const BED_PLATFORM_Z = 47.75 * inch;
+export const CABINET_TOP_Z = 47 * inch;            // measured, top of the 8020 frame; folded stair tops out at 46 9/16
+export const BED_PLATFORM_Z = 47 * inch;           // measured, cabover floor; the mattress lies on it
 export const MATTRESS_THICK = 4 * inch;
 export const WALL_GAP = 0.5 * inch;                // bed-end wall to the stair's bed end
-export const CABINET_DEPTH = 12.5 * inch;          // along x, wall to front post
-export const CABINET_WIDTH = 13 * inch;            // behind the side panel
-export const HANDLE_Y = 19.25 * inch;              // cab door handle's closest point to the panel (19 3/4 from the 8020)
-export const HANDLE_Z = 22 * inch;                 // center; the block is 1" tall, so its top is at 22 1/2
+export const CABINET_DEPTH = 12 * inch;            // measured, along x, wall to the front of the 8020 frame
+export const CABINET_WIDTH = 29.25 * inch;         // measured, the 8020 frame behind the side panel, out to the camper's side wall
+export const PANEL_T = 0.25 * inch;                 // Plyboo side panel over the 8020 frame
+export const HANDLE_Y = (157 / 8) * inch - PANEL_T; // cab door handle's closest point to the panel: measured 19 5/8 from the 8020, so 19 3/8
+export const HANDLE_Z = 22 * inch;                 // measured, taken as the center
+export const HANDLE_W = 4.25 * inch;               // measured, along y
+export const HANDLE_H = 0.75 * inch;               // measured, along z
+// The room around the stair, for mock-up. The entrance aisle runs from the
+// camper door, past the cabinet's front, to the middle aisle; the dinette is
+// across it from the cabinet. The middle aisle runs along the camper between
+// the dinette and the shower. The side wall is taken to be right behind the
+// cabinet's frame.
+export const ENTRY_AISLE_W = (221 / 8) * inch;     // measured 27 5/8, cabinet front to the dinette, along x
+export const DINETTE_DEPTH = 35.25 * inch;         // measured, side wall to the middle aisle, along y
+export const DINETTE_H = 47 * inch;                // measured, dinette seat's height at the entrance aisle
+export const DINETTE_T = 4.5 * inch;               // measured, its thickness along x
+export const HANDLE_TO_SHOWER = 8.75 * inch;       // measured, handle's far end to the shower door across the middle aisle
+export const SIDE_WALL_Y = -(PANEL_T + CABINET_WIDTH);                // -29 1/2
+export const DINETTE_Y1 = SIDE_WALL_Y + DINETTE_DEPTH;                // 5 3/4: the middle aisle's near edge
+export const SHOWER_Y = HANDLE_Y + HANDLE_W + HANDLE_TO_SHOWER;       // 32 3/8: the middle aisle's far edge
+export const DINETTE_X0 = CABINET_DEPTH - WALL_GAP + ENTRY_AISLE_W;   // 39 1/8
 export const HANDLE_PROJECTION = 2 * inch;         // out from the bed-end wall, to x 1 1/2
 
 // ---------------------------------------------------------------------------
 // Layout and material
 // ---------------------------------------------------------------------------
 export const RISE = 10.25 * inch;                  // tread tops T1, T2, T3 = 1x, 2x, 3x RISE
-export const GOING = 6 * inch;                     // top tread x 0-6, middle 6-12, step 12-18
-export const SHEET_T = (1 / 8) * inch;             // treads, front angle, step clip, ledge, step legs
-export const PLATE_T = (3 / 16) * inch;            // outer rail, brackets
+export const GOING = 5.75 * inch;                  // top tread x 0 to 5 3/4, middle to 11 1/2, step to 17 1/4; two goings and WALL_GAP make CABINET_DEPTH
+export const SHEET_T = (1 / 8) * inch;             // treads, step clips, ledge, step legs, stow bracket and hook
+export const PLATE_T = (3 / 16) * inch;            // brackets
 
 // Bends: SendCutSend's bending specs for 5052. They set one bend radius and
 // K-factor per thickness and don't do custom radii, so the tread lips bend at
@@ -52,6 +69,12 @@ export const K_SHEET = 0.44;                       // K-factor on .125" sheet
 export const K_PLATE = 0.43;                       // K-factor on .187" sheet
 export const DIE_W_SHEET = 0.630 * inch;           // their die width for .125"
 export const DIE_W_PLATE = 0.984 * inch;           // their die width for .187"
+// The outer rail's sheet: 3/16", for its stiffness (1/8" is about 30% as stiff as a plate; steel of
+// equal stiffness is 3.3 mm and twice the weight).
+export const RAIL_T = PLATE_T;
+export const RAIL_BEND_R = BEND_R_PLATE;
+export const RAIL_K = K_PLATE;
+export const RAIL_DIE_W = DIE_W_PLATE;
 // Keep cut features at least half the die width from a bend line (0.315" on
 // .125", 0.492" on .187"), measured on the flat pattern.
 // Bend reliefs, where a bend stops short of an edge: SendCutSend wants them at
@@ -65,19 +88,26 @@ export const RELIEF_EXTRA = 0.020 * inch;          // relief depth beyond radius
 export const RELIEF_CLEAR = (1 / 16) * inch;       // bare edge past a relief, inside the bend line
 
 // Corner radii (outside corners keep hands and shins from catching).
-export const R_OUTSIDE_LARGE = 0.5 * inch;         // rail and its flanges, trays' lips, ledge shelf, front angle's top outer corner
-export const R_OUTSIDE_SMALL = 0.25 * inch;        // brackets, front angle, step clip, legs, ledge back leg
+export const R_OUTSIDE_LARGE = 0.5 * inch;         // rail and its flanges, trays' lips, ledge shelf, step clips
+export const R_OUTSIDE_SMALL = 0.25 * inch;        // brackets, step clips, legs, ledge back leg
 export const R_INSIDE_MIN = (1 / 8) * inch;        // smallest inside corner
 export const ALU_DENSITY = 2.68 * gram / (centimeter ^ 3);   // 5052-H32
 export const STEEL_DENSITY = 8.0 * gram / (centimeter ^ 3);  // 304 stainless
 export const TUBE_DENSITY = 2.70 * gram / (centimeter ^ 3);  // 6061 axle tube
+export const BUSHING_DENSITY = 1.46 * gram / (centimeter ^ 3);   // iglide G
+export const PTFE_DENSITY = 2.2 * gram / (centimeter ^ 3);
+export const RUBBER_DENSITY = 1.3 * gram / (centimeter ^ 3);     // neoprene
 
 // ---------------------------------------------------------------------------
 // Treads (three: top, middle, and the hook-on step's tray)
 // ---------------------------------------------------------------------------
-export const TRAY_W = 18 * inch;                   // along y
+// 17" wide keeps the open stair inside the cab door handle: the rail's flange
+// tips reach TRAY_W + 1 7/8 out from the panel (18 7/8), 1/2" short of
+// HANDLE_Y, so the rail needs no notch around the handle. Everything across
+// the stair (the outer axle line, the rail, the step clip) follows TRAY_W.
+export const TRAY_W = 17 * inch;                   // along y
 export const TRAY_Y0 = (3 / 8) * inch;             // tray's cabinet-side edge
-export const TRAY_D = (45 / 8) * inch;             // 5 5/8 along x
+export const TRAY_D = GOING - 2 * (3 / 16) * inch;  // 5 3/8 along x
 export const TRAY_INSET = (3 / 16) * inch;         // tray starts this far into its going
 export const LIP = 2 * inch;                       // lips bent down at the x ends
 export const LIP_CORNER_R = R_OUTSIDE_LARGE;       // both bottom corners of each lip
@@ -85,19 +115,25 @@ export const LIP_CORNER_R = R_OUTSIDE_LARGE;       // both bottom corners of eac
 // ---------------------------------------------------------------------------
 // Pivots
 // ---------------------------------------------------------------------------
+// The tube and its bushings. Change AXLE_DIA to the tube's measured diameter
+// and BUSHING_WALL to the bushing that fits it (1 mm for igus 12 x 14, 1/16"
+// for a 1/2" x 5/8" inch bushing): the bores, bushings, thrust and wave
+// washers and keyhole slots all follow.
+export const AXLE_DIA = 12 * millimeter;           // aluminum tube on all six axles
+export const AXLE_BORE = 5 * millimeter;           // tapped M6 at both ends
+export const BUSHING_WALL = 1 * millimeter;        // bushing OD = tube + 2 walls
+export const HOLE_DIA = AXLE_DIA + 2 * BUSHING_WALL;   // 14 mm bushing bore, reamed H7 (cut 3/8 pilots, bend, then open up)
 export const CAB_AXLE_Y = (15 / 16) * inch;
 export const CAB_AXLE_DROP = (5 / 8) * inch;       // below T
-export const OUT_AXLE_Y = 17.75 * inch;            // the rail brackets' axle line
+export const OUT_AXLE_INSET = (5 / 8) * inch;      // outer axle, in from the tray's outer edge
+export const OUT_AXLE_Y = TRAY_Y0 + TRAY_W - OUT_AXLE_INSET;   // 16 3/4, the rail brackets' axle line
 export const OUT_AXLE_DROP = 1.5 * inch;           // below T
-export const HOLE_DIA = 14 * millimeter;           // bushing bore, reamed H7 (cut 3/8 pilots, bend, then open up)
 export const EAR_X0 = (7 / 16) * inch;             // ear outer faces at EAR_X0 and GOING - EAR_X0 in each going
 export const EAR_HOOK_R = (7 / 16) * inch;         // round top of every hook, on its axle hole
 export const EAR_W = (19 / 16) * inch;             // bracket ear reach, u 0 to 1 3/16
 export const HOOK_U0 = (5 / 16) * inch;            // hook part of each ear starts at u = 5/16
-export const AXLE_DIA = 12 * millimeter;           // aluminum tube on all six axles
-export const AXLE_BORE = 5 * millimeter;           // tapped M6 at both ends
-export const TREAD_AXLE_LEN = 145.2 * millimeter;  // 5.72
-export const TREAD_AXLE_X0 = (GOING - TREAD_AXLE_LEN) / 2;   // centered: x 0.14 to 5.86 in each going
+export const TREAD_AXLE_LEN = 138.85 * millimeter; // 5.47
+export const TREAD_AXLE_X0 = (GOING - TREAD_AXLE_LEN) / 2;   // centered: x 0.14 to 5.61 in each going
 // Each axle end: an M6 fender washer and an M6 button-head screw (ISO 7380).
 export const END_WASHER_DIA = 18 * millimeter;
 export const END_WASHER_T = 1.6 * millimeter;
@@ -105,27 +141,52 @@ export const END_HEAD_DIA = 10.5 * millimeter;
 export const END_HEAD_H = 3.3 * millimeter;
 
 // ---------------------------------------------------------------------------
+// Pivot stack: bushings and washers on every axle. Sizes are the catalog
+// parts' (igus iglide flanged bushings, a DIN 7603 size PTFE ring).
+// ---------------------------------------------------------------------------
+export const BUSHING_FLANGE_DIA = AXLE_DIA + 8 * millimeter;   // 20 mm flange (McMaster 2705T142 has 18 mm)
+export const BUSHING_FLANGE_T = 1 * millimeter;
+export const LIP_BUSHING_LEN = 4 * millimeter;     // overall, flange included: igus JFM-1214-04 (iglide J), in the 1/8" lips and step leg ears
+export const EAR_BUSHING_LEN = 6 * millimeter;     // overall: GFM-1214-06, in the brackets' 3/16" ears
+export const THRUST_OD = AXLE_DIA + 6 * millimeter;    // 18 mm PTFE washer; the most that sits flat inside a lip at a cabinet-side hole
+export const THRUST_T = 1.5 * millimeter;
+// Wave washer: McMaster 1775N12, split wave disc spring, one per axle at the
+// back. It pushes the tread toward the front until the front lip's stack is
+// solid, so it sits in both lip-to-ear gaps' worth of room. Drawn as a flat
+// ring squeezed to the back gap with the tread centered.
+export const WAVE_OD = 0.625 * inch;
+export const WAVE_ID = 0.48 * inch;
+export const WAVE_T = 0.01 * inch;                 // spring steel, doubled at the split's overlap
+export const WAVE_FREE_H = 0.095 * inch;
+export const WAVE_WORK_H = 0.05 * inch;            // at its rated 10 lb
+// Step pins: a neoprene washer behind the back lip's bushing flange.
+export const NEO_ID = 0.5 * inch;
+export const NEO_OD = (7 / 8) * inch;
+export const NEO_T = (1 / 8) * inch;
+
+// ---------------------------------------------------------------------------
 // Brackets: one part, used four times. Two on the cabinet; two turned
 // around to face the cabinet and bolted inside the outer rail.
 // ---------------------------------------------------------------------------
 export const BRACKET_TOP_DROP = (13 / 8) * inch;   // web top at T - 1 5/8
 export const BRACKET_H = 2 * inch;                 // web bottom at T - 3 5/8
-export const SCREW_X = [1.5 * inch, 2.5 * inch, 3.5 * inch, 4.5 * inch];   // within the going
+export const SCREW_X = [GOING / 2 - 1.5 * inch, GOING / 2, GOING / 2 + 1.5 * inch];   // three M6, 1 1/2" apart about the going's middle
 export const SCREW_DROP = (17 / 8) * inch;         // screw row at T - 2 1/8
 export const SCREW_HOLE_DIA = 6.6 * millimeter;    // M6 clearance
-export const SCREW_CSK_DIA = 12.4 * millimeter;    // 90 degree countersink, ear side (not modeled)
-export const STOP_PIN_Y = (17 / 16) * inch;
-export const STOP_PIN_DROP = (67 / 32) * inch;     // T - 2 3/32
-export const STOP_PIN_DIA = (3 / 16) * inch;
-export const STOP_PIN_OUT = (5 / 16) * inch;       // sticks out under the lip; flush on the ear's inside
+// Stop pin: threaded standoff PEM SOS-M5-8 (McMaster 93090A115: smooth 7.12 mm body, 8 mm long overall, thin 7.9 mm hex head), used as a
+// nut rather than pressed in: head against the ear's outer face, held by an M5 x 12 button-head screw from inside the ear.
+export const STOP_PIN_Y = 1.055 * inch;            // 0.32 from the ear's far edge, which a pressed-in standoff would need
+export const STOP_PIN_DIA = 0.281 * inch;
+export const STOP_PIN_SLEEVE = 0.6 * millimeter;   // wall of the heat-shrink sleeve on the standoff's barrel, which the lip lands on
+export const STOP_PIN_DROP = (67 / 32) * inch + (STOP_PIN_DIA - (3 / 16) * inch) / 2 + STOP_PIN_SLEEVE;   // sleeve's top at T - 2: the lip's bottom edge rests on it
+export const STOP_PIN_HOLE = 5.5 * millimeter;     // M5 clearance, in the ear
+export const STOP_PIN_OUT = 8 * millimeter;        // out from the ear's outer face: under the whole lip (1/8 to 1/4 from the ear), up to the stow bracket's hook plate at 5/16
 export const EAR_CORNER_R = R_OUTSIDE_SMALL;       // each ear's bottom outer corner
 // The hook starts 1/16" past the end of the ear's 1/4" bend, so the notch's
 // inside corner can only take a 1/32" radius and still stay clear of the bend.
 export const EAR_NOTCH_R = (1 / 32) * inch;        // the hook notch
-// Rail bracket screws: M6 x 20 flat head (ISO 10642) from the ear side, DIN 985 nyloc nut outside the rail.
+// Bracket screws: M6 button heads in plain holes. On the rail brackets, M6 x 20 with the head outside the rail and a DIN 985 nyloc nut on the web, between the ears.
 export const FH_DIA = 6 * millimeter;
-export const FH_LEN = 20 * millimeter;             // overall, head included; comes through the nut by about 4 mm
-export const FH_HEAD_DIA = 12 * millimeter;        // 90 degree head
 export const NUT_AF = 10 * millimeter;
 export const NUT_H = 6 * millimeter;
 
@@ -133,92 +194,176 @@ export const NUT_H = 6 * millimeter;
 // Outer rail
 // ---------------------------------------------------------------------------
 // The rail bracket is a cabinet bracket turned around: its web, against the
-// rail's inner face, fills y 18 1/2 to 18 11/16, and its axle hole lands on
+// rail's inner face, fills y 17 1/2 to 17 11/16, and its axle hole lands on
 // the outer axle line.
-export const RAIL_Y = OUT_AXLE_Y + CAB_AXLE_Y;     // 18 11/16, inner face (outer face 18 7/8)
+export const RAIL_Y = OUT_AXLE_Y + CAB_AXLE_Y;     // 17 11/16, inner face (outer face 17 7/8)
 export const RAIL_STEP_DROP = 2 * inch;            // step edges at T - 2 (28 3/4 and 18 1/2)
-export const RAIL_BACK_Z = 23.5 * inch;            // bed-side edge, bottom of the straight part
-export const RAIL_NOTCH_X = 2.5 * inch;            // notch for the door handle: x 0 to 2 1/2, up to z 23 1/2
-export const RAIL_LINE_X = 3 * inch;               // the long lower edge runs from the foot through (3, 20)
-export const RAIL_LINE_Z = 20 * inch;
-export const RAIL_FOOT_X = 8.25 * inch;            // foot runs x 8 1/4 to 12
-export const RAIL_FOOT_Z = 0.5 * inch;
-export const RAIL_NOTCH_IN_R = 0.5 * inch;         // the notch's inside corner (2 1/2, 23 1/2)
-export const RAIL_NOTCH_R = 1 * inch;              // where the notch meets the long edge
-export const RAIL_FLANGE = 1 * inch;               // outward, beyond the plate (out to y 19 7/8)
-export const RAIL_FLANGE_STOP = 0.5 * inch;        // the long flange stops this far short of the notch corner
+export const RAIL_BACK_Z = 23.5 * inch;            // bottom of the bed-side edge; the long lower edge runs from here straight to the foot
+export const RAIL_FOOT_X = GOING - 1.25 * inch;    // foot runs x 4 1/2 to 11 1/2: 7 on the floor. Folded, its back inch stands in front of the stowed step's top
+export const RAIL_FOOT_Z = (1 / 8) * inch;           // the rail foot pad, the step leg pads and the ledge strip are all the same 1/8" rubber
+export const RAIL_FLANGE = 1 * inch;               // outward, beyond the plate (out to y 18 7/8)
 export const RAIL_FLANGE_TIP_R = R_OUTSIDE_LARGE;  // every flange's free corners
-export const HAND_SLOT_X = 3 * inch;
-export const HAND_SLOT_Z = 25 * inch;
+export const HAND_SLOT_X = 1.5 * GOING;            // centered under the middle tread's bracket, near the travel lock
+export const HAND_SLOT_Z = 14.5 * inch;
 export const HAND_SLOT_L = 4 * inch;               // along x
-export const HAND_SLOT_H = 1.25 * inch;
-// Step clip screws, M6 (SCREW_HOLE_DIA) through the clip and the rail. 11 1/8 is
-// as close to the front flange as half a die width from its bend allows.
-export const CLIP_SCREW_X = [(83 / 8) * inch, (89 / 8) * inch];   // 10 3/8 and 11 1/8
-export const CLIP_SCREW_Z = 9 * inch;
+export const HAND_SLOT_H = 1.5 * inch;               // 1 1/8 open once the 3/32 rubber edge trim (8507K54) is on
+// Foot pad: rubber, glued under the foot flange's flat, standing on the floor.
+export const RAIL_PAD_W = RAIL_FLANGE - RAIL_BEND_R;   // 3/4, the flange's flat width past its bend
+export const RAIL_PAD_T = RAIL_FOOT_Z;             // 1/8, the same rubber as the step leg pads and the ledge strip
 
 // ---------------------------------------------------------------------------
-// Keyholes (front angle and step clip)
+// Step clips: one part, used twice. One on the cabinet's front post, one
+// turned upside down inside the outer rail. Each is an angle: a mounting leg
+// with two pairs of M6 holes, each pair one above the other, and a keyhole leg, flush with the
+// stair's front end, that takes one of the hook-on step's pins. The keyhole
+// has a slot above and below its hole, so the part is the same either way up.
 // ---------------------------------------------------------------------------
-export const KEYHOLE_DIA = 20 * millimeter;        // clears the pin's fender washer and button head
-export const KEYHOLE_SLOT_W = 13 * millimeter;     // clears the 12 mm tube
-
-// ---------------------------------------------------------------------------
-// Front angle
-// ---------------------------------------------------------------------------
-export const FA_X1 = 12 * inch;                    // flush with the cabinet's front edge
-export const FA_PANEL_LEG_X0 = (85 / 8) * inch;    // 10 5/8
-export const FA_PANEL_LEG_TOP = 16.5 * inch;
-export const FA_OUT_LEG = 2 * inch;                // along y
-export const FA_BOTTOM_Z = 1 * inch;
-export const FA_TOP_Z = 18 * inch;
-export const FA_SCREW_X = (365 / 32) * inch;       // 11 13/32, front post centerline
-export const FA_SCREW_Z = [4.5 * inch, 12.25 * inch, 15.5 * inch];
-export const FA_SCREW_HOLE_DIA = (17 / 64) * inch;
-export const FA_KEYHOLE_Y = CAB_AXLE_Y;            // 15/16, on the step's cabinet-side pivot line
-export const FA_KEYHOLE_Z = (161 / 16) * inch;     // 10 1/16, hole center
-export const FA_KEYHOLE_END_Z = 9.5 * inch;        // slot's round end, 1/8 below the pin at 9 5/8
-export const FA_CORNER_R = R_OUTSIDE_SMALL;
-export const FA_ENTRY_R = R_OUTSIDE_LARGE;         // outward leg's top outer corner (y 2, z 18), facing the entry
-
-// ---------------------------------------------------------------------------
-// Step clip (bolted inside the outer rail with M6 button heads and nyloc nuts)
-// ---------------------------------------------------------------------------
-export const CLIP_X0 = (79 / 8) * inch;            // 9 7/8; outer face at x 12
-export const CLIP_Z0 = (63 / 8) * inch;            // 7 7/8
-export const CLIP_H = (17 / 8) * inch;             // up to z 10
-export const CLIP_KEY_LEG_Y0 = (131 / 8) * inch;   // 16 3/8
-export const CLIP_KEYHOLE_Y = OUT_AXLE_Y;          // 17 3/4, on the step's outer pivot line
-export const CLIP_KEYHOLE_Z = (147 / 16) * inch;   // 9 3/16, hole center
-export const CLIP_KEYHOLE_END_Z = (69 / 8) * inch; // 8 5/8, slot's round end, 1/8 below the pin at 8 3/4
+export const KEYHOLE_DIA = END_WASHER_DIA + 4 * millimeter;    // 22 mm, 2 mm all round the pin's 18 mm fender washer
+export const KEYHOLE_SLOT_W = AXLE_DIA + 1 * millimeter;      // 13 mm, clears the tube
+export const CLIP_MOUNT_L = (13 / 8) * inch;       // mounting leg, along x back from the front end (to x 9 7/8)
+export const CLIP_MOUNT_H = 3.125 * inch;          // mounting leg's height
+export const CLIP_KEY_H = 2.125 * inch;            // keyhole leg's height, centered on the mounting leg
+export const CLIP_KEY_LEG = 2 * inch;              // keyhole leg's reach from the mounting face
+export const CLIP_HOLE_IN = 15 * millimeter;       // screw line, in from the front end: the middle of the 30 mm front post's slot
+export const CLIP_HOLE_X = 2 * GOING - CLIP_HOLE_IN;   // 10.91, the front pair, used on the cabinet
+export const CLIP_HOLE_BACK = 0.5 * inch;          // the rear pair, used on the rail, this far behind: clear of the front flange's bend
+export const CLIP_HOLE_DZ = 0.875 * inch;          // each screw above and below the clip's middle (1 3/4 apart)
+export const CLIP_PIN_DROP = (7 / 16) * inch;      // the resting pin below the keyhole's middle
+export const CLIP_SLOT_DROP = (1 / 8) * inch;      // each slot's round end past the resting pin: the step stands on its legs
+export const CLIP_CAB_Z = RISE - CAB_AXLE_DROP + CLIP_PIN_DROP;    // cabinet clip's middle: 10 1/16
+export const CLIP_RAIL_Z = RISE - OUT_AXLE_DROP + CLIP_PIN_DROP;   // rail clip's middle: 9 3/16
 export const CLIP_CORNER_R = R_OUTSIDE_SMALL;      // the free corners of both legs
+// Where the rail's clip sits, for the checks and drawings.
+export const CLIP_X0 = 2 * GOING - CLIP_MOUNT_L;
+export const CLIP_Z0 = CLIP_RAIL_Z - CLIP_MOUNT_H / 2;
+export const CLIP_H = CLIP_MOUNT_H;
+export const CLIP_KEY_LEG_Y0 = RAIL_Y - CLIP_KEY_LEG;   // 15 11/16
+
+// ---------------------------------------------------------------------------
+// Travel lock
+// ---------------------------------------------------------------------------
+// Travel lock: McMaster 8501A58 twist-lock spring plunger (M10, 6 mm nose,
+// 14 mm travel), pointing up through a small ledge on the panel, under where
+// the rail's foot flange lands when the stair is folded. The folded rail's
+// first move on the way open is straight out from the panel, square to the
+// pin, so the pin in the flange's hole locks the fold. The handle hangs under
+// the ledge.
+export const FOLD_DY = -(CAB_AXLE_DROP - OUT_AXLE_DROP) - (OUT_AXLE_Y - CAB_AXLE_Y);   // the rail's move when folded: -14 15/16
+export const FOLD_DZ = (OUT_AXLE_Y - CAB_AXLE_Y) - (CAB_AXLE_DROP - OUT_AXLE_DROP);    // +16 11/16
+export const LOCK_X = (RAIL_FOOT_X + 2 * GOING) / 2;   // pin line: mid-foot, 9 1/4 along the cabinet
+export const LOCK_Y = RAIL_Y + RAIL_T + RAIL_FLANGE - RAIL_PAD_W / 2;   // on the open rail: mid-flat of the foot flange, 18 1/2
+export const LOCK_FOLD_Y = LOCK_Y + FOLD_DY;       // folded: 3 9/16 off the panel
+export const LOCK_HOLE = 6.5 * millimeter;         // in the rail's foot flange, for the nose
+export const LOCK_SHELF_HOLE = 10.5 * millimeter;  // M10 clearance in the ledge's shelf
+export const PLUNGER_TAP = 8.5 * millimeter;       // M10 x 1.5 tap drill, in the block
+export const PLUNGER_NOSE = 14 * millimeter;       // nose travel past the plunger's thread
+export const PLUNGER_THREAD = 33 * millimeter;     // threaded length
+export const LOCK_GAP = (3 / 16) * inch;           // block top to the folded flange; the foot comes in about 0.09 low
+export const LOCK_BLOCK_T = 5 * millimeter;        // M10 x 1.5 thin jam nut on the shelf (a regular nut under it clamps the plunger)
+export const LOCK_NUT_AF = 17 * millimeter;        // across its flats
+export const LOCK_BLOCK_TOP_Z = RAIL_FOOT_Z + FOLD_DZ - LOCK_GAP;   // 16 5/8
+export const LOCK_SHELF_TOP_Z = LOCK_BLOCK_TOP_Z - LOCK_BLOCK_T;    // 16.80, just under the cabinet bracket's web (16 7/8)
+export const LOCK_LEDGE_W = (9 / 8) * inch;        // the shelf's tongue along x, between the two foot pads
+export const LOCK_LEDGE_X0 = LOCK_X - LOCK_LEDGE_W / 2;             // 8 11/16
+export const LOCK_LEDGE_REACH = RAIL_Y + RAIL_T + RAIL_FLANGE + FOLD_DY;   // 3 15/16, as far out as the folded rail's flange
+export const LOCK_LEDGE_LEG = 1.75 * inch;         // panel leg, down from the shelf's top
+export const RAIL_PAD_GAP = LOCK_LEDGE_W + (1 / 4) * inch;          // the foot pads stop 1/8 short of the ledge each side
+export const RAIL_PAD_L = (2 * GOING - RAIL_FOOT_X - RAIL_PAD_GAP) / 2;   // 1 9/16 each
+export const RAIL_PAD_X0 = [RAIL_FOOT_X, 2 * GOING - RAIL_PAD_L];  // back pad, front pad
 
 // ---------------------------------------------------------------------------
 // Step ledge
 // ---------------------------------------------------------------------------
-export const LEDGE_LEN = 6 * inch;                 // x 0 to 6
+export const LEDGE_LEN = GOING;                    // x 0 to 5 3/4
 export const LEDGE_SHELF = 2.5 * inch;             // along y
 export const LEDGE_TOP_Z = (9 / 8) * inch;
-export const LEDGE_LEG_H = 1 * inch;
-export const LEDGE_SCREW_X = [1.5 * inch, 4.5 * inch];
-export const LEDGE_SCREW_Z = 0.5 * inch;           // 1/2 rather than the page's 5/8 keeps the countersinks half a die width from the bend
-export const LEDGE_SCREW_DIA = 0.177 * inch;       // #8 clearance (countersink not modeled)
+export const LEDGE_SCREW_X = [1.25 * inch, 4.75 * inch];   // two M6 through the back wall, behind the stowed step
+export const LEDGE_SCREW_Z = 2 * inch;             // above the shelf's bend, below the wall's top
+export const LEDGE_SCREW_DIA = SCREW_HOLE_DIA;     // M6 button heads
 export const LEDGE_SHELF_R = R_OUTSIDE_LARGE;      // the shelf's front corners, at ankle height
-export const LEDGE_LEG_R = R_OUTSIDE_SMALL;        // the back leg's bottom corners
+export const LEDGE_LEG_R = R_OUTSIDE_SMALL;        // the back wall's top corner at the bed end
+export const LEDGE_STRIP_Y0 = (1 / 4) * inch;      // the rubber strip starts past the back wall's bend
+export const LEDGE_STRIP_T = (1 / 8) * inch;       // rubber strip on the shelf; the folded step stands on it
+export const STOW_PANEL_GAP = (1 / 32) * inch;     // the folded step's back (the outer leg's web, from 9" up) stands this far off the panel
+
+// ---------------------------------------------------------------------------
+// Bumpers: rubber, stuck to the panel behind each folded tread. The folded
+// tread tops sit 5/16" off the panel, so a 3/8" bumper is squeezed 1/16".
+// ---------------------------------------------------------------------------
+export const BUMPER_DIA = 0.5 * inch;
+export const BUMPER_H = (3 / 8) * inch;
+export const BUMPER_UP = 12 * inch;                // above the tread's cabinet axle, mid-depth in its going
 
 // ---------------------------------------------------------------------------
 // Hook-on step: its tray is the tread part, at T1 in the step's going, so its
-// pivots sit on the treads' axle lines, at y 15/16, z 9 5/8 and y 17 3/4,
+// pivots sit on the treads' axle lines, at y 15/16, z 9 5/8 and y 16 3/4,
 // z 8 3/4. The two legs are one part. The cabinet-side leg is built; the outer
 // leg is the same part turned half a turn about a vertical axis, which puts
-// its web's outer face at y 18 3/8.
+// its web's outer face at y 17 3/8.
 // ---------------------------------------------------------------------------
-export const STEP_LEG_Y0 = (5 / 16) * inch;        // cabinet-side leg's web, outer face
+export const STEP_LEG_Y0 = 0 * inch;               // cabinet-side leg's web, outer face: in the panel's plane, past the cabinet's front. 15/16 from the pivots, so the lock's tapped hole fits between them and the bend
 export const STEP_LEG_BOTTOM_Z = (1 / 8) * inch;   // underside of the foot flange
 export const STEP_LEG_TOP_Z = (81 / 8) * inch;     // 10 1/8, stops against the skin's underside
 export const STEP_LEG_FLANGE = (5 / 8) * inch;     // side and foot flanges, out from the web's outer face
-export const STEP_LEG_EAR = (17 / 16) * inch;      // ears, out from the web's outer face
+export const STEP_LEG_EAR = CAB_AXLE_Y - STEP_LEG_Y0 + (7 / 16) * inch;   // ears, out from the web's outer face: 1 3/8, 7/16 past the pivots (folded, the tip stops 1/16 under the skin)
 export const STEP_LEG_EAR_Z = (133 / 16) * inch;   // 8 5/16, where each side flange widens into its ear
 export const STEP_LEG_EAR_R = (3 / 8) * inch;      // the ear's top outer corner
-export const STEP_AXLE_X0 = 11.87 * inch;          // back end is the hook pin, through the keyhole
-export const STEP_AXLE_X1 = 17.86 * inch;          // 152.1 mm (5.99) long
+// Leg lock: a McMaster 8501A54 twist-lock spring plunger (M6 x 1, 4 mm nose, 10 mm travel) threaded
+// into each leg's front ear, at a hole of its own halfway between the ear's two pivot holes and
+// 0.3 toward the web, so that both legs are one part and SendCutSend can tap it: 0.255 from the
+// pivot holes' edges (they want 0.246) and 0.529 from the bend line (0.517). Open, its nose springs through the
+// tray's front lip.
+export const LEG_LOCK_DY = -0.3 * inch;             // from the pivot holes' line, toward the web
+export const LEG_LOCK_DROP = (CAB_AXLE_DROP + OUT_AXLE_DROP) / 2;   // below the tread's top: 1 1/16
+export const LEG_LOCK_TAP = 5 * millimeter;        // M6 x 1 tap drill, in the ear
+export const LEG_LOCK_HOLE = 4.5 * millimeter;     // in the tray's front lip, for the 4 mm nose
+export const LEG_LOCK_NOSE = 10 * millimeter;      // nose travel past the plunger's thread
+export const LEG_LOCK_NUT_T = 3.2 * millimeter;    // M6 thin jam nut inside the ear
+export const LEG_LOCK_NUT_AF = 10 * millimeter;
+export const LEG_LOCK_HANDLE = 15 * millimeter;    // the L-handle's reach from the plunger's axis
+export const STEP_AXLE_X0 = 2 * GOING - 0.13 * inch;  // 11.37; back end is the hook pin, through the keyhole
+export const STEP_AXLE_X1 = 3 * GOING - 0.14 * inch;  // 17.11; 145.8 mm (5.74) long
+export const STEP_PAD_L = GOING - (9 / 8) * inch;   // 4 5/8 rubber pad under each leg's foot flange, as wide as the flange
+export const STEP_PAD_T = STEP_LEG_BOTTOM_Z;       // 1/8, down to the floor
+
+// ---------------------------------------------------------------------------
+// Stowed hook-on step: two hook plates on the panel catch its two pins
+// ---------------------------------------------------------------------------
+// The stowed step stands in the top tread's going with its pins pointing to
+// the cabinet front, just past x = GOING, where slotted plates
+// catch them. The lower plate's slot opens upward: the step's bottom end is
+// set down on the ledge and its lower pin drops in. The upper plate's slot
+// opens toward the room: the step's top is tipped in to the panel and the
+// upper pin slides in until it seats on the slot's round end.
+// The upper plate is one part with the travel lock's shelf, the "Stow
+// bracket", all 1/8 sheet with two bends: the shelf is the base, the panel leg
+// is bent down along its panel edge and the hook plate is bent up along its
+// bed-end edge. A notch in the shelf's corner keeps the two bends apart.
+// The step is stowed before the stair is folded. Folded, the back inch of the
+// rail's foot stands in front of the step's top and a rubber bumper on the
+// rail's inner face presses on the step, so the one plunger locks everything.
+export const STOW_TOP_Y = STOW_PANEL_GAP + OUT_AXLE_DROP + CAB_AXLE_Y - STEP_LEG_Y0;   // the stowed step's tread face: 2 7/16
+export const STOW_Z0 = LEDGE_TOP_Z + LEDGE_STRIP_T - TRAY_Y0;      // stowed height of the step's y = 0: 7/8
+export const STOW_PIN_UP_Y = STOW_TOP_Y - OUT_AXLE_DROP;           // upper pin: 15/16 off the panel
+export const STOW_PIN_UP_Z = STOW_Z0 + OUT_AXLE_Y;                 // 17 5/8
+export const STOW_PIN_LO_Y = STOW_TOP_Y - CAB_AXLE_DROP;           // lower pin: 1 13/16
+export const STOW_PIN_LO_Z = STOW_Z0 + CAB_AXLE_Y;                 // 1 13/16
+export const STOW_HOOK_X0 = GOING;                 // plates from here to GOING + SHEET_T, where the cabinet's step clip sits when the step is in use
+export const STOW_SLOT_DROP = (1 / 8) * inch;      // the lower slot's round end below the resting pin (the step stands on the ledge)
+export const STOW_BRACKET_Z0 = LOCK_SHELF_TOP_Z - LOCK_LEDGE_LEG;   // the stow bracket's bottom edge: 15.05
+export const STOW_UP_Z1 = 18.15625 * inch;         // upper hook plate's top, under the cabinet bracket's stop pin (18.20) and the middle tread's back lip as it folds (18.39)
+export const STOW_UP_D = 2.25 * inch;              // plate reach from the panel
+export const STOW_UP_Y0 = (5 / 16) * inch;         // the hook plate and its bend start here, clear of the panel leg's bend
+export const STOW_NOTCH_X = STOW_HOOK_X0 + (7 / 16) * inch;   // the panel leg and its bend start here, clear of the hook plate's bend
+export const STOW_SHELF_R = R_OUTSIDE_SMALL;       // the shelf's inside corner and the tongue's tips
+export const STOW_BRACKET_SCREW_X = [STOW_NOTCH_X + (3 / 8) * inch, LOCK_LEDGE_X0 + LOCK_LEDGE_W - (3 / 8) * inch];   // two M6 screws, one near each end of the leg
+export const STOW_BRACKET_SCREW_Z = [LOCK_SHELF_TOP_Z - (11 / 16) * inch, STOW_BRACKET_Z0 + (3 / 8) * inch];   // on a slant: the first high on the leg (half a die width below the bend), the second low
+export const STOW_LO_Z0 = LEDGE_TOP_Z - SHEET_T;    // lower hook plate, bent off the front end of the step ledge's back wall: from the shelf's underside, 1
+export const STOW_LO_Z1 = (21 / 8) * inch;
+export const STOW_LO_D = 2.5 * inch;
+export const STOW_SCREW_DIA = SCREW_HOLE_DIA;      // M6, as everywhere but the plunger
+// Step bumper: a panel bumper stuck on the rail's inner face, on the back inch
+// of the foot. Folded, it presses on the stowed step's face.
+export const RAIL_BUMPER_X = (RAIL_FOOT_X + GOING - TRAY_INSET) / 2;   // 5.03, between the foot's back end and the step's front end
+export const RAIL_BUMPER_Z = RAIL_FOOT_Z + 0.75 * inch;                // 1 1/4, above the foot flange's bend
+export const STOW_PIN_X = GOING - TREAD_AXLE_X0;   // the stowed step's lower pin's tube end, where it hinges in the lower hook
