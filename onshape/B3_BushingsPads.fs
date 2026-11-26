@@ -12,7 +12,7 @@ import(path : "onshape/std/common.fs", version : "2641.0");
  *   Lip bushing (16 used): flanged plastic bushing in each tread lip, flange
  *   outside the lip, and in each step leg ear, flange toward the lip.
  *   Ear bushing (8): the longer one in each bracket ear, flange toward the lip.
- *   Thrust washer (12): PTFE, against the inside of each lip.
+ *   Thrust washer (12): nylon (modeled with PTFE material), against the inside of each lip.
  *   Wave washer (6): one per axle, in the back gap between the thrust washer
  *   and the ear bushing's flange, drawn as a flat ring squeezed to that gap.
  *   Neoprene washer (2): on each step pin, behind the back lip's bushing.

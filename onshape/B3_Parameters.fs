@@ -122,7 +122,8 @@ export const LIP_CORNER_R = R_OUTSIDE_LARGE;       // both bottom corners of eac
 export const AXLE_DIA = 12 * millimeter;           // aluminum tube on all six axles
 export const AXLE_BORE = 5 * millimeter;           // tapped M6 at both ends
 export const BUSHING_WALL = 1 * millimeter;        // bushing OD = tube + 2 walls
-export const HOLE_DIA = AXLE_DIA + 2 * BUSHING_WALL;   // 14 mm bushing bore, reamed H7 (cut 3/8 pilots, bend, then open up)
+export const HOLE_DIA = AXLE_DIA + 2 * BUSHING_WALL;   // 14 mm: the bushings' OD, and the H7 bore they press into
+export const BUSHING_CUT_DIA = HOLE_DIA - 0.1 * millimeter;   // 13.9 mm as cut: SendCutSend's +/-0.005" keeps it at or under H7's 14.018, then sanded to a firm press
 export const CAB_AXLE_Y = (15 / 16) * inch;
 export const CAB_AXLE_DROP = (5 / 8) * inch;       // below T
 export const OUT_AXLE_INSET = (5 / 8) * inch;      // outer axle, in from the tray's outer edge
@@ -142,14 +143,14 @@ export const END_HEAD_H = 3.3 * millimeter;
 
 // ---------------------------------------------------------------------------
 // Pivot stack: bushings and washers on every axle. Sizes are the catalog
-// parts' (igus iglide flanged bushings, a DIN 7603 size PTFE ring).
+// parts' (igus iglide flanged bushings, a 3/4" nylon washer).
 // ---------------------------------------------------------------------------
 export const BUSHING_FLANGE_DIA = AXLE_DIA + 8 * millimeter;   // 20 mm flange (McMaster 2705T142 has 18 mm)
 export const BUSHING_FLANGE_T = 1 * millimeter;
 export const LIP_BUSHING_LEN = 4 * millimeter;     // overall, flange included: igus JFM-1214-04 (iglide J), in the 1/8" lips and step leg ears
 export const EAR_BUSHING_LEN = 6 * millimeter;     // overall: GFM-1214-06, in the brackets' 3/16" ears
-export const THRUST_OD = AXLE_DIA + 6 * millimeter;    // 18 mm PTFE washer; the most that sits flat inside a lip at a cabinet-side hole
-export const THRUST_T = 1.5 * millimeter;
+export const THRUST_OD = 0.75 * inch;                 // nylon washer McMaster 90295A492, 3/4" OD: the most that sits flat inside a lip at a cabinet-side hole
+export const THRUST_T = 1.52 * millimeter;            // sold as 1/16" (1.45 to 1.70 mm); use ones measuring 1.52 or less, or sand them, to keep the wave washer within its rating
 // Wave washer: McMaster 1775N12, split wave disc spring, one per axle at the
 // back. It pushes the tread toward the front until the front lip's stack is
 // solid, so it sits in both lip-to-ear gaps' worth of room. Drawn as a flat
@@ -290,7 +291,7 @@ export const STOW_PANEL_GAP = (1 / 32) * inch;     // the folded step's back (th
 // Bumpers: rubber, stuck to the panel behind each folded tread. The folded
 // tread tops sit 5/16" off the panel, so a 3/8" bumper is squeezed 1/16".
 // ---------------------------------------------------------------------------
-export const BUMPER_DIA = 0.5 * inch;
+export const BUMPER_DIA = (9 / 16) * inch;          // McMaster 9540K768
 export const BUMPER_H = (3 / 8) * inch;
 export const BUMPER_UP = 12 * inch;                // above the tread's cabinet axle, mid-depth in its going
 
