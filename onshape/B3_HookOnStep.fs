@@ -53,8 +53,8 @@ export const b3HookOnStep = defineFeature(function(context is Context, id is Id,
                     vector(y0, zt)
                 ], [0, 0, R_INSIDE_MIN, r, STEP_LEG_EAR_R, 0]);
         const holes = [
-                b3Hole(CAB_AXLE_Y, b3T(n) - CAB_AXLE_DROP, HOLE_DIA),
-                b3Hole(CAB_AXLE_Y, b3T(n) - OUT_AXLE_DROP, HOLE_DIA),
+                b3Hole(CAB_AXLE_Y, b3T(n) - CAB_AXLE_DROP, BUSHING_CUT_DIA),
+                b3Hole(CAB_AXLE_Y, b3T(n) - OUT_AXLE_DROP, BUSHING_CUT_DIA),
                 b3Hole(CAB_AXLE_Y + LEG_LOCK_DY, b3T(n) - LEG_LOCK_DROP, LEG_LOCK_TAP)
             ];
         b3PrismYZ(context, id + "leg" + "sideBack", side, holes, faces[0], faces[0] + SHEET_T);
